@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import Analytics from '@vercel/analytics/astro'
 
 type Business = {
   id: string;

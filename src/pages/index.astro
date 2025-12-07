@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import Analytics from '@vercel/analytics/astro';
 import BusinessSearch from '../components/BusinessSearch';
 import SuggestBusinessForm from '../components/SuggestBusinessForm';
 ---
@@ -63,5 +64,6 @@ import SuggestBusinessForm from '../components/SuggestBusinessForm';
         </div>
       </main>
     </div>
+    <Analytics />
   </body>
 </html>
