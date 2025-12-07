@@ -1,16 +1,61 @@
 ---
-
+import '../styles/global.css';
+import BusinessSearch from '../components/BusinessSearch';
+import SuggestBusinessForm from '../components/SuggestBusinessForm';
 ---
 
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>VantaJax
+    </title>
+  </head>
+  <body class="min-h-screen bg-black text-slate-50">
+    <div class="relative min-h-screen overflow-hidden">
+      <!-- subtle radial glow in background -->
+      <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(147,51,234,0.35),_transparent_55%),_radial-gradient(circle_at_bottom,_rgba(59,7,100,0.6),_transparent_55%)] opacity-80" />
+
+      <main class="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
+        <div class="w-full max-w-4xl rounded-3xl border border-purple-900/60 bg-black/80 px-5 py-8 sm:px-8 sm:py-10 shadow-[0_0_60px_rgba(168,85,247,0.35)]">
+          <header class="mb-8 sm:mb-10">
+            <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-300/80">
+              VantaJax Project
+            </p>
+            <h1 class="mt-3 text-3xl sm:text-4xl font-bold tracking-tight">
+              Find Black-owned businesses in your area
+            </h1>
+            <p class="mt-3 max-w-2xl text-sm sm:text-base text-slate-300">
+              Start with Jacksonville and nearby ZIP codes. Search by city, ZIP, and
+              category to discover food, services, retail, and nonprofits led by
+              Black owners.
+            </p>
+          </header>
+
+          <!-- main content split into two clear sections -->
+          <section class="space-y-10">
+            <div class="space-y-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Browse the radar
+              </h2>
+              <BusinessSearch client:load />
+            </div>
+
+            <div class="border-t border-purple-900/50 pt-6">
+              <h2 class="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Help grow the map
+              </h2>
+              <SuggestBusinessForm client:load />
+            </div>
+          </section>
+
+          <footer class="mt-8 border-t border-purple-900/50 pt-4 text-[11px] text-slate-400">
+            Built as an MVP to make Black-owned businesses easier to find.{' '}
+            <span class="text-purple-300">
+              Your suggestions and feedback help shape what comes next.
+            </span>
+          </footer>
+        </div>
+      </main>
+    </div>
+  </body>
 </html>
