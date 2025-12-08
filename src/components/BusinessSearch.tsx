@@ -81,7 +81,7 @@ export default function BusinessSearch() {
 
     if (loc) {
       const pattern = `%${loc}%`;
-      // match name OR city OR zip
+      // name OR city OR zip
       query = query.or(
         `city.ilike.${pattern},zip.ilike.${pattern},name.ilike.${pattern}`
       );
@@ -104,7 +104,24 @@ export default function BusinessSearch() {
       throw error;
     }
 
-    return (data || []) as Business[];
+    const results = (data || []) as Business[];
+
+    // 🔎 Fire-and-forget logging into search_events
+    supabase
+      .from('search_events')
+      .insert({
+        location: loc || null,
+        category: cat || null,
+        verified_only: verified,
+        result_count: results.length,
+      })
+      .then(({ error: logError }) => {
+        if (logError) {
+          console.error('Error logging search event:', logError);
+        }
+      });
+
+    return results;
   };
 
   const handleSearch = async (e: FormEvent<HTMLFormElement>) => {

@@ -1,0 +1,243 @@
+---
+export const prerender = false;
+
+import Layout from "../layouts/Layout.astro";
+import { createClient } from "@supabase/supabase-js";
+
+const expectedKey = import.meta.env.ADMIN_ACCESS_KEY;
+const requestUrl = new URL(Astro.request.url);
+const key = requestUrl.searchParams.get("key");
+
+// Protect route with shared secret
+if (!expectedKey || key !== expectedKey) {
+    return Astro.redirect("/");
+}
+
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const serviceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !serviceKey) {
+    throw new Error("Server Supabase credentials not configured");
+}
+
+const supabase = createClient(supabaseUrl, serviceKey);
+
+// Daily metrics from view
+const { data: dailyMetrics, error: metricsError } = await supabase
+    .from("daily_metrics")
+    .select("*")
+    .order("day", { ascending: false });
+
+if (metricsError) {
+    console.error(metricsError);
+    throw metricsError;
+}
+
+// Totals
+const { count: totalBusinesses } = await supabase
+    .from("businesses")
+    .select("*", { count: "exact", head: true });
+
+const { count: totalSuggestions } = await supabase
+    .from("business_suggestions")
+    .select("*", { count: "exact", head: true });
+
+const { count: totalSearches } = await supabase
+    .from("search_events")
+    .select("*", { count: "exact", head: true });
+
+// Today snapshot
+const todayMetrics =
+    dailyMetrics && dailyMetrics.length > 0 ? dailyMetrics[0] : null;
+
+const formatDate = (value: string | Date) =>
+    new Date(value).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+    });
+---
+
+<Layout title="Metrics – VantaJax">
+    <main class="space-y-6">
+        <header class="space-y-1">
+            <h1 class="text-lg font-semibold text-slate-50">Metrics</h1>
+            <p class="text-[11px] text-slate-400">
+                High-level analytics for VantaJax. This view is based on the
+                last 7 days of activity.
+            </p>
+        </header>
+
+        <!-- Summary cards -->
+        <section class="grid gap-4 sm:grid-cols-3">
+            <div
+                class="rounded-2xl border border-purple-900/60 bg-black/70 p-4 shadow-[0_0_20px_rgba(76,29,149,0.6)]"
+            >
+                <h2
+                    class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400"
+                >
+                    Businesses
+                </h2>
+                <p class="mt-2 text-2xl font-semibold text-slate-50">
+                    {totalBusinesses ?? 0}
+                </p>
+                <p class="mt-1 text-[11px] text-slate-500">
+                    Total live directory entries.
+                </p>
+            </div>
+
+            <div
+                class="rounded-2xl border border-purple-900/60 bg-black/70 p-4 shadow-[0_0_20px_rgba(76,29,149,0.6)]"
+            >
+                <h2
+                    class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400"
+                >
+                    Suggestions
+                </h2>
+                <p class="mt-2 text-2xl font-semibold text-slate-50">
+                    {totalSuggestions ?? 0}
+                </p>
+                <p class="mt-1 text-[11px] text-slate-500">
+                    Total supporter-submitted suggestions.
+                </p>
+            </div>
+
+            <div
+                class="rounded-2xl border border-purple-900/60 bg-black/70 p-4 shadow-[0_0_20px_rgba(76,29,149,0.6)]"
+            >
+                <h2
+                    class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400"
+                >
+                    Searches
+                </h2>
+                <p class="mt-2 text-2xl font-semibold text-slate-50">
+                    {totalSearches ?? 0}
+                </p>
+                <p class="mt-1 text-[11px] text-slate-500">
+                    Total searches recorded (all time).
+                </p>
+            </div>
+        </section>
+
+        <!-- Today snapshot -->
+        {
+            todayMetrics && (
+                <section class="rounded-2xl border border-purple-900/60 bg-black/80 p-4 shadow-[0_0_25px_rgba(76,29,149,0.7)]">
+                    <h2 class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        Today’s snapshot • {formatDate(todayMetrics.day)}
+                    </h2>
+                    <div class="mt-3 grid gap-4 sm:grid-cols-4">
+                        <div class="space-y-1">
+                            <p class="text-[11px] text-slate-400">Searches</p>
+                            <p class="text-base font-semibold text-slate-50">
+                                {todayMetrics.searches}
+                            </p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-[11px] text-slate-400">
+                                Zero-result searches
+                            </p>
+                            <p class="text-base font-semibold text-slate-50">
+                                {todayMetrics.zero_result_searches}
+                            </p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-[11px] text-slate-400">
+                                Suggestions
+                            </p>
+                            <p class="text-base font-semibold text-slate-50">
+                                {todayMetrics.suggestions}
+                            </p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-[11px] text-slate-400">
+                                New businesses
+                            </p>
+                            <p class="text-base font-semibold text-slate-50">
+                                {todayMetrics.new_businesses}
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            )
+        }
+
+        <!-- 7-day table -->
+        <section class="space-y-2">
+            <h2
+                class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400"
+            >
+                Last 7 days
+            </h2>
+
+            <div
+                class="overflow-x-auto rounded-2xl border border-purple-900/60 bg-black/70 shadow-[0_0_20px_rgba(76,29,149,0.6)]"
+            >
+                <table
+                    class="min-w-full border-collapse text-left text-[11px] text-slate-200"
+                >
+                    <thead class="border-b border-purple-900/60 bg-black">
+                        <tr>
+                            <th class="px-3 py-2 font-semibold text-slate-300"
+                                >Day</th
+                            >
+                            <th class="px-3 py-2 font-semibold text-slate-300"
+                                >Searches</th
+                            >
+                            <th class="px-3 py-2 font-semibold text-slate-300"
+                                >Zero-result</th
+                            >
+                            <th class="px-3 py-2 font-semibold text-slate-300"
+                                >Avg results</th
+                            >
+                            <th class="px-3 py-2 font-semibold text-slate-300"
+                                >Suggestions</th
+                            >
+                            <th class="px-3 py-2 font-semibold text-slate-300"
+                                >New businesses</th
+                            >
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {
+                            dailyMetrics && dailyMetrics.length > 0 ? (
+                                dailyMetrics.map((row) => (
+                                    <tr class="border-t border-purple-900/40 bg-black/60 hover:bg-black/80">
+                                        <td class="px-3 py-2 text-slate-100">
+                                            {formatDate(row.day)}
+                                        </td>
+                                        <td class="px-3 py-2">
+                                            {row.searches}
+                                        </td>
+                                        <td class="px-3 py-2">
+                                            {row.zero_result_searches}
+                                        </td>
+                                        <td class="px-3 py-2">
+                                            {Number(row.avg_results).toFixed(1)}
+                                        </td>
+                                        <td class="px-3 py-2">
+                                            {row.suggestions}
+                                        </td>
+                                        <td class="px-3 py-2">
+                                            {row.new_businesses}
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td
+                                        class="px-3 py-3 text-slate-400"
+                                        colspan="6"
+                                    >
+                                        No metrics available yet. Try again
+                                        after you have some searches and
+                                        suggestions.
+                                    </td>
+                                </tr>
+                            )
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</Layout>
