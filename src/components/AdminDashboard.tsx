@@ -29,6 +29,7 @@ export default function AdminDashboard({ suggestions }: Props) {
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [globalMessage, setGlobalMessage] = useState<string | null>(null);
+  const [filter, setFilter] = useState('');
 
   const handlePromote = async (e: FormEvent<HTMLFormElement>, suggestionId: string) => {
     e.preventDefault();
@@ -86,7 +87,7 @@ export default function AdminDashboard({ suggestions }: Props) {
     }
   };
 
-    const handleReject = async (suggestionId: string) => {
+  const handleReject = async (suggestionId: string) => {
     setGlobalError(null);
     setGlobalMessage(null);
 
@@ -121,7 +122,28 @@ export default function AdminDashboard({ suggestions }: Props) {
     }
   };
 
-  if (!items.length) {
+  const normalizedFilter = filter.trim().toLowerCase();
+
+  const filteredItems = !normalizedFilter
+    ? items
+    : items.filter((s) => {
+        const haystack = [
+          s.name,
+          s.city ?? '',
+          s.state ?? '',
+          s.notes ?? '',
+          s.website ?? '',
+        ]
+          .join(' ')
+          .toLowerCase();
+
+        return haystack.includes(normalizedFilter);
+      });
+
+  const totalCount = items.length;
+  const visibleCount = filteredItems.length;
+
+  if (!totalCount) {
     return (
       <div className="rounded-2xl border border-purple-900/40 bg-black/60 px-4 py-4 sm:px-5 sm:py-5 text-sm text-slate-200">
         <p>No suggestions waiting for review.</p>
@@ -134,6 +156,26 @@ export default function AdminDashboard({ suggestions }: Props) {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-[11px] text-slate-300">
+          <span className="font-semibold text-slate-100">
+            {visibleCount} / {totalCount}
+          </span>{' '}
+          suggestions visible
+          {normalizedFilter && (
+            <span className="text-slate-500"> (filtered by “{filter}”)</span>
+          )}
+        </div>
+
+        <input
+          type="text"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder="Filter by name, city, notes…"
+          className="w-full max-w-xs rounded-lg border border-purple-900/70 bg-black/60 px-3 py-1.5 text-[11px] text-slate-50 outline-none placeholder:text-slate-500 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/70"
+        />
+      </div>
+
       {globalError && (
         <p className="rounded-xl border border-red-500/50 bg-red-950/50 px-3 py-2 text-xs text-red-100">
           {globalError}
@@ -146,7 +188,7 @@ export default function AdminDashboard({ suggestions }: Props) {
       )}
 
       <div className="grid gap-4">
-        {items.map((s) => (
+        {filteredItems.map((s) => (
           <article
             key={s.id}
             className="rounded-2xl border border-purple-900/50 bg-black/70 p-4 sm:p-5 shadow-[0_0_25px_rgba(76,29,149,0.6)]"
@@ -285,7 +327,7 @@ export default function AdminDashboard({ suggestions }: Props) {
                 />
               </div>
 
-                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <label className="inline-flex items-center gap-2 text-[11px] text-slate-300">
                   <input
                     type="checkbox"
