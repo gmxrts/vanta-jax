@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
+declare global {
+  interface Window {
+    plausible?: (event: string, options?: { props?: Record<string, unknown> }) => void;
+  }
+}
+
+
 type Business = {
   id: string;
   name: string;
@@ -100,6 +107,16 @@ export default function BusinessSearch() {
         category,
         verifiedOnly,
       });
+
+    if (typeof window !== 'undefined' && window.plausible) {
+      window.plausible('Search', {
+        props: {
+          location: location.trim() || 'empty',
+          category: category || 'all',
+          verifiedOnly,
+        },
+      });
+    }
     } catch (err) {
       console.error(err);
       setError('Unexpected error occurred.');

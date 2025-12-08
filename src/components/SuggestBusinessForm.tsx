@@ -40,6 +40,15 @@ export default function SuggestBusinessForm() {
       setState('FL');
       setWebsite('');
       setNotes('');
+
+      if (typeof window !== 'undefined' && window.plausible) {
+        window.plausible('SuggestionSubmitted', {
+          props: {
+            city: city || 'unknown',
+            state: state || 'unknown',
+          },
+        });
+      }
     } catch (err) {
       console.error(err);
       setError('Unexpected error occurred.');
@@ -54,7 +63,8 @@ export default function SuggestBusinessForm() {
         Suggest a Black-owned business
       </h2>
       <p className="mt-1 text-[11px] text-slate-400">
-        Know a spot that should be on the radar? Drop it here and we’ll review it.
+        Know a spot that should be on the radar? Share it here and we’ll review it before adding it
+        to the directory.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-3 space-y-3">
