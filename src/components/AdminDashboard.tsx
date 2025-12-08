@@ -26,6 +26,7 @@ const categories = [
 export default function AdminDashboard({ suggestions }: Props) {
   const [items, setItems] = useState<Suggestion[]>(suggestions || []);
   const [promotingId, setPromotingId] = useState<string | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [globalMessage, setGlobalMessage] = useState<string | null>(null);
 
@@ -82,6 +83,41 @@ export default function AdminDashboard({ suggestions }: Props) {
       setGlobalError('Unexpected error promoting suggestion.');
     } finally {
       setPromotingId(null);
+    }
+  };
+
+    const handleReject = async (suggestionId: string) => {
+    setGlobalError(null);
+    setGlobalMessage(null);
+
+    const confirmed = window.confirm('Reject and remove this suggestion?');
+    if (!confirmed) return;
+
+    setRejectingId(suggestionId);
+
+    try {
+      const res = await fetch('/api/reject', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ suggestionId }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setGlobalError(data?.error || 'Failed to reject suggestion.');
+        return;
+      }
+
+      setItems((prev) => prev.filter((s) => s.id !== suggestionId));
+      setGlobalMessage('Suggestion rejected and removed.');
+    } catch (err) {
+      console.error(err);
+      setGlobalError('Unexpected error rejecting suggestion.');
+    } finally {
+      setRejectingId(null);
     }
   };
 
@@ -249,7 +285,7 @@ export default function AdminDashboard({ suggestions }: Props) {
                 />
               </div>
 
-              <div className="flex items-center justify-between gap-3">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <label className="inline-flex items-center gap-2 text-[11px] text-slate-300">
                   <input
                     type="checkbox"
@@ -260,13 +296,24 @@ export default function AdminDashboard({ suggestions }: Props) {
                   <span>Mark as verified Black-owned</span>
                 </label>
 
-                <button
-                  type="submit"
-                  disabled={promotingId === s.id}
-                  className="inline-flex items-center justify-center rounded-lg bg-purple-500 px-3 py-1.5 text-[11px] font-semibold text-black shadow-[0_0_18px_rgba(147,51,234,0.8)] hover:brightness-110 disabled:opacity-60"
-                >
-                  {promotingId === s.id ? 'Promoting…' : 'Promote to directory'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleReject(s.id)}
+                    disabled={rejectingId === s.id}
+                    className="inline-flex items-center justify-center rounded-lg border border-red-500/70 bg-black px-3 py-1.5 text-[11px] font-semibold text-red-300 hover:bg-red-950/40 disabled:opacity-60"
+                  >
+                    {rejectingId === s.id ? 'Rejecting…' : 'Reject'}
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={promotingId === s.id}
+                    className="inline-flex items-center justify-center rounded-lg bg-purple-500 px-3 py-1.5 text-[11px] font-semibold text-black shadow-[0_0_18px_rgba(147,51,234,0.8)] hover:brightness-110 disabled:opacity-60"
+                  >
+                    {promotingId === s.id ? 'Promoting…' : 'Promote to directory'}
+                  </button>
+                </div>
               </div>
             </form>
           </article>
