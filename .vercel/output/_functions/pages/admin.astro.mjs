@@ -1,6 +1,6 @@
 import { e as createComponent, k as renderHead, l as renderComponent, r as renderTemplate } from '../chunks/astro/server_BnPQ4LVQ.mjs';
 /* empty css                                 */
-import { $ as $$Index } from '../chunks/index_B0KXZgH1.mjs';
+import { $ as $$Index } from '../chunks/index_xBOz_KDz.mjs';
 import { jsxs, jsx } from 'react/jsx-runtime';
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
@@ -343,9 +343,9 @@ Internal view for reviewing and promoting suggestions into the main directory.
                 This page is not meant to be public.
 </p> </div> <a href="/" class="text-[11px] text-purple-300 underline underline-offset-2 decoration-purple-400/80 hover:text-purple-200">
 ← Back to search
-</a> </header> ${renderComponent($$result, "AdminDashboard", AdminDashboard, { "client:load": true, "suggestions": suggestions, "client:component-hydration": "load", "client:component-path": "C:/Users/Treezus/desktop/dev/vantajax/src/components/AdminDashboard", "client:component-export": "default" })} </div> </main> </div> ${renderComponent($$result, "Analytics", $$Index, {})} </body></html>`;
-}, "C:/Users/Treezus/desktop/dev/vantajax/src/pages/admin.astro", void 0);
-const $$file = "C:/Users/Treezus/desktop/dev/vantajax/src/pages/admin.astro";
+</a> </header> ${renderComponent($$result, "AdminDashboard", AdminDashboard, { "client:load": true, "suggestions": suggestions, "client:component-hydration": "load", "client:component-path": "/Users/hollow/Desktop/Developer/personal/vanta-jax/src/components/AdminDashboard", "client:component-export": "default" })} </div> </main> </div> ${renderComponent($$result, "Analytics", $$Index, {})} </body></html>`;
+}, "/Users/hollow/Desktop/Developer/personal/vanta-jax/src/pages/admin.astro", void 0);
+const $$file = "/Users/hollow/Desktop/Developer/personal/vanta-jax/src/pages/admin.astro";
 const $$url = "/admin";
 
 const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({

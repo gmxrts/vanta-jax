@@ -1,6 +1,6 @@
 import { e as createComponent, k as renderHead, l as renderComponent, r as renderTemplate } from '../chunks/astro/server_BnPQ4LVQ.mjs';
 /* empty css                                 */
-import { $ as $$Index } from '../chunks/index_B0KXZgH1.mjs';
+import { $ as $$Index } from '../chunks/index_xBOz_KDz.mjs';
 export { renderers } from '../renderers.mjs';
 
 const $$About = createComponent(($$result, $$props, $$slots) => {
@@ -37,9 +37,9 @@ on the home page to submit it. Every suggestion helps this become more useful fo
 </p> </div> <div class="mt-6 text-xs text-slate-400 flex items-center justify-between"> <a href="/" class="text-purple-300 underline underline-offset-2 decoration-purple-400/80 hover:text-purple-200">
 ← Back to search
 </a> <span>MVP build • Jacksonville, FL</span> </div> </div> </main> </div> ${renderComponent($$result, "Analytics", $$Index, {})} </body></html>`;
-}, "C:/Users/Treezus/desktop/dev/vantajax/src/pages/about.astro", void 0);
+}, "/Users/hollow/Desktop/Developer/personal/vanta-jax/src/pages/about.astro", void 0);
 
-const $$file = "C:/Users/Treezus/desktop/dev/vantajax/src/pages/about.astro";
+const $$file = "/Users/hollow/Desktop/Developer/personal/vanta-jax/src/pages/about.astro";
 const $$url = "/about";
 
 const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({

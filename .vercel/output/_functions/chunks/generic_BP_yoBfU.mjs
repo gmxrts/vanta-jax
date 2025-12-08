@@ -489,7 +489,7 @@ async function getConfiguredImageService() {
   if (!globalThis?.astroAsset?.imageService) {
     const { default: service } = await import(
       // @ts-expect-error
-      './sharp__n4YRIBm.mjs'
+      './sharp_D4DODMnd.mjs'
     ).catch((e) => {
       const error = new AstroError(InvalidImageService);
       error.cause = e;
@@ -671,7 +671,7 @@ const $$Image = createComponent(async ($$result, $$props, $$slots) => {
   }
   const { class: className, ...attributes } = { ...additionalAttributes, ...image.attributes };
   return renderTemplate`${maybeRenderHead()}<img${addAttribute(image.src, "src")}${spreadAttributes(attributes)}${addAttribute(className, "class")}>`;
-}, "C:/Users/Treezus/desktop/dev/vantajax/node_modules/.pnpm/astro@5.16.4_@types+node@24_3033648cbdd3ba9e9bd5fac7de0994fa/node_modules/astro/components/Image.astro", void 0);
+}, "/Users/hollow/Desktop/Developer/personal/vanta-jax/node_modules/.pnpm/astro@5.16.4_@types+node@24.10.1_@vercel+functions@2.2.13_jiti@2.6.1_lightningcss@1.30.2_rollup@4.53.3_typescript@5.9.3/node_modules/astro/components/Image.astro", void 0);
 
 const mimes = {
   "3g2": "video/3gpp2",
@@ -1189,7 +1189,7 @@ const $$Picture = createComponent(async ($$result, $$props, $$slots) => {
     const srcsetAttribute = props.densities || !props.densities && !props.widths && !useResponsive ? `${image.src}${image.srcSet.values.length > 0 ? ", " + image.srcSet.attribute : ""}` : image.srcSet.attribute;
     return renderTemplate`<source${addAttribute(srcsetAttribute, "srcset")}${addAttribute(lookup(image.options.format ?? image.src) ?? `image/${image.options.format}`, "type")}${spreadAttributes(sourceAdditionalAttributes)}>`;
   })}  <img${addAttribute(fallbackImage.src, "src")}${spreadAttributes(attributes)}${addAttribute(className, "class")}> </picture>`;
-}, "C:/Users/Treezus/desktop/dev/vantajax/node_modules/.pnpm/astro@5.16.4_@types+node@24_3033648cbdd3ba9e9bd5fac7de0994fa/node_modules/astro/components/Picture.astro", void 0);
+}, "/Users/hollow/Desktop/Developer/personal/vanta-jax/node_modules/.pnpm/astro@5.16.4_@types+node@24.10.1_@vercel+functions@2.2.13_jiti@2.6.1_lightningcss@1.30.2_rollup@4.53.3_typescript@5.9.3/node_modules/astro/components/Picture.astro", void 0);
 
 const fontsMod = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   __proto__: null
@@ -1248,7 +1248,7 @@ const $$Font = createComponent(($$result, $$props, $$slots) => {
   }
   const filteredPreloadData = filterPreloads(data.preloadData, preload);
   return renderTemplate`<style>${unescapeHTML(data.css)}</style>${filteredPreloadData?.map(({ url, type }) => renderTemplate`<link rel="preload"${addAttribute(url, "href")} as="font"${addAttribute(`font/${type}`, "type")} crossorigin>`)}`;
-}, "C:/Users/Treezus/desktop/dev/vantajax/node_modules/.pnpm/astro@5.16.4_@types+node@24_3033648cbdd3ba9e9bd5fac7de0994fa/node_modules/astro/components/Font.astro", void 0);
+}, "/Users/hollow/Desktop/Developer/personal/vanta-jax/node_modules/.pnpm/astro@5.16.4_@types+node@24.10.1_@vercel+functions@2.2.13_jiti@2.6.1_lightningcss@1.30.2_rollup@4.53.3_typescript@5.9.3/node_modules/astro/components/Font.astro", void 0);
 
 const assetQueryParams = undefined;
 							const imageConfig = {"endpoint":{"route":"/_image"},"service":{"entrypoint":"astro/assets/services/sharp","config":{}},"domains":[],"remotePatterns":[],"responsiveStyles":false};
