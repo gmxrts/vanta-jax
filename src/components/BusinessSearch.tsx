@@ -147,64 +147,67 @@ export default function BusinessSearch() {
   };
 
   const renderBusinessCard = (b: Business) => (
-    <article
+    <a
       key={b.id}
-      className="group flex h-full flex-col rounded-2xl border border-purple-900/60 bg-black/70 p-4 shadow-[0_0_30px_rgba(76,29,149,0.65)] transition hover:border-purple-400 hover:shadow-[0_0_40px_rgba(168,85,247,0.9)]"
+      href={`/business/${b.id}`}
+      className="block no-underline"
     >
-      <header className="mb-2 flex items-start justify-between gap-2">
-        <div>
-          <h2 className="text-sm font-semibold text-slate-50">{b.name}</h2>
-          <p className="mt-1 text-[11px] text-slate-400">
-            {b.category} •{' '}
-            {b.area ? (
-              <>
-                {b.area} • {b.city}, {b.state} {b.zip}
-              </>
-            ) : (
-              <>
-                {b.city}, {b.state} {b.zip}
-              </>
+      <article
+        className="group flex h-full flex-col rounded-2xl border border-purple-900/60 bg-black/70 p-4 shadow-[0_0_30px_rgba(76,29,149,0.65)] transition hover:border-purple-400 hover:shadow-[0_0_40px_rgba(168,85,247,0.9)]"
+      >
+        <header className="mb-2 flex items-start justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-50">{b.name}</h2>
+            <p className="mt-1 text-[11px] text-slate-400">
+              {b.category} •{' '}
+              {b.area ? (
+                <>
+                  {b.area} • {b.city}, {b.state} {b.zip}
+                </>
+              ) : (
+                <>
+                  {b.city}, {b.state} {b.zip}
+                </>
+              )}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            {b.verified && (
+              <span className="inline-flex items-center rounded-full bg-purple-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-purple-200">
+                Verified
+              </span>
             )}
-          </p>
-        </div>
-        <div className="flex flex-col items-end gap-1">
-          {b.verified && (
-            <span className="inline-flex items-center rounded-full bg-purple-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-purple-200">
-              Verified
-            </span>
-          )}
-          {b.featured && (
-            <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-200">
-              Featured
-            </span>
-          )}
-        </div>
-      </header>
+            {b.featured && (
+              <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-200">
+                Featured
+              </span>
+            )}
+          </div>
+        </header>
 
-      <p className="text-xs text-slate-200">{b.address}</p>
+        <p className="text-xs text-slate-200">{b.address}</p>
 
-      {b.description && (
-        <p className="mt-2 line-clamp-3 text-xs text-slate-300">{b.description}</p>
-      )}
-
-      <div className="mt-3 space-y-1 text-xs text-slate-200">
-        {b.phone && <p>📞 {b.phone}</p>}
-        {b.website && (
-          <p>
-            🌐{' '}
-            <a
-              href={b.website}
-              target="_blank"
-              rel="noreferrer"
-              className="text-purple-300 underline underline-offset-2 decoration-purple-400/80 hover:text-purple-200"
-            >
-              Visit website
-            </a>
+        {b.description && (
+          <p className="mt-2 line-clamp-3 text-xs text-slate-300">
+            {b.description}
           </p>
         )}
-      </div>
-    </article>
+
+        <div className="mt-3 space-y-1 text-xs text-slate-200">
+          {b.phone && <p>📞 {b.phone}</p>}
+          {b.website && (
+            <p>
+              🌐{' '}
+              <span className="text-purple-300 underline underline-offset-2 decoration-purple-400/80 group-hover:text-purple-200">
+                Visit website
+              </span>
+            </p>
+          )}
+        </div>
+      </article>
+    </a>
   );
+
 
   return (
     <div className="space-y-6">
