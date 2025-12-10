@@ -27,6 +27,24 @@ const categories = [
   { value: 'nonprofit', label: 'Nonprofit' },
 ];
 
+type QuickFilter = {
+  id: string;
+  label: string;
+  category?: string;
+  location?: string;
+  verifiedOnly?: boolean;
+};
+
+const quickFilters: QuickFilter[] = [
+  { id: 'all', label: 'All', category: '' },
+  { id: 'food', label: 'Food & Dining', category: 'food' },
+  { id: 'retail', label: 'Retail', category: 'retail' },
+  { id: 'services', label: 'Services', category: 'services' },
+  { id: 'health', label: 'Health', category: 'health' },
+  { id: 'nonprofit', label: 'Nonprofit', category: 'nonprofit' },
+  { id: 'verified', label: 'Verified only', verifiedOnly: true },
+];
+
 export default function BusinessSearch() {
   const [location, setLocation] = useState('');
   const [category, setCategory] = useState('');
@@ -39,6 +57,8 @@ export default function BusinessSearch() {
 
   const [featured, setFeatured] = useState<Business[]>([]);
   const [loadingFeatured, setLoadingFeatured] = useState(true);
+
+  const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
 
   // Load featured businesses once on mount
   useEffect(() => {
@@ -124,11 +144,53 @@ export default function BusinessSearch() {
     return results;
   };
 
+  const applyQuickFilter = async (filter: QuickFilter) => {
+    setLoading(true);
+    setError(null);
+    setHasSearched(true);
+    setActiveQuickFilter(filter.id);
+
+    const nextLocation = filter.location ?? '';
+    const nextCategory = filter.category ?? '';
+    const nextVerified = filter.verifiedOnly ?? false;
+
+    // keep form inputs in sync with the pill selection
+    setLocation(nextLocation);
+    setCategory(nextCategory);
+    setVerifiedOnly(nextVerified);
+
+    try {
+      const data = await fetchBusinesses({
+        location: nextLocation,
+        category: nextCategory,
+        verifiedOnly: nextVerified,
+      });
+      setResults(data);
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message || 'Unexpected error occurred.');
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setLocation('');
+    setCategory('');
+    setVerifiedOnly(false);
+    setResults([]);
+    setHasSearched(false);
+    setError(null);
+    setActiveQuickFilter(null);
+  };
+
   const handleSearch = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     setHasSearched(true);
+    setActiveQuickFilter(null); // manual search clears pill selection
 
     try {
       const data = await fetchBusinesses({
@@ -152,9 +214,7 @@ export default function BusinessSearch() {
       href={`/business/${b.id}`}
       className="block no-underline"
     >
-      <article
-        className="group flex h-full flex-col rounded-2xl border border-purple-900/60 bg-black/70 p-4 shadow-[0_0_30px_rgba(76,29,149,0.65)] transition hover:border-purple-400 hover:shadow-[0_0_40px_rgba(168,85,247,0.9)]"
-      >
+      <article className="group flex h-full flex-col rounded-2xl border border-purple-900/60 bg-black/70 p-4 shadow-[0_0_30px_rgba(76,29,149,0.65)] transition hover:border-purple-400 hover:shadow-[0_0_40px_rgba(168,85,247,0.9)]">
         <header className="mb-2 flex items-start justify-between gap-2">
           <div>
             <h2 className="text-sm font-semibold text-slate-50">{b.name}</h2>
@@ -207,7 +267,6 @@ export default function BusinessSearch() {
       </article>
     </a>
   );
-
 
   return (
     <div className="space-y-6">
@@ -273,10 +332,36 @@ export default function BusinessSearch() {
             </button>
 
             <p className="text-[11px] text-slate-400">
-              Tip: Try a name like <span className="font-mono text-purple-300">Soul</span> or a
-              ZIP like <span className="font-mono text-purple-300">32205</span>.
+              Tip: Try a name like{' '}
+              <span className="font-mono text-purple-300">Soul</span> or a ZIP
+              like <span className="font-mono text-purple-300">32205</span>.
             </p>
           </div>
+        </div>
+
+        {/* Quick filters */}
+        <div className="mt-3 flex flex-wrap gap-2">
+          {quickFilters.map((filter) => {
+            const isActive = activeQuickFilter === filter.id;
+
+            return (
+              <button
+                key={filter.id}
+                type="button"
+                disabled={loading}
+                onClick={() => applyQuickFilter(filter)}
+                className={[
+                  'rounded-full border px-3 py-1 text-[11px] transition',
+                  'disabled:opacity-60 disabled:cursor-not-allowed',
+                  isActive
+                    ? 'border-purple-400 bg-purple-600/30 text-purple-50 shadow-[0_0_15px_rgba(147,51,234,0.7)]'
+                    : 'border-purple-900/70 bg-black/60 text-slate-300 hover:border-purple-400 hover:text-slate-100',
+                ].join(' ')}
+              >
+                {filter.label}
+              </button>
+            );
+          })}
         </div>
       </form>
 
@@ -288,12 +373,50 @@ export default function BusinessSearch() {
       )}
 
       {!error && hasSearched && !loading && (
-        <div className="flex items-center justify-between text-[11px] text-slate-300">
-          <span>
-            {results.length === 0
-              ? 'No businesses found. Try broadening your search.'
-              : `Showing ${results.length} business${results.length === 1 ? '' : 'es'}.`}
-          </span>
+        <div className="space-y-3 text-[11px] text-slate-300">
+          <div className="flex items-center justify-between">
+            <span>
+              {results.length === 0
+                ? 'No businesses found for this search.'
+                : `Showing ${results.length} business${
+                    results.length === 1 ? '' : 'es'
+                  }.`}
+            </span>
+
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="text-[11px] text-purple-300 hover:text-purple-200 underline underline-offset-2"
+            >
+              Clear search
+            </button>
+          </div>
+
+          {results.length === 0 && (
+            <div className="rounded-2xl border border-purple-900/70 bg-black/70 px-3 py-3">
+              <p className="text-[11px] text-slate-200">Try one of these:</p>
+              <ul className="mt-1 list-disc space-y-0.5 pl-4 text-[11px] text-slate-400">
+                <li>Search by just the city or ZIP.</li>
+                <li>
+                  Use fewer words (e.g.{' '}
+                  <span className="font-mono text-purple-300">Soul</span>{' '}
+                  instead of full name).
+                </li>
+                <li>
+                  Switch to a broader category like{' '}
+                  <span className="font-mono text-purple-300">Services</span>.
+                </li>
+              </ul>
+
+              {/* Update /suggest if your suggestion form lives elsewhere */}
+              <a
+                href="/suggest"
+                className="mt-2 inline-flex items-center rounded-lg bg-purple-600/80 px-3 py-1.5 text-[11px] font-semibold text-black shadow-[0_0_18px_rgba(147,51,234,0.8)] hover:bg-purple-500"
+              >
+                Can’t find a spot? Suggest a business.
+              </a>
+            </div>
+          )}
         </div>
       )}
 
