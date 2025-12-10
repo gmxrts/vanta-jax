@@ -1,75 +1,82 @@
 ---
-import '../styles/global.css';
-import Analytics from '@vercel/analytics/astro';
-import BusinessSearch from '../components/BusinessSearch';
-import SuggestBusinessForm from '../components/SuggestBusinessForm';
+import Layout from "../layouts/Layout.astro";
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>VantaJax
-    </title>
-      <script
-    defer
-    data-domain="vanta-jax.vercel.app"
-    src="https://plausible.io/js/script.js"
-  ></script>
+<Layout
+  title="VantaJax – Find Black-owned businesses in Jacksonville, FL"
+  description="VantaJax helps you discover and support Black-owned businesses in Jacksonville, Florida."
+>
+  <section class="flex h-full items-center justify-center">
+    <div
+      class="w-full max-w-3xl rounded-3xl border border-purple-900/60 bg-black/80 px-6 py-8 sm:px-8 sm:py-10 shadow-[0_0_40px_rgba(168,85,247,0.4)]"
+    >
+      <header class="mb-6 sm:mb-7 space-y-2">
+        <p
+          class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-300/80"
+        >
+          VantaJax • Jacksonville, FL
+        </p>
+        <p class="text-sm sm:text-base text-slate-300 max-w-xl">
+          VantaJax is focused on
+          <span class="font-semibold text-purple-300"> Jacksonville, FL</span>.
+          Browse the directory of Black-owned businesses or suggest a spot you
+          love so others can discover it too.
+        </p>
+      </header>
 
-  </head>
-  <body class="min-h-screen bg-black text-slate-50">
-    <div class="relative min-h-screen overflow-hidden">
-      <!-- subtle radial glow in background -->
-      <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(147,51,234,0.35),_transparent_55%),_radial-gradient(circle_at_bottom,_rgba(59,7,100,0.6),_transparent_55%)] opacity-80" />
+      <!-- Primary actions block -->
+      <section class="space-y-6">
+        <div
+          class="rounded-2xl border border-slate-800/80 bg-black/70 px-4 py-4 sm:px-5 sm:py-5"
+        >
+          <p class="text-[11px] font-semibold text-slate-400 mb-3 uppercase tracking-[0.18em]">
+            Get started
+          </p>
 
-      <main class="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
-        <div class="w-full max-w-4xl rounded-3xl border border-purple-900/60 bg-black/80 px-5 py-8 sm:px-8 sm:py-10 shadow-[0_0_60px_rgba(168,85,247,0.35)]">
-          <header class="mb-8 sm:mb-10">
-            <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-300/80">
-              VantaJax Project focused on Jacksonville, FL
-            </p>
-            <h1 class="mt-3 text-3xl sm:text-4xl font-bold tracking-tight">
-              Find Black-owned businesses in your area
-            </h1>
-            <p class="mt-3 max-w-2xl text-sm sm:text-base text-slate-300">
-              Right now Vanta is focused on <span class="font-semibold text-purple-300">Jacksonville, FL</span>.
-              Search by city, ZIP, and category to discover Black-owned food, services, retail, health, and
-              nonprofits — with more cities coming over time.
-            </p>
-          </header>
-
-          <!-- main content split into two clear sections -->
-          <section class="space-y-10">
-            <div class="space-y-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                Browse the radar
-              </h2>
-              <BusinessSearch client:load />
-            </div>
-
-            <div class="border-t border-purple-900/50 pt-6">
-              <h2 class="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                Help grow the map
-              </h2>
-              <SuggestBusinessForm client:load />
-            </div>
-          </section>
-
-          <footer class="mt-8 border-t border-purple-900/50 pt-4 text-[11px] text-slate-400 flex items-center justify-between flex-wrap gap-2">
-            <span>
-              Built as an MVP to make Black-owned businesses easier to find in
-               <span class="text-purple-300 font-medium"> Jacksonville, FL</span>.
-            </span>
+          <!-- buttons no longer stretch edge-to-edge -->
+          <div
+            class="flex flex-col items-stretch gap-3 sm:flex-row sm:justify-start sm:items-center sm:gap-4"
+          >
             <a
-              href="/about"
-              class="text-purple-300 underline underline-offset-2 decoration-purple-400/80 hover:text-purple-200"
-> 
-              About Vanta
+              href="/businesses"
+              class="inline-flex items-center justify-center rounded-full bg-linear-to-r from-purple-500 via-fuchsia-500 to-purple-400 px-6 py-2.5 text-xs sm:text-sm font-semibold text-black shadow-[0_0_20px_rgba(147,51,234,0.9)] hover:brightness-110"
+            >
+              Browse businesses
             </a>
-          </footer>
+
+            <a
+              href="/suggest-business"
+              class="inline-flex items-center justify-center rounded-full border border-purple-500/70 bg-black/70 px-6 py-2.5 text-xs sm:text-sm font-semibold text-purple-100 shadow-[0_0_18px_rgba(147,51,234,0.75)] hover:bg-purple-600/20 hover:border-purple-300 hover:text-purple-50"
+            >
+              Suggest a business
+            </a>
+          </div>
         </div>
-      </main>
+
+        <!-- How it works -->
+        <div class="space-y-2 pt-1">
+          <h2
+            class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400"
+          >
+            How VantaJax helps
+          </h2>
+          <ul class="space-y-1.5 text-[13px] sm:text-sm text-slate-300">
+            <li>
+              • <span class="text-slate-50 font-medium">Discover</span>
+              Black-owned food, retail, services, health, and nonprofits across
+              Jacksonville.
+            </li>
+            <li>
+              • <span class="text-slate-50 font-medium">Support</span> local
+              owners by finding places that align with your values.
+            </li>
+            <li>
+              • <span class="text-slate-50 font-medium">Contribute</span> by
+              submitting businesses that should be on the radar.
+            </li>
+          </ul>
+        </div>
+      </section>
     </div>
-    <Analytics />
-  </body>
-</html>
+  </section>
+</Layout>

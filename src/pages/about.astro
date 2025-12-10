@@ -1,90 +1,100 @@
 ---
-import '../styles/global.css';
-import Analytics from '@vercel/analytics/astro';
+import Layout from "../layouts/Layout.astro";
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>About Vanta • Black-Owned Radar</title>
-  </head>
-  <body class="min-h-screen bg-black text-slate-50">
-    <div class="relative min-h-screen overflow-hidden">
-      <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(147,51,234,0.35),_transparent_55%),_radial-gradient(circle_at_bottom,_rgba(59,7,100,0.6),_transparent_55%)] opacity-80" />
+<Layout
+  title="About VantaJax"
+  description="Learn what VantaJax is and why it exists – a focused directory for Black-owned businesses in Jacksonville, FL."
+>
+  <section class="flex h-full items-center justify-center">
+    <div
+      class="w-full max-w-3xl rounded-3xl border border-purple-900/60 bg-black/80 px-6 py-8 sm:px-8 sm:py-10 shadow-[0_0_40px_rgba(168,85,247,0.4)]"
+    >
+      <p class="text-[11px] text-slate-400 mb-3">
+        <a
+          href="/"
+          class="text-purple-300 hover:text-purple-100 underline underline-offset-2"
+        >
+          ← Back to home
+        </a>
+      </p>
 
-      <main class="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
-        <div class="w-full max-w-3xl rounded-3xl border border-purple-900/60 bg-black/80 px-5 py-8 sm:px-8 sm:py-10 shadow-[0_0_60px_rgba(168,85,247,0.35)]">
-          <header class="mb-6">
-            <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-300/80">
-              About Vanta
-            </p>
-            <h1 class="mt-3 text-3xl sm:text-4xl font-bold tracking-tight">
-              Putting Black-owned businesses
-              <span class="block text-purple-300">on the radar.</span>
-            </h1>
-          </header>
+      <header class="mb-6 sm:mb-8">
+        <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight">
+          About VantaJax
+        </h1>
+        <p class="mt-3 max-w-xl text-sm sm:text-base text-slate-300">
+          VantaJax is a focused directory for Black-owned businesses in
+          Jacksonville, Florida. The goal is simple: make it easier for people
+          to intentionally support Black owners, professionals, and community
+          spaces without having to dig through scattered lists and social posts.
+        </p>
+      </header>
 
-          <div class="space-y-4 text-sm sm:text-base text-slate-200">
-            <p>
-              Vanta exists to make supporting Black-owned businesses <span class="font-semibold">effortless</span>.
-              The price of community shouldn’t be inconvenience. But right now, finding Black-owned
-              restaurants, services, nonprofits, or creatives usually means digging through old lists,
-              social posts, or word of mouth.
-            </p>
-
-            <p>
-              This project is a simple answer to that: a living directory where supporters can search by
-              city, ZIP, and category to discover verified Black-owned and Black-led businesses.
-            </p>
-
-            <h2 class="pt-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
-              Where we are now
-            </h2>
-            <p>
-              Today, Vanta is focused on <span class="font-semibold text-purple-300">Jacksonville, Florida</span>.
-              The first version highlights food, services, retail, health, and nonprofits, with a mix of
-              verified entries and community-submitted suggestions.
-            </p>
-
-            <p>
-              This is an MVP. The data set is small on purpose, so it can be shaped by real people using it
-              — not just assumptions.
-            </p>
-
-            <h2 class="pt-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
-              What’s coming next
-            </h2>
-            <ul class="list-disc space-y-1 pl-5 text-sm text-slate-200">
-              <li>Growing the directory with more verified Black-owned businesses</li>
-              <li>Better filtering and discovery for food, services, retail, health, and nonprofits</li>
-              <li>Support for additional cities as the project matures</li>
-              <li>A way for business owners to claim and update their listing</li>
-              <li>Location-aware features like “near me” and map-based search</li>
-            </ul>
-
-            <h2 class="pt-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
-              How you can help
-            </h2>
-            <p>
-              If you know a Black-owned business that should be on the radar, use the
-              <span class="font-semibold text-purple-300"> suggestion form </span>
-              on the home page to submit it. Every suggestion helps this become more useful for the next
-              person trying to support the community on purpose.
-            </p>
-          </div>
-
-          <div class="mt-6 text-xs text-slate-400 flex items-center justify-between">
-            <a
-              href="/"
-              class="text-purple-300 underline underline-offset-2 decoration-purple-400/80 hover:text-purple-200"
-            >
-              ← Back to search
-            </a>
-            <span>MVP build • Jacksonville, FL</span>
-          </div>
+      <section class="space-y-5 text-sm text-slate-200">
+        <div class="space-y-2">
+          <h2 class="text-sm font-semibold text-slate-100">
+            Why this exists
+          </h2>
+          <p class="text-slate-300">
+            It’s often said that the price of community is inconvenience. Finding
+            and supporting Black-owned businesses usually means word-of-mouth,
+            random Instagram posts, or out-of-date spreadsheets. VantaJax is
+            meant to cut through that and give people a single, living place to
+            start.
+          </p>
         </div>
-      </main>
+
+        <div class="space-y-2">
+          <h2 class="text-sm font-semibold text-slate-100">
+            What VantaJax focuses on
+          </h2>
+          <ul class="space-y-1.5 text-slate-300">
+            <li>• Businesses that are actually in Jacksonville and nearby areas.</li>
+            <li>• Owners who identify their business as Black-owned.</li>
+            <li>• Transparency around what’s verified and what’s community-submitted.</li>
+            <li>• Making it easy for anyone to suggest places that should be on the radar.</li>
+          </ul>
+        </div>
+
+        <div class="space-y-2">
+          <h2 class="text-sm font-semibold text-slate-100">
+            How this will grow
+          </h2>
+          <p class="text-slate-300">
+            VantaJax is starting simple: a searchable directory, featured spots,
+            and a suggestion form. Over time, the plan is to add better
+            filtering, richer profiles for businesses, and tools for owners to
+            manage their own listings.
+          </p>
+        </div>
+
+        <div class="space-y-2">
+          <h2 class="text-sm font-semibold text-slate-100">
+            Want to help?
+          </h2>
+          <p class="text-slate-300">
+            The easiest way to support this is by using it: search for local
+            spots, share the directory, and suggest businesses that should be
+            here. If you’d like to collaborate or have ideas, you can start by
+            submitting a business and mentioning that in the notes.
+          </p>
+        </div>
+      </section>
+
+      <footer class="mt-8 border-t border-purple-900/50 pt-4 text-[11px] text-slate-400 flex flex-wrap items-center justify-between gap-2">
+        <span>
+          Ready to explore?
+          <a
+            href="/businesses"
+            class="ml-1 text-purple-300 hover:text-purple-100 underline underline-offset-2"
+          >
+            Browse businesses
+          </a>
+          .
+        </span>
+        <span>Focused on Jacksonville, FL.</span>
+      </footer>
     </div>
-    <Analytics />
-  </body>
-</html>
+  </section>
+</Layout>

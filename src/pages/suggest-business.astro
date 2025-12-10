@@ -1,0 +1,58 @@
+---
+import Layout from "../layouts/Layout.astro";
+import SuggestBusinessForm from "../components/SuggestBusinessForm";
+---
+
+<Layout
+  title="Suggest a Black-owned business • VantaJax"
+  description="Submit a Black-owned business in Jacksonville, FL to help grow the VantaJax directory."
+>
+  <section class="flex h-full items-center justify-center">
+    <div
+      class="w-full max-w-3xl rounded-3xl border border-purple-900/60 bg-black/80 px-6 py-8 sm:px-8 sm:py-10 shadow-[0_0_40px_rgba(168,85,247,0.4)]"
+    >
+      <!-- Back link -->
+      <p class="text-[11px] text-slate-400 mb-4">
+        <a
+          href="/"
+          class="text-purple-300 hover:text-purple-100 underline underline-offset-2"
+        >
+          ← Back to home
+        </a>
+      </p>
+
+      <header class="mb-6 sm:mb-8">
+        <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight">
+          Suggest a Black-owned business
+        </h1>
+        <p class="mt-3 max-w-xl text-sm sm:text-base text-slate-300">
+          Know a spot that should be on the radar? Submit the details below.
+          We’ll review and add verified businesses to the directory.
+        </p>
+      </header>
+
+      <!-- Matching “action bar” like home -->
+      <div
+        class="rounded-2xl border border-slate-800/80 bg-black/70 px-4 py-4 sm:px-5 sm:py-5 mb-8"
+      >
+        <p class="text-xs font-medium text-slate-400 mb-3 uppercase tracking-[0.18em]">
+          Quick Actions
+        </p>
+
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+          <a
+            href="/businesses"
+            class="inline-flex flex-1 items-center justify-center rounded-xl bg-linear-to-r from-purple-500 via-fuchsia-500 to-purple-400 px-5 py-2.5 text-sm font-semibold text-black shadow-[0_0_25px_rgba(147,51,234,0.9)] hover:brightness-110"
+          >
+            Browse businesses
+          </a>
+        </div>
+      </div>
+
+      <!-- Suggest form -->
+      <section>
+        <SuggestBusinessForm client:load />
+      </section>
+    </div>
+  </section>
+</Layout>

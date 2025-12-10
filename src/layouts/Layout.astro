@@ -1,19 +1,108 @@
 ---
 import "../styles/global.css";
-const { title = "VantaJax" } = Astro.props;
+import Analytics from "@vercel/analytics/astro";
+
+const {
+  title = "VantaJax",
+  description = "Find and support Black-owned businesses in Jacksonville, FL with VantaJax.",
+} = Astro.props;
 ---
 
 <html lang="en" class="bg-black text-slate-200">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>{title}</title>
-        <link rel="icon" href="/favicon.ico" />
-    </head>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.ico" />
 
-    <body class="min-h-screen bg-black text-slate-200 antialiased">
-        <main class="mx-auto max-w-6xl px-4 py-8">
-            <slot />
-        </main>
-    </body>
+    <!-- Plausible analytics -->
+    <script
+      defer
+      data-domain="vanta-jax.vercel.app"
+      src="https://plausible.io/js/script.js"
+    ></script>
+  </head>
+
+  <body class="min-h-screen bg-black text-slate-200 antialiased">
+    <div
+      class="relative min-h-screen overflow-hidden flex flex-col"
+    >
+      <!-- shared gradient background -->
+      <div
+        class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(147,51,234,0.35),transparent_55%),radial-gradient(circle_at_bottom,rgba(59,7,100,0.6),transparent_55%)] opacity-80"
+      ></div>
+
+      <!-- header / nav -->
+      <header
+        class="relative z-10 border-b border-purple-900/60 bg-black/70 backdrop-blur-sm"
+      >
+        <nav
+          class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3"
+        >
+          <a href="/" class="flex items-center gap-2">
+            <span
+              class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-linear-to-br from-purple-500 via-fuchsia-500 to-purple-300 shadow-[0_0_20px_rgba(147,51,234,0.8)]"
+            >
+              <span class="text-[11px] font-black tracking-tight text-black">
+                V
+              </span>
+            </span>
+            <span class="text-sm font-semibold tracking-wide text-slate-100">
+              VantaJax
+            </span>
+          </a>
+
+          <div
+            class="flex items-center gap-1 text-xs sm:text-sm font-medium text-slate-200"
+          >
+
+          <a
+              href="/about"
+              class="rounded-lg px-3 py-1.5 text-slate-300 hover:bg-purple-900/40 hover:text-slate-50"
+            >
+              About
+            </a>
+
+          <a
+              href="/businesses"
+              class="rounded-lg px-3 py-1.5 text-slate-200 hover:bg-purple-900/40 hover:text-slate-50"
+            >
+              Browse
+            </a>
+            <a
+              href="/suggest-business"
+              class="rounded-lg border border-purple-500/70 bg-purple-600/40 px-3 py-1.5 text-purple-50 shadow-[0_0_18px_rgba(147,51,234,0.8)] hover:bg-purple-500/70"
+            >
+              Suggest
+            </a>
+          </div>
+        </nav>
+      </header>
+
+      <!-- main content: fills remaining height -->
+      <main
+        class="relative z-10 flex-1 mx-auto w-full max-w-6xl px-4 py-8"
+      >
+        <slot />
+      </main>
+
+      <!-- footer -->
+      <footer class="relative z-10 border-t border-purple-900/60 bg-black/80">
+        <div
+          class="mx-auto flex max-w-6xl flex-col items-start justify-between gap-2 px-4 py-4 text-[11px] text-slate-400 sm:flex-row sm:items-center"
+        >
+          <span>
+            Built to make Black-owned businesses easier to find in
+            <span class="font-medium text-purple-300"> Jacksonville, FL</span>.
+          </span>
+          <span class="text-slate-500">
+            V1 MVP · V2 in progress.
+          </span>
+        </div>
+      </footer>
+    </div>
+
+    <Analytics />
+  </body>
 </html>
