@@ -210,15 +210,15 @@ export default function BusinessSearch() {
       <a
         key={b.id}
         href={`/business/${b.id}`}
-        className="group rounded-2xl border border-slate-800 bg-black/70 px-4 py-4 text-sm text-slate-200 shadow-[0_0_20px_rgba(15,23,42,0.7)] transition-transform 'hover:-translate-y-0.5' hover:border-purple-500/70 hover:shadow-[0_0_30px_rgba(147,51,234,0.45)]"
+        className="group rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm text-slate-800 shadow-sm transition 'hover:-translate-y-0.5' hover:border-purple-500 hover:shadow-md"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
-            <h3 className="text-sm font-semibold text-slate-50 group-hover:text-purple-100">
+            <h3 className="text-sm font-semibold text-slate-900 group-hover:text-purple-700">
               {b.name}
             </h3>
             {hasAddress && (
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-500">
                 {b.address && <>{b.address}, </>}
                 {b.city && <>{b.city}, </>}
                 {b.state && <>{b.state} </>}
@@ -226,7 +226,7 @@ export default function BusinessSearch() {
               </p>
             )}
             {b.category && (
-              <p className="text-[11px] text-slate-400 capitalize">
+              <p className="text-[11px] text-slate-500 capitalize">
                 {b.category}
                 {b.area && <> • {b.area}</>}
               </p>
@@ -235,12 +235,12 @@ export default function BusinessSearch() {
 
           <div className="flex flex-col items-end gap-1">
             {b.verified && (
-              <span className="inline-flex items-center rounded-full bg-emerald-600/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-50">
+              <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 border border-emerald-300">
                 Verified
               </span>
             )}
             {b.featured && (
-              <span className="inline-flex items-center rounded-full bg-purple-600/80 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-200">
+              <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-purple-700 border border-purple-300">
                 Featured
               </span>
             )}
@@ -248,7 +248,7 @@ export default function BusinessSearch() {
         </div>
 
         {b.description && (
-          <p className="mt-3 line-clamp-2 text-[12px] text-slate-300">
+          <p className="mt-3 line-clamp-2 text-[12px] text-slate-700">
             {b.description}
           </p>
         )}
@@ -261,11 +261,11 @@ export default function BusinessSearch() {
       {/* Search + filters */}
       <form
         onSubmit={handleSearch}
-        className="rounded-2xl border border-slate-800 bg-black/80 px-4 py-5 sm:px-6 sm:py-6 shadow-[0_0_32px_rgba(15,23,42,0.9)] space-y-4"
+        className="rounded-2xl border border-slate-200 bg-white px-4 py-5 sm:px-6 sm:py-6 shadow-sm space-y-4"
       >
         <div className="grid gap-4 sm:grid-cols-[2fr,1.3fr] sm:items-end">
           <div className="space-y-1.5">
-            <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+            <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
               Name, city, or ZIP
             </label>
             <input
@@ -273,19 +273,19 @@ export default function BusinessSearch() {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="ex: Riverside, 32204, Soul Food…"
-              className="w-full rounded-xl border border-slate-700 bg-black/80 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
             />
           </div>
 
           <div className="grid gap-3 sm:grid-cols-[1.4fr,auto] sm:items-end">
             <div className="space-y-1.5">
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
                 Category
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-black/80 px-3 py-2 text-sm text-slate-100 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
               >
                 {categories.map((c) => (
                   <option key={c.value} value={c.value}>
@@ -296,12 +296,12 @@ export default function BusinessSearch() {
             </div>
 
             <div className="flex items-center justify-end gap-2">
-              <label className="inline-flex items-center gap-2 text-[11px] text-slate-300">
+              <label className="inline-flex items-center gap-2 text-[11px] text-slate-700">
                 <input
                   type="checkbox"
                   checked={verifiedOnly}
                   onChange={(e) => setVerifiedOnly(e.target.checked)}
-                  className="h-3.5 w-3.5 rounded border-slate-600 bg-black/80 text-purple-500 focus:ring-purple-500"
+                  className="h-3.5 w-3.5 rounded border-slate-400 text-purple-600 focus:ring-purple-500"
                 />
                 Verified only
               </label>
@@ -314,7 +314,7 @@ export default function BusinessSearch() {
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center justify-center rounded-xl bg-linear-to-r from-purple-500 via-fuchsia-500 to-purple-400 px-4 py-2 text-xs font-semibold text-black shadow-[0_0_18px_rgba(147,51,234,0.85)] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-xl bg-purple-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Searching…" : "Search"}
             </button>
@@ -322,14 +322,14 @@ export default function BusinessSearch() {
               <button
                 type="button"
                 onClick={handleClearSearch}
-                className="inline-flex items-center justify-center rounded-xl border border-slate-700 bg-black/70 px-3 py-2 text-[11px] font-medium text-slate-300 hover:border-slate-500 hover:text-slate-100"
+                className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-[11px] font-medium text-slate-700 hover:bg-slate-50"
               >
                 Clear
               </button>
             )}
           </div>
 
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-slate-500">
             Searches are focused on Jacksonville, FL.
           </p>
         </div>
@@ -337,7 +337,7 @@ export default function BusinessSearch() {
 
       {/* Quick filters */}
       <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
           Quick filters
         </p>
         <div className="flex flex-wrap gap-2">
@@ -350,8 +350,8 @@ export default function BusinessSearch() {
                 onClick={() => applyQuickFilter(filter)}
                 className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium transition ${
                   active
-                    ? "border-purple-500 bg-purple-600/30 text-purple-100 shadow-[0_0_16px_rgba(147,51,234,0.7)]"
-                    : "border-slate-700 bg-black/60 text-slate-300 hover:border-purple-500/70 hover:text-purple-100"
+                    ? "border-purple-600 bg-purple-100 text-purple-700"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
                 }`}
               >
                 {filter.label}
@@ -362,14 +362,14 @@ export default function BusinessSearch() {
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-red-900 bg-red-950/60 px-4 py-3 text-[12px] text-red-200">
+        <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-[12px] text-red-700">
           {error}
         </div>
       )}
 
       {!hasSearched && !error && (
         <section className="space-y-3">
-          <div className="flex items-center justify-between text-[11px] text-slate-400">
+          <div className="flex items-center justify-between text-[11px] text-slate-500">
             <span className="font-semibold uppercase tracking-[0.18em]">
               Featured
             </span>
@@ -394,7 +394,7 @@ export default function BusinessSearch() {
 
       {hasSearched && !error && (
         <section className="space-y-3">
-          <div className="flex items-center justify-between text-[11px] text-slate-300">
+          <div className="flex items-center justify-between text-[11px] text-slate-600">
             <span>
               {loading
                 ? "Searching…"
@@ -407,7 +407,7 @@ export default function BusinessSearch() {
             <button
               type="button"
               onClick={handleClearSearch}
-              className="text-[11px] text-purple-300 hover:text-purple-200 underline underline-offset-2"
+              className="text-[11px] text-purple-700 hover:text-purple-900 underline underline-offset-2"
             >
               Reset search
             </button>
@@ -420,11 +420,11 @@ export default function BusinessSearch() {
           )}
 
           {!loading && results.length === 0 && (
-            <p className="text-[11px] text-slate-400">
-              Can’t find what you’re looking for{" "}
+            <p className="text-[11px] text-slate-500">
+              Can’t find what you’re looking for?{" "}
               <a
                 href="/suggest-business"
-                className="text-purple-300 underline underline-offset-2 hover:text-purple-100"
+                className="text-purple-700 underline underline-offset-2 hover:text-purple-900"
               >
                 Suggest a business.
               </a>
@@ -438,7 +438,7 @@ export default function BusinessSearch() {
         !loading &&
         !loadingFeatured &&
         featured.length === 0 && (
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-slate-500">
             Use the search above to discover Black-owned businesses in your
             area.
           </p>

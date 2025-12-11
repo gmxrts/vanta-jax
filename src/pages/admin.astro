@@ -41,35 +41,35 @@ if (error) {
 <Layout title="Admin – VantaJax">
   <section class="py-6">
     <div
-      class="w-full max-w-5xl mx-auto rounded-3xl border border-purple-900/60 bg-black/80 px-5 py-8 sm:px-8 sm:py-10 shadow-[0_0_60px_rgba(168,85,247,0.35)]"
+      class="w-full max-w-5xl mx-auto rounded-3xl border border-slate-200 bg-white px-5 py-8 sm:px-8 sm:py-10 shadow-sm"
     >
       <header
         class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
       >
         <div>
           <p
-            class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-300/80"
+            class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-600"
           >
             Admin
           </p>
-          <h1 class="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
+          <h1 class="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
             Business suggestions
           </h1>
-          <p class="mt-1 text-[11px] sm:text-xs text-slate-400">
+          <p class="mt-1 text-[11px] sm:text-xs text-slate-500">
             Internal view for reviewing and promoting community-submitted
             suggestions into the main directory. This page is not public.
           </p>
         </div>
         <div class="flex flex-wrap items-center gap-2 text-[11px]">
           <a
-            href="/metrics?key={key}"
-            class="rounded-lg border border-purple-700/70 bg-black/70 px-3 py-1.5 text-purple-200 hover:border-purple-400 hover:text-purple-50"
+            href={`/metrics?key=${key}`}
+            class="rounded-lg border border-purple-600 bg-white px-3 py-1.5 text-purple-700 hover:bg-purple-50"
           >
             View metrics
           </a>
           <a
             href="/"
-            class="text-purple-300 underline underline-offset-2 decoration-purple-400/80 hover:text-purple-200"
+            class="text-purple-700 underline underline-offset-2 hover:text-purple-900"
           >
             ← Back to site
           </a>

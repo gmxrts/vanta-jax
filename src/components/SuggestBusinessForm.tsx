@@ -33,7 +33,7 @@ export default function SuggestBusinessForm() {
     const notes = ((fd.get('notes') as string) || '').trim() || null;
 
     if (!name || !city) {
-      setError('Please provide at least a business name and city.');
+      setError('Business name and city are required.');
       setLoading(false);
       return;
     }
@@ -68,16 +68,16 @@ export default function SuggestBusinessForm() {
 
   return (
     <section className="space-y-3">
-      <h2 className="text-sm font-semibold text-slate-50">
+      <h2 className="text-sm font-semibold text-slate-900">
         Suggest a Black-owned business
       </h2>
-      <p className="text-[11px] text-slate-400">
+      <p className="text-[11px] text-slate-600">
         Know a spot that should be on the radar? Drop it here and we’ll review it.
       </p>
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-3 rounded-2xl border border-purple-900/60 bg-black/70 p-4 sm:p-5 shadow-[0_0_25px_rgba(76,29,149,0.6)]"
+        className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm"
       >
         {/* Honeypot field (hidden from humans) */}
         <div className="hidden">
@@ -93,76 +93,79 @@ export default function SuggestBusinessForm() {
         </div>
 
         <div className="space-y-1">
-          <label className="block text-[11px] font-medium text-slate-300">
+          <label className="block text-[11px] font-medium text-slate-700">
             Business name *
           </label>
           <input
             name="name"
             maxLength={120}
             required
-            className="w-full rounded-lg border border-purple-900/70 bg-black/60 px-3 py-1.5 text-xs text-slate-50 outline-none placeholder:text-slate-500 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/70"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
             placeholder="e.g. Soul Food Bistro"
           />
         </div>
 
         <div className="grid gap-3 sm:grid-cols-[2fr,1fr]">
           <div className="space-y-1">
-            <label className="block text-[11px] font-medium text-slate-300">
+            <label className="block text-[11px] font-medium text-slate-700">
               City *
             </label>
             <input
               name="city"
               maxLength={80}
               required
-              className="w-full rounded-lg border border-purple-900/70 bg-black/60 px-3 py-1.5 text-xs text-slate-50 outline-none placeholder:text-slate-500 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/70"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
               placeholder="e.g. Jacksonville"
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-[11px] font-medium text-slate-300">
+            <label className="block text-[11px] font-medium text-slate-700">
               State
             </label>
             <input
               name="state"
               defaultValue="FL"
               maxLength={2}
-              className="w-full rounded-lg border border-purple-900/70 bg-black/60 px-3 py-1.5 text-xs uppercase text-slate-50 outline-none placeholder:text-slate-500 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/70"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
             />
           </div>
         </div>
 
         <div className="space-y-1">
-          <label className="block text-[11px] font-medium text-slate-300">
+          <label className="block text-[11px] font-medium text-slate-700">
             Website or social link
           </label>
           <input
             name="website"
-            maxLength={255}
-            className="w-full rounded-lg border border-purple-900/70 bg-black/60 px-3 py-1.5 text-xs text-slate-50 outline-none placeholder:text-slate-500 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/70"
-            placeholder="https:// or @handle"
+            maxLength={200}
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+            placeholder="https://…, Instagram, etc."
           />
         </div>
 
         <div className="space-y-1">
-          <label className="block text-[11px] font-medium text-slate-300">
-            Any notes
+          <label className="block text-[11px] font-medium text-slate-700">
+            Anything we should know?
           </label>
           <textarea
             name="notes"
-            maxLength={1000}
             rows={3}
-            className="w-full rounded-lg border border-purple-900/70 bg-black/60 px-3 py-1.5 text-xs text-slate-50 outline-none placeholder:text-slate-500 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/70"
-            placeholder="What do you love about this place?"
+            maxLength={500}
+            className="w-full resize-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+            placeholder="Why this spot belongs on the radar, best days to go, etc."
           />
+          <p className="text-[10px] text-slate-400">
+            Basic details are enough. We’ll handle the rest during verification.
+          </p>
         </div>
 
         {error && (
-          <p className="rounded-lg border border-red-500/50 bg-red-950/50 px-3 py-1.5 text-[11px] text-red-100">
+          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-[11px] text-red-700">
             {error}
           </p>
         )}
         {message && (
-          <p className="rounded-lg border border-emerald-500/40 bg-emerald-950/40 px-3 py-1.5 text-[11px] text-emerald-100">
+          <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] text-emerald-700">
             {message}
           </p>
         )}
@@ -170,7 +173,7 @@ export default function SuggestBusinessForm() {
         <button
           type="submit"
           disabled={loading}
-          className="inline-flex items-center justify-center rounded-xl bg-purple-500 px-4 py-1.5 text-[11px] font-semibold text-black shadow-[0_0_18px_rgba(147,51,234,0.8)] hover:brightness-110 disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-xl bg-purple-600 px-4 py-2 text-[12px] font-semibold text-white shadow-sm hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? 'Submitting…' : 'Submit suggestion'}
         </button>

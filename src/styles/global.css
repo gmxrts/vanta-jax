@@ -3,6 +3,31 @@
 @tailwind utilities;
 
 /* Optional: tiny global tweak */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  @apply antialiased;
+  @apply bg-white text-slate-900 antialiased;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+/* Slightly narrower text blocks when you want easier reading */
+.prose-narrow {
+  max-width: 65ch;
+}
+
+/* Shared centered page shell (if you want it) */
+.page-shell {
+  @apply flex min-h-[70vh] items-center justify-center py-6;
+}
+
+/* Generic light card helper (used by admin/metrics/etc.) */
+.card {
+  @apply w-full rounded-3xl border border-slate-200 bg-white shadow-sm;
 }

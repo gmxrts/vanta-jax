@@ -9,14 +9,13 @@ import BusinessSearch from "../components/BusinessSearch";
 >
   <section class="flex h-full items-center justify-center">
     <div
-      class="w-full max-w-4xl rounded-3xl border border-purple-900/60 bg-black/80 px-6 py-8 sm:px-8 sm:py-10 shadow-[0_0_40px_rgba(168,85,247,0.4)]"
+      class="w-full max-w-4xl rounded-3xl border border-slate-200 bg-white px-6 py-8 sm:px-8 sm:py-10 shadow-sm"
     >
-      <!-- back + title -->
       <div class="mb-5 sm:mb-6 space-y-2">
-        <p class="text-[11px] text-slate-400">
+        <p class="text-[11px] text-slate-500">
           <a
             href="/"
-            class="text-purple-300 hover:text-purple-100 underline underline-offset-2"
+            class="text-purple-700 hover:text-purple-900 underline underline-offset-2"
           >
             ← Back to home
           </a>
@@ -24,25 +23,25 @@ import BusinessSearch from "../components/BusinessSearch";
         <h1 class="text-2xl sm:text-3xl font-semibold tracking-tight">
           Browse Black-owned businesses
         </h1>
-        <p class="mt-1 max-w-xl text-sm text-slate-300">
+        <p class="mt-1 max-w-xl text-sm text-slate-700">
           Search by name, city, ZIP code, category, or verification status. Use
           the filters below to explore Jacksonville’s Black-owned directory.
         </p>
       </div>
 
-      <!-- Quick actions: narrower + centered, not full card width -->
+      <!-- Quick actions -->
       <div class="mb-7">
         <div
-          class="mx-auto max-w-md rounded-2xl border border-slate-800/80 bg-black/70 px-4 py-4 sm:px-5 sm:py-5"
+          class="mx-auto max-w-md rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 sm:px-5 sm:py-5"
         >
-          <p class="text-[11px] font-semibold text-slate-400 mb-3 uppercase tracking-[0.18em]">
+          <p class="text-[11px] font-semibold text-slate-500 mb-3 uppercase tracking-[0.18em]">
             Quick actions
           </p>
 
           <div class="flex justify-center">
             <a
               href="/suggest-business"
-              class="inline-flex items-center justify-center rounded-full border border-purple-500/70 bg-black/70 px-6 py-2.5 text-xs sm:text-sm font-semibold text-purple-100 shadow-[0_0_18px_rgba(147,51,234,0.75)] hover:bg-purple-600/20 hover:border-purple-300 hover:text-purple-50"
+              class="inline-flex items-center justify-center rounded-full border border-purple-600 bg-white px-6 py-2.5 text-xs sm:text-sm font-semibold text-purple-700 hover:bg-purple-50 transition"
             >
               Suggest a business
             </a>
@@ -50,7 +49,6 @@ import BusinessSearch from "../components/BusinessSearch";
         </div>
       </div>
 
-      <!-- Search UI; inner content width is constrained by the component -->
       <BusinessSearch client:load />
     </div>
   </section>
