@@ -1,6 +1,6 @@
 ---
-import "../styles/global.css";
 import Layout from "../layouts/Layout.astro";
+import Analytics from "@vercel/analytics/astro";
 import AdminDashboard from "../components/AdminDashboard";
 import { createClient } from "@supabase/supabase-js";
 
@@ -10,7 +10,7 @@ const expectedKey = import.meta.env.ADMIN_ACCESS_KEY;
 const requestUrl = new URL(Astro.request.url);
 const key = requestUrl.searchParams.get("key");
 
-// Protect with shared secret
+// If no key or wrong key, bounce to home
 if (!expectedKey || key !== expectedKey) {
   return Astro.redirect("/");
 }
@@ -22,11 +22,11 @@ if (!supabaseUrl || !serviceKey) {
   console.warn("Supabase admin credentials are missing. Check env vars.");
 }
 
-const supabase = createClient(supabaseUrl!, serviceKey || "");
+const supabase =
+  supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey) : null;
 
-// Load suggestions for review
 const { data: suggestions = [], error } =
-  supabaseUrl && serviceKey
+  supabase
     ? await supabase
         .from("business_suggestions")
         .select("*")
@@ -38,45 +38,34 @@ if (error) {
 }
 ---
 
-<Layout title="Admin – VantaJax">
-  <section class="py-6">
-    <div
-      class="w-full max-w-5xl mx-auto rounded-3xl border border-slate-200 bg-white px-5 py-8 sm:px-8 sm:py-10 shadow-sm"
-    >
-      <header
-        class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div>
-          <p
-            class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-600"
-          >
+<Layout title="Admin • VantaJax">
+  <section class="py-10 px-4">
+    <div class="mx-auto max-w-5xl space-y-6">
+      <header class="flex flex-wrap items-baseline justify-between gap-3">
+        <div class="space-y-1">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-600">
             Admin
           </p>
-          <h1 class="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+          <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">
             Business suggestions
           </h1>
-          <p class="mt-1 text-[11px] sm:text-xs text-slate-500">
-            Internal view for reviewing and promoting community-submitted
-            suggestions into the main directory. This page is not public.
+          <p class="text-[11px] text-slate-600 max-w-xl">
+            Internal view for reviewing and promoting community-submitted suggestions into
+            the main directory. This page is not public.
           </p>
         </div>
-        <div class="flex flex-wrap items-center gap-2 text-[11px]">
-          <a
-            href={`/metrics?key=${key}`}
-            class="rounded-lg border border-purple-600 bg-white px-3 py-1.5 text-purple-700 hover:bg-purple-50"
-          >
-            View metrics
-          </a>
-          <a
-            href="/"
-            class="text-purple-700 underline underline-offset-2 hover:text-purple-900"
-          >
-            ← Back to site
-          </a>
-        </div>
+
+        <a
+          href="/businesses"
+          class="text-[11px] text-purple-700 hover:text-purple-900 underline underline-offset-2"
+        >
+          ← Back to search
+        </a>
       </header>
 
       <AdminDashboard client:load suggestions={suggestions} />
     </div>
   </section>
+
+  <Analytics />
 </Layout>

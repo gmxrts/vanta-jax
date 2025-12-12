@@ -1,21 +1,8 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const anonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !anonKey) {
-  throw new Error("Supabase client not configured");
-}
-
-const supabase = createClient(supabaseUrl, anonKey);
+import { supabase } from "../../lib/supabaseClient";
 
 const { id } = Astro.params;
-
-if (!id) {
-  throw new Error("Missing business id");
-}
 
 const { data: business, error } = await supabase
   .from("businesses")
@@ -24,175 +11,171 @@ const { data: business, error } = await supabase
   .single();
 
 if (error) {
-  console.error(error);
+  console.error("Error loading business:", error);
 }
 
-const pageTitle = business
-  ? `${business.name} • VantaJax`
-  : "Business not found • VantaJax";
+// Helper to build full address string
+const fullAddress = business
+  ? [
+      business.address,
+      [business.city, business.state].filter(Boolean).join(", "),
+      business.zip,
+    ]
+      .filter(Boolean)
+      .join(" ")
+  : "";
 ---
 
-<Layout
-  title={pageTitle}
-  description={
-    business
-      ? `Learn more about ${business.name}, a ${
-          business.category || "Black-owned"
-        } business in ${business.city || "Jacksonville"}, FL.`
-      : "The requested business could not be found in the VantaJax directory."
-  }
->
-  <section class="flex h-full items-center justify-center">
+<Layout title={business ? business.name : "Business • VantaJax"}>
+  <main class="min-h-[60vh] px-4 py-8">
     {business ? (
-      <article
-        class="w-full max-w-4xl rounded-3xl border border-slate-200 bg-white px-6 py-8 sm:px-8 sm:py-10 shadow-sm"
-      >
-        <p class="text-[11px] text-slate-500 mb-3">
-          <a
-            href="/businesses"
-            class="text-purple-700 hover:text-purple-900 underline underline-offset-2"
-          >
-            ← Back to directory
-          </a>
-        </p>
-
-        <header class="mb-6">
-          <div class="flex flex-wrap items-center gap-2 mb-2">
-            <h1 class="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">
+      <div class="mx-auto max-w-2xl space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <!-- Header -->
+        <header class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 class="text-2xl font-semibold text-slate-900 sm:text-3xl">
               {business.name}
             </h1>
+            <p class="mt-1 text-sm text-slate-600 capitalize">
+              {business.category}
+            </p>
+            {business.area && (
+              <p class="mt-1 text-xs text-slate-500">
+                Serving: {business.area}
+              </p>
+            )}
+          </div>
+
+          <div class="flex flex-wrap gap-2 justify-start sm:justify-end">
             {business.verified && (
-              <span
-                class="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700"
-              >
+              <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 border border-emerald-300">
                 Verified
               </span>
             )}
             {business.featured && (
-              <span
-                class="inline-flex items-center rounded-full border border-purple-300 bg-purple-100 px-2.5 py-0.5 text-[11px] font-semibold text-purple-700"
-              >
+              <span class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-purple-700 border border-purple-300">
                 Featured
-              </span>
-            )}
-          </div>
-
-          <div class="flex flex-wrap gap-2 text-[11px] text-slate-600">
-            {business.category && (
-              <span
-                class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium capitalize text-slate-700"
-              >
-                {business.category}
-              </span>
-            )}
-            {business.area && (
-              <span
-                class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700"
-              >
-                {business.area}
               </span>
             )}
           </div>
         </header>
 
-        <div class="grid gap-6 sm:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)]">
-          <div class="space-y-3">
-            <h2 class="text-sm font-semibold text-slate-900 tracking-wide">
+        {/* Description */}
+        {business.description && (
+          <section class="space-y-1">
+            <h2 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
               About
             </h2>
-            <p class="text-sm text-slate-700 leading-relaxed">
-              {business.description
-                ? business.description
-                : "No description has been added for this business yet."}
+            <p class="text-sm leading-relaxed text-slate-700">
+              {business.description}
             </p>
-          </div>
+          </section>
+        )}
 
-          <div class="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-            <h2 class="text-sm font-semibold text-slate-900 tracking-wide">
+        {/* Contact / info */}
+        <section class="grid gap-4 sm:grid-cols-2">
+          <div class="space-y-3">
+            <h2 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
               Details
             </h2>
 
-            <div class="space-y-3 text-sm text-slate-700">
-              <div>
-                <p class="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                  Address
-                </p>
-                {business.address || business.city || business.state || business.zip ? (
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                      `${business.address || ""}, ${business.city || ""} ${
-                        business.state || ""
-                      } ${business.zip || ""}`
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="text-sm text-purple-700 hover:text-purple-900 underline underline-offset-2"
-                  >
-                    {business.address}
-                    {business.city && `, ${business.city}`}
-                    {business.state && `, ${business.state}`}
-                    {business.zip && ` ${business.zip}`}
-                  </a>
-                ) : (
-                  <p class="text-sm text-slate-500">No address on file yet.</p>
-                )}
-              </div>
+            {business.phone && (
+              <p class="text-sm text-slate-700">
+                📞{" "}
+                <a
+                  href={`tel:${business.phone}`}
+                  class="text-purple-700 underline underline-offset-2 hover:text-purple-900"
+                >
+                  {business.phone}
+                </a>
+              </p>
+            )}
 
-              <div>
-                <p class="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                  Phone
-                </p>
-                {business.phone ? (
-                  <a
-                    href={`tel:${business.phone}`}
-                    class="text-sm text-purple-700 hover:text-purple-900 underline underline-offset-2"
-                  >
-                    {business.phone}
-                  </a>
-                ) : (
-                  <p class="text-sm text-slate-500">No phone listed yet.</p>
-                )}
-              </div>
+            {business.website && (
+              <p class="text-sm text-slate-700">
+                🌐{" "}
+                <a
+                  href={business.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  class="text-purple-700 underline underline-offset-2 hover:text-purple-900"
+                >
+                  Visit website
+                </a>
+              </p>
+            )}
 
-              <div>
-                <p class="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                  Website
-                </p>
-                {business.website ? (
-                  <a
-                    href={business.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="text-sm text-purple-700 hover:text-purple-900 underline underline-offset-2 break-all"
-                  >
-                    {business.website}
-                  </a>
-                ) : (
-                  <p class="text-sm text-slate-500">No website listed yet.</p>
-                )}
-              </div>
-            </div>
+            {fullAddress && (
+              <p class="text-sm text-slate-700">
+                📍 {fullAddress}
+              </p>
+            )}
           </div>
-        </div>
-      </article>
-    ) : (
-      <div
-        class="w-full max-w-3xl rounded-3xl border border-red-200 bg-red-50 px-6 py-8 sm:px-8 sm:py-10 shadow-sm"
-      >
-        <h1 class="text-2xl font-semibold text-red-800 mb-2">
-          Business not found
-        </h1>
-        <p class="text-sm text-red-700 mb-4">
-          We couldn’t find that business in the VantaJax directory. It may have
-          been removed or the link is incorrect.
-        </p>
-        <a
-          href="/businesses"
-          class="inline-flex items-center rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-800 hover:bg-red-100"
-        >
-          ← Back to directory
-        </a>
+
+          <div class="space-y-3">
+            <h2 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Location
+            </h2>
+
+            {fullAddress ? (
+              <>
+                <a
+                  id="open-in-maps"
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                    fullAddress
+                  )}`}
+                  data-address={fullAddress}
+                  target="_blank"
+                  rel="noreferrer"
+                  class="inline-flex items-center justify-center rounded-xl border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-medium text-purple-700 shadow-sm hover:bg-purple-100"
+                >
+                  Open in Maps
+                </a>
+
+                <script>
+                  {`
+                  (function () {
+                    const link = document.getElementById('open-in-maps');
+                    if (!link) return;
+
+                    link.addEventListener('click', function (event) {
+                      const address = link.getAttribute('data-address') || '';
+                      const hasNavigator = typeof navigator !== 'undefined';
+
+                      if (!hasNavigator || !navigator.userAgent) {
+                        return;
+                      }
+
+                      const ua = navigator.userAgent.toLowerCase();
+                      const isIOS =
+                        /iphone|ipad|ipod/.test(ua) && !window.MSStream;
+                      const isAndroid = /android/.test(ua);
+
+                      if (isIOS) {
+                        event.preventDefault();
+                        window.location.href = 'maps://?q=' + encodeURIComponent(address);
+                      } else if (isAndroid) {
+                        event.preventDefault();
+                        window.location.href =
+                          'geo:0,0?q=' + encodeURIComponent(address);
+                      }
+                    });
+                  })();
+                `}
+                </script>
+              </>
+            ) : (
+              <p class="text-sm text-slate-500">
+                No address available for this business.
+              </p>
+            )}
+          </div>
+        </section>
       </div>
+    ) : (
+      <p class="text-center text-sm text-slate-500">
+        Business not found.
+      </p>
     )}
-  </section>
+  </main>
 </Layout>

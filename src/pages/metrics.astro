@@ -17,16 +17,17 @@ const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const serviceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !serviceKey) {
-  throw new Error("Server Supabase credentials not configured");
+  throw new Error("Supabase admin credentials are missing.");
 }
 
 const supabase = createClient(supabaseUrl, serviceKey);
 
-// Daily metrics from view (most recent first)
-const { data: dailyMetrics, error: metricsError } = await supabase
+// Daily metrics from view (last 7 days, most recent first)
+const { data: dailyMetrics = [], error: metricsError } = await supabase
   .from("daily_metrics")
   .select("*")
-  .order("day", { ascending: false });
+  .order("day", { ascending: false })
+  .limit(7);
 
 if (metricsError) {
   console.error(metricsError);
@@ -37,11 +38,6 @@ if (metricsError) {
 const { count: totalBusinesses } = await supabase
   .from("businesses")
   .select("*", { count: "exact", head: true });
-
-const { count: totalVerifiedBusinesses } = await supabase
-  .from("businesses")
-  .select("*", { count: "exact", head: true })
-  .eq("verified", true);
 
 const { count: totalSuggestions } = await supabase
   .from("business_suggestions")
@@ -55,32 +51,6 @@ const { count: totalSearches } = await supabase
 const todayMetrics =
   dailyMetrics && dailyMetrics.length > 0 ? dailyMetrics[0] : null;
 
-// 7-day aggregate
-const recentMetrics = dailyMetrics ? dailyMetrics.slice(0, 7) : [];
-
-const aggregate = recentMetrics.reduce(
-  (acc, row: any) => {
-    acc.searches += row.searches ?? 0;
-    acc.zeroResultSearches += row.zero_result_searches ?? 0;
-    acc.suggestions += row.suggestions ?? 0;
-    acc.newBusinesses += row.new_businesses ?? 0;
-    acc.avgResultsSum += Number(row.avg_results ?? 0);
-    acc.days += 1;
-    return acc;
-  },
-  {
-    searches: 0,
-    zeroResultSearches: 0,
-    suggestions: 0,
-    newBusinesses: 0,
-    avgResultsSum: 0,
-    days: 0,
-  }
-);
-
-const avgResultsLast7 =
-  aggregate.days > 0 ? aggregate.avgResultsSum / aggregate.days : 0;
-
 const formatDate = (value: string | Date) =>
   new Date(value).toLocaleDateString("en-US", {
     month: "short",
@@ -88,262 +58,141 @@ const formatDate = (value: string | Date) =>
   });
 ---
 
-<Layout title="Metrics – VantaJax">
-  <section class="py-6 space-y-6">
-    <header class="space-y-2">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">
-            Metrics
-          </h1>
-          <p class="text-[11px] text-slate-500">
-            High-level analytics based on recent activity, search events, and
-            suggestions.
+<Layout title="Metrics • VantaJax">
+  <section class="py-10 px-4">
+    <div class="mx-auto max-w-5xl space-y-8">
+      <header class="space-y-1">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-600">
+          Admin
+        </p>
+        <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">
+          Metrics
+        </h1>
+        <p class="text-[11px] text-slate-600">
+          High-level analytics for VantaJax. This view is based on the last 7 days of
+          activity.
+        </p>
+      </header>
+
+      <!-- Summary cards -->
+      <section class="grid gap-4 sm:grid-cols-3">
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h2 class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Businesses
+          </h2>
+          <p class="mt-2 text-2xl font-semibold text-slate-900">
+            {totalBusinesses ?? 0}
+          </p>
+          <p class="mt-1 text-[11px] text-slate-500">
+            Total live directory entries.
           </p>
         </div>
-        <a
-          href={`/admin?key=${key}`}
-          class="rounded-lg border border-purple-600 bg-white px-3 py-1.5 text-[11px] font-medium text-purple-700 hover:bg-purple-50"
-        >
-          Go to admin
-        </a>
-      </div>
-    </header>
 
-    <!-- Summary cards -->
-    <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div
-        class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-      >
-        <h2
-          class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500"
-        >
-          Businesses
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h2 class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Suggestions
+          </h2>
+          <p class="mt-2 text-2xl font-semibold text-slate-900">
+            {totalSuggestions ?? 0}
+          </p>
+          <p class="mt-1 text-[11px] text-slate-500">
+            Community-submitted businesses.
+          </p>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h2 class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Searches
+          </h2>
+          <p class="mt-2 text-2xl font-semibold text-slate-900">
+            {totalSearches ?? 0}
+          </p>
+          <p class="mt-1 text-[11px] text-slate-500">
+            Total directory searches logged.
+          </p>
+        </div>
+      </section>
+
+      <!-- Today snapshot -->
+      <section class="space-y-3">
+        <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+          Today
         </h2>
-        <p class="mt-2 text-2xl font-semibold text-slate-900">
-          {totalBusinesses ?? 0}
-        </p>
-        <p class="mt-1 text-[11px] text-slate-500">
-          Total live directory entries.
-        </p>
-      </div>
-
-      <div
-        class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-      >
-        <h2
-          class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500"
-        >
-          Verified businesses
-        </h2>
-        <p class="mt-2 text-2xl font-semibold text-slate-900">
-          {totalVerifiedBusinesses ?? 0}
-        </p>
-        <p class="mt-1 text-[11px] text-slate-500">
-          Marked as verified Black-owned.
-        </p>
-      </div>
-
-      <div
-        class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-      >
-        <h2
-          class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500"
-        >
-          Suggestions (open)
-        </h2>
-        <p class="mt-2 text-2xl font-semibold text-slate-900">
-          {totalSuggestions ?? 0}
-        </p>
-        <p class="mt-1 text-[11px] text-slate-500">
-          Community submissions waiting in the queue.
-        </p>
-      </div>
-
-      <div
-        class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-      >
-        <h2
-          class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500"
-        >
-          Searches (all time)
-        </h2>
-        <p class="mt-2 text-2xl font-semibold text-slate-900">
-          {totalSearches ?? 0}
-        </p>
-        <p class="mt-1 text-[11px] text-slate-500">
-          Total recorded searches in the directory.
-        </p>
-      </div>
-    </section>
-
-    <!-- Today snapshot -->
-    {
-      todayMetrics && (
-        <section
-          class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3"
-        >
-          <div class="flex items-center justify-between gap-2">
-            <h2
-              class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500"
-            >
-              Today’s snapshot • {formatDate(todayMetrics.day)}
-            </h2>
-            <p class="text-[11px] text-slate-400">
-              Based on daily_metrics view.
+        {todayMetrics ? (
+          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="text-[11px] text-slate-500 mb-3">
+              {formatDate(todayMetrics.day)}
             </p>
-          </div>
-          <div class="grid gap-4 sm:grid-cols-4">
-            <div class="space-y-1">
-              <p class="text-[11px] text-slate-500">Searches</p>
-              <p class="text-base font-semibold text-slate-900">
-                {todayMetrics.searches}
-              </p>
-            </div>
-            <div class="space-y-1">
-              <p class="text-[11px] text-slate-500">Zero-result searches</p>
-              <p class="text-base font-semibold text-slate-900">
-                {todayMetrics.zero_result_searches}
-              </p>
-            </div>
-            <div class="space-y-1">
-              <p class="text-[11px] text-slate-500">Suggestions</p>
-              <p class="text-base font-semibold text-slate-900">
-                {todayMetrics.suggestions}
-              </p>
-            </div>
-            <div class="space-y-1">
-              <p class="text-[11px] text-slate-500">New businesses</p>
-              <p class="text-base font-semibold text-slate-900">
-                {todayMetrics.new_businesses}
-              </p>
+            <div class="grid gap-4 sm:grid-cols-4">
+              <div class="space-y-1">
+                <p class="text-[11px] text-slate-500">Searches</p>
+                <p class="text-base font-semibold text-slate-900">
+                  {todayMetrics.searches}
+                </p>
+              </div>
+              <div class="space-y-1">
+                <p class="text-[11px] text-slate-500">Zero-result</p>
+                <p class="text-base font-semibold text-slate-900">
+                  {todayMetrics.zero_result_searches}
+                </p>
+              </div>
+              <div class="space-y-1">
+                <p class="text-[11px] text-slate-500">Suggestions</p>
+                <p class="text-base font-semibold text-slate-900">
+                  {todayMetrics.suggestions}
+                </p>
+              </div>
+              <div class="space-y-1">
+                <p class="text-[11px] text-slate-500">New businesses</p>
+                <p class="text-base font-semibold text-slate-900">
+                  {todayMetrics.new_businesses}
+                </p>
+              </div>
             </div>
           </div>
-        </section>
-      )
-    }
+        ) : (
+          <p class="text-[11px] text-slate-500">
+            No metrics recorded for today yet.
+          </p>
+        )}
+      </section>
 
-    <!-- 7-day overview -->
-    {
-      recentMetrics && recentMetrics.length > 0 && (
-        <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p class="text-[11px] text-slate-500 uppercase tracking-[0.18em]">
-              Searches (7 days)
-            </p>
-            <p class="mt-2 text-lg font-semibold text-slate-900">
-              {aggregate.searches}
-            </p>
-            <p class="mt-1 text-[11px] text-slate-500">
-              Total searches across the last {aggregate.days} day(s).
-            </p>
-          </div>
-          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p class="text-[11px] text-slate-500 uppercase tracking-[0.18em]">
-              Zero-result (7 days)
-            </p>
-            <p class="mt-2 text-lg font-semibold text-slate-900">
-              {aggregate.zeroResultSearches}
-            </p>
-            <p class="mt-1 text-[11px] text-slate-500">
-              Searches that returned zero results.
-            </p>
-          </div>
-          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p class="text-[11px] text-slate-500 uppercase tracking-[0.18em]">
-              Avg results / search
-            </p>
-            <p class="mt-2 text-lg font-semibold text-slate-900">
-              {avgResultsLast7.toFixed(1)}
-            </p>
-            <p class="mt-1 text-[11px] text-slate-500">
-              Mean of daily average results in the last {aggregate.days} day(s).
-            </p>
-          </div>
-          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p class="text-[11px] text-slate-500 uppercase tracking-[0.18em]">
-              Suggestions & new businesses
-            </p>
-            <p class="mt-2 text-lg font-semibold text-slate-900">
-              {aggregate.suggestions} / {aggregate.newBusinesses}
-            </p>
-            <p class="mt-1 text-[11px] text-slate-500">
-              Suggestions vs. new businesses added.
-            </p>
-          </div>
-        </section>
-      )
-    }
-
-    <!-- Daily table -->
-    <section class="space-y-2">
-      <h2
-        class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500"
-      >
-        Daily breakdown
-      </h2>
-
-      <div
-        class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm"
-      >
-        <table
-          class="min-w-full border-collapse text-left text-[11px] text-slate-800"
-        >
-          <thead class="border-b border-slate-200 bg-slate-50">
-            <tr>
-              <th class="px-3 py-2 font-semibold text-slate-600">Day</th>
-              <th class="px-3 py-2 font-semibold text-slate-600">Searches</th>
-              <th class="px-3 py-2 font-semibold text-slate-600">
-                Zero-result
-              </th>
-              <th class="px-3 py-2 font-semibold text-slate-600">
-                Avg results
-              </th>
-              <th class="px-3 py-2 font-semibold text-slate-600">
-                Suggestions
-              </th>
-              <th class="px-3 py-2 font-semibold text-slate-600">
-                New businesses
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {
-              dailyMetrics && dailyMetrics.length > 0 ? (
-                dailyMetrics.map((row: any) => (
-                  <tr
-                    class="border-t border-slate-200 bg-white hover:bg-slate-50"
-                  >
-                    <td class="px-3 py-2 text-slate-900">
-                      {formatDate(row.day)}
-                    </td>
-                    <td class="px-3 py-2">{row.searches}</td>
-                    <td class="px-3 py-2">
-                      {row.zero_result_searches}
-                    </td>
-                    <td class="px-3 py-2">
-                      {Number(row.avg_results).toFixed(1)}
-                    </td>
-                    <td class="px-3 py-2">
-                      {row.suggestions}
-                    </td>
-                    <td class="px-3 py-2">
-                      {row.new_businesses}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td class="px-3 py-3 text-slate-500" colspan="6">
-                    No metrics available yet. Try again after you have some
-                    searches and suggestions.
+      <!-- 7-day table -->
+      <section class="space-y-3">
+        <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+          Last 7 days
+        </h2>
+        <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <table class="min-w-full text-left text-[11px] text-slate-700">
+            <thead class="border-b border-slate-200 bg-slate-50 text-[10px] uppercase tracking-[0.15em] text-slate-500">
+              <tr>
+                <th class="px-3 py-2">Day</th>
+                <th class="px-3 py-2">Searches</th>
+                <th class="px-3 py-2">Zero-result</th>
+                <th class="px-3 py-2">Avg. results</th>
+                <th class="px-3 py-2">Suggestions</th>
+                <th class="px-3 py-2">New businesses</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dailyMetrics.map((row) => (
+                <tr class="border-t border-slate-100">
+                  <td class="px-3 py-2 text-slate-600">
+                    {formatDate(row.day)}
                   </td>
+                  <td class="px-3 py-2">{row.searches}</td>
+                  <td class="px-3 py-2">{row.zero_result_searches}</td>
+                  <td class="px-3 py-2">
+                    {Number(row.avg_results).toFixed(1)}
+                  </td>
+                  <td class="px-3 py-2">{row.suggestions}</td>
+                  <td class="px-3 py-2">{row.new_businesses}</td>
                 </tr>
-              )
-            }
-          </tbody>
-        </table>
-      </div>
-    </section>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
   </section>
 </Layout>

@@ -1,10 +1,10 @@
 ---
 import "../styles/global.css";
-import Analytics from "@vercel/analytics/astro";
 
 const {
   title = "VantaJax",
-  description = "Find and support Black-owned businesses in Jacksonville, FL with VantaJax.",
+  description = "",
+  fullWidth = false
 } = Astro.props;
 ---
 
@@ -13,89 +13,22 @@ const {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
-    <meta name="description" content={description} />
-    <link rel="icon" href="/favicon.ico" />
+    {description && <meta name="description" content={description} />}
 
-    <script
-      defer
-      data-domain="vanta-jax.vercel.app"
-      src="https://plausible.io/js/script.js"
-    ></script>
+    <!-- Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="icon" href="/favicon.ico" />
   </head>
 
   <body class="min-h-screen bg-white text-slate-900 antialiased">
-    <!-- subtle purple glow at top -->
-    <div
-      class="pointer-events-none absolute inset-x-0 top-0 h-32 bg-linear-to-b from-purple-200/70 to-transparent"
-    ></div>
-
-    <div class="relative min-h-screen flex flex-col">
-      <!-- header / nav -->
-      <header
-        class="relative z-10 border-b border-slate-200 bg-white/80 backdrop-blur-sm"
-      >
-        <nav
-          class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3"
-        >
-          <a href="/" class="flex items-center gap-2">
-            <span
-              class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-linear-to-br from-purple-600 via-fuchsia-500 to-purple-400 shadow-sm"
-            >
-              <span class="text-[11px] font-black tracking-tight text-white">
-                V
-              </span>
-            </span>
-            <span class="text-sm font-semibold tracking-wide text-slate-900">
-              VantaJax
-            </span>
-          </a>
-
-          <div
-            class="flex items-center gap-1 text-xs sm:text-sm font-medium text-slate-700"
-          >
-            <a
-              href="/about"
-              class="rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-            >
-              About
-            </a>
-            <a
-              href="/businesses"
-              class="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
-            >
-              Browse
-            </a>
-            <a
-              href="/suggest-business"
-              class="rounded-lg border border-purple-600 bg-purple-600 px-3 py-1.5 text-white shadow-sm hover:bg-purple-700"
-            >
-              Suggest
-            </a>
-          </div>
-        </nav>
-      </header>
-
-      <!-- main content -->
-      <main
-        class="relative z-10 flex-1 mx-auto w-full max-w-6xl px-4 py-8"
-      >
-        <slot />
-      </main>
-
-      <!-- footer -->
-      <footer class="relative z-10 border-t border-slate-200 bg-white">
-        <div
-          class="mx-auto flex max-w-6xl flex-col items-start justify-between gap-2 px-4 py-4 text-[11px] text-slate-500 sm:flex-row sm:items-center"
-        >
-          <span>
-            Built to make Black-owned businesses easier to find in
-            <span class="font-medium text-purple-700"> Jacksonville, FL</span>.
-          </span>
-          <span class="text-slate-400">V1 MVP · V2 in progress.</span>
-        </div>
-      </footer>
-    </div>
-
-    <Analytics />
+    <main class={fullWidth ? "w-full min-h-screen" : "mx-auto min-h-screen max-w-6xl px-4 py-8"}>
+      <slot />
+    </main>
   </body>
 </html>

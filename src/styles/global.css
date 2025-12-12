@@ -1,9 +1,8 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
 @import "tailwindcss";
 @import "tailwindcss/preflight";
 @tailwind utilities;
-
-/* Optional: tiny global tweak */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
 html {
   scroll-behavior: smooth;
@@ -30,4 +29,110 @@ body {
 /* Generic light card helper (used by admin/metrics/etc.) */
 .card {
   @apply w-full rounded-3xl border border-slate-200 bg-white shadow-sm;
+}
+
+/* ===========================
+   VantaJax design helpers
+   =========================== */
+
+@layer components {
+  /* Generic cards */
+  .vj-card {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  .vj-card-tight {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm p-4 sm:p-5;
+  }
+
+  .vj-card-comfortable {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm p-5 sm:p-6;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-full text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-full text-sm font-semibold transition
+      bg-purple-600 text-white px-6 py-3 shadow-sm hover:bg-purple-700
+      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-600;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-full text-sm font-semibold transition
+      border border-slate-300 bg-white text-slate-800 px-6 py-3 hover:bg-slate-50
+      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-300;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-full text-sm font-semibold transition
+      border border-transparent bg-transparent text-slate-700 px-4 py-2 hover:bg-slate-100
+      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-300;
+  }
+
+  .btn-sm {
+    @apply text-xs px-3 py-1.5;
+  }
+
+  /* Chips / filter pills */
+  .vj-chip {
+    @apply inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium;
+  }
+
+  .vj-chip-default {
+    @apply inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium
+      border-slate-300 bg-white text-slate-700 hover:bg-slate-50;
+  }
+
+  .vj-chip-active {
+    @apply inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium
+      border-purple-600 bg-purple-100 text-purple-700;
+  }
+
+  /* Status badges */
+  .vj-badge {
+    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide;
+  }
+
+  .vj-badge-verified {
+    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide
+      border-emerald-300 bg-emerald-100 text-emerald-700;
+  }
+
+  .vj-badge-featured {
+    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide
+      border-purple-300 bg-purple-100 text-purple-700;
+  }
+
+  /* Inputs */
+  .vj-input {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400
+      focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500;
+  }
+
+  .vj-input-pill {
+    @apply w-full rounded-full border border-slate-300 bg-white px-5 py-3 text-base text-slate-900 placeholder:text-slate-400 shadow-sm
+      focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500;
+  }
+
+  .vj-select {
+    @apply rounded-full border border-slate-300 bg-white px-3 py-1.5 text-[11px] text-slate-900
+      focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500;
+  }
+
+  .vj-checkbox {
+    @apply h-4 w-4 rounded border-slate-400 text-purple-600 focus:ring-purple-500;
+  }
+}
+
+@layer utilities {
+  .vj-text-muted {
+    @apply text-slate-500;
+  }
+
+  .vj-text-subtle {
+    @apply text-slate-400;
+  }
 }
