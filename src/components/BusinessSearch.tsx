@@ -125,7 +125,7 @@ export default function BusinessSearch() {
       throw error;
     }
 
-    const results = (data || []) as Business[];
+    const rows = (data || []) as Business[];
 
     // fire-and-forget metrics logging
     supabase
@@ -134,15 +134,13 @@ export default function BusinessSearch() {
         location: loc || null,
         category: cat || null,
         verified_only: verified,
-        result_count: results.length,
+        result_count: rows.length,
       })
       .then(({ error: logError }) => {
-        if (logError) {
-          console.error("Error logging search event:", logError);
-        }
+        if (logError) console.error("Error logging search event:", logError);
       });
 
-    return results;
+    return rows;
   };
 
   const handleSearch = async (e: FormEvent) => {
@@ -211,13 +209,14 @@ export default function BusinessSearch() {
       <a
         key={b.id}
         href={`/business/${b.id}`}
-        className="vj-card-tight group text-sm text-slate-800 transition 'hover:-translate-y-0.5' hover:border-purple-500 hover:shadow-md"
+        className="vj-card-tight group text-sm text-slate-800 transition hover:-translate-y-0.5 hover:border-purple-500 hover:shadow-md"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
             <h3 className="text-sm font-semibold text-slate-900 group-hover:text-purple-700">
               {b.name}
             </h3>
+
             {hasAddress && (
               <p className="text-[11px] text-slate-500">
                 {b.address && <>{b.address}, </>}
@@ -226,6 +225,7 @@ export default function BusinessSearch() {
                 {b.zip && <>{b.zip}</>}
               </p>
             )}
+
             {b.category && (
               <p className="text-[11px] text-slate-500 capitalize">
                 {b.category}
@@ -235,12 +235,8 @@ export default function BusinessSearch() {
           </div>
 
           <div className="flex flex-col items-end gap-1">
-            {b.verified && (
-              <span className="vj-badge-verified">Verified</span>
-            )}
-            {b.featured && (
-              <span className="vj-badge-featured">Featured</span>
-            )}
+            {b.verified && <span className="vj-badge-verified">Verified</span>}
+            {b.featured && <span className="vj-badge-featured">Featured</span>}
           </div>
         </div>
 
@@ -260,35 +256,62 @@ export default function BusinessSearch() {
         onSubmit={handleSearch}
         className="w-full max-w-2xl flex flex-col items-center gap-4"
       >
-        <input
-          type="text"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          placeholder="Search by name, city, ZIP, or keyword…"
-          className="vj-input-pill"
-        />
+        <div className="w-full">
+          <div className="relative">
+            <div className="vj-searchbar-sheen" />
 
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary"
-          >
-            {loading ? "Searching…" : "Search"}
-          </button>
-          {(location || category || verifiedOnly || hasSearched) && (
+            {/* Input first, then icon-button (required for focus animation CSS) */}
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Search businesses, services, or categories…"
+              className="vj-searchbar vj-rounded-full"
+            />
+
             <button
-              type="button"
-              onClick={handleClearSearch}
-              className="btn-secondary"
+              type="submit"
+              className="vj-searchbar-icon-btn"
+              aria-label={loading ? "Searching…" : "Search"}
+              disabled={loading}
             >
-              Clear
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M16.5 16.5 21 21"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
             </button>
+          </div>
+
+          {(location || category || verifiedOnly || hasSearched) && (
+            <div className="mt-3 flex justify-center">
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="btn-secondary text-sm px-5 py-2"
+              >
+                Clear
+              </button>
+            </div>
           )}
         </div>
 
         {/* secondary controls under the bar */}
-        <div className="flex w-full flex-wrap items-center gap-3 text-[11px] text-slate-600 justify-center">
+        <div className="flex w-full flex-wrap items-center gap-4 text-[11px] text-slate-500 justify-center">
           <div className="flex items-center gap-2">
             <span className="font-medium text-slate-700">Category</span>
             <select
@@ -387,6 +410,7 @@ export default function BusinessSearch() {
                     results.length === 1 ? "" : "es"
                   }.`}
             </span>
+
             <button
               type="button"
               onClick={handleClearSearch}

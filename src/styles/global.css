@@ -125,9 +125,101 @@ body {
   .vj-checkbox {
     @apply h-4 w-4 rounded border-slate-400 text-purple-600 focus:ring-purple-500;
   }
+
+  /* ================================
+     VantaJax Hero Search (Animated)
+     Icon is clickable submit button
+  ================================ */
+
+  .vj-searchbar {
+    @apply w-full h-16 pl-10 pr-16 text-lg
+    rounded-full bg-white
+    border-2 border-slate-500
+    text-slate-900 placeholder:text-slate-400
+    transition-all duration-200
+    hover:border-slate-600
+    focus:outline-none focus:border-slate-800 focus:ring-4 focus:ring-purple-500/20;
+
+  /* critical alignment fixes */
+  line-height: 1.45;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 20px !important;
+
+  border-radius: 9999px !important;
+
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.14),
+    0 10px 26px rgba(0, 0, 0, 0.16);
+  }
+
+  .vj-searchbar:hover {
+    box-shadow:
+      0 4px 6px rgba(0, 0, 0, 0.1),
+      0 10px 20px rgba(0, 0, 0, 0.12);
+  }
+
+  /* subtle top highlight */
+  .vj-searchbar-sheen {
+    position: absolute;
+    inset: 2px 2px auto 2px;
+    height: 46%;
+    border-radius: 9999px;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.45),
+      rgba(255, 255, 255, 0)
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* clickable animated icon (right side) */
+  .vj-searchbar-icon-btn {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 9999px !important;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    color: rgba(15, 23, 42, 0.55);
+    background: transparent;
+    transition: transform 180ms ease, color 180ms ease, background 180ms ease;
+    z-index: 3;
+  }
+
+  .vj-searchbar-icon-btn:hover {
+    background: rgba(15, 23, 42, 0.06);
+    color: rgba(15, 23, 42, 0.8);
+    transform: translateY(-50%) scale(1.06);
+  }
+
+  .vj-searchbar-icon-btn:active {
+    transform: translateY(-50%) scale(0.97);
+  }
+
+  .vj-searchbar-icon-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  /* animate icon when input is focused (input must be immediately before button) */
+  .vj-searchbar:focus + .vj-searchbar-icon-btn {
+    color: rgba(124, 58, 237, 0.95);
+    transform: translateY(-50%) scale(1.06);
+  }
 }
 
 @layer utilities {
+  .vj-rounded-full {
+    border-radius: 9999px;
+  }
   .vj-text-muted {
     @apply text-slate-500;
   }
