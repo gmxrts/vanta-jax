@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 
 type Suggestion = {
@@ -67,9 +67,7 @@ export default function AdminDashboard({ suggestions }: Props) {
     try {
       const res = await fetch("/api/promote", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
@@ -103,9 +101,7 @@ export default function AdminDashboard({ suggestions }: Props) {
     try {
       const res = await fetch("/api/reject", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ suggestionId }),
       });
 
@@ -128,30 +124,25 @@ export default function AdminDashboard({ suggestions }: Props) {
 
   const normalizedFilter = filter.trim().toLowerCase();
 
-  const filteredItems = !normalizedFilter
-    ? items
-    : items.filter((s) => {
-        const haystack = [
-          s.name,
-          s.city ?? "",
-          s.state ?? "",
-          s.notes ?? "",
-          s.website ?? "",
-        ]
-          .join(" ")
-          .toLowerCase();
+  const filteredItems = useMemo(() => {
+    if (!normalizedFilter) return items;
 
-        return haystack.includes(normalizedFilter);
-      });
+    return items.filter((s) => {
+      const haystack = [s.name, s.city ?? "", s.state ?? "", s.notes ?? "", s.website ?? ""]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(normalizedFilter);
+    });
+  }, [items, normalizedFilter]);
 
   const totalCount = items.length;
   const visibleCount = filteredItems.length;
 
   if (!totalCount) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 sm:px-5 sm:py-5 text-sm text-slate-800">
-        <p>No suggestions waiting for review.</p>
-        <p className="mt-1 text-[11px] text-slate-500">
+      <div className="rounded-3xl border border-slate-200/70 bg-white/60 px-5 py-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur">
+        <p className="text-sm font-semibold text-slate-900">No suggestions waiting for review.</p>
+        <p className="mt-2 text-[11px] text-slate-600">
           When supporters submit new businesses, they will appear here.
         </p>
       </div>
@@ -159,9 +150,9 @@ export default function AdminDashboard({ suggestions }: Props) {
   }
 
   return (
-    <div className="space-y-4">
-      {/* header row */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-5">
+      {/* Control bar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-[11px] text-slate-600">
           <span className="font-semibold text-slate-900">
             {visibleCount} / {totalCount}
@@ -172,45 +163,51 @@ export default function AdminDashboard({ suggestions }: Props) {
           )}
         </div>
 
-        <input
-          type="text"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          placeholder="Filter by name, city, notes…"
-          className="w-full max-w-xs rounded-lg border border-slate-300 bg-white px-3 py-2 text-[11px] text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
-        />
+        <div className="w-full sm:w-auto">
+          <input
+            type="text"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="Filter by name, city, notes…"
+            className="w-full sm:w-[320px] rounded-2xl border border-slate-200 bg-white/70 px-4 py-2.5 text-[12px] text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+          />
+        </div>
       </div>
 
       {globalError && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] text-red-700">
+        <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-[12px] text-red-700">
           {globalError}
-        </p>
+        </div>
       )}
       {globalMessage && (
-        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] text-emerald-700">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-[12px] text-emerald-700">
           {globalMessage}
-        </p>
+        </div>
       )}
 
-      {/* suggestion cards */}
-      <div className="space-y-4">
+      {/* Suggestion cards */}
+      <div className="space-y-5">
         {filteredItems.map((s) => (
           <article
             key={s.id}
-            className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm"
+            className="rounded-[28px] border border-slate-200/70 bg-white/70 p-5 sm:p-7 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur"
           >
-            <header className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-              <div>
-                <h2 className="text-sm font-semibold text-slate-900">
+            <header className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div className="space-y-1">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Submission
+                </p>
+                <h2 className="text-base sm:text-lg font-semibold text-slate-900">
                   {s.name}
                 </h2>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-slate-600">
                   Suggested {new Date(s.created_at).toLocaleString()}
                 </p>
               </div>
-              <div className="text-[11px] text-slate-500">
+
+              <div className="text-[11px] text-slate-600">
                 {s.city || s.state ? (
-                  <span>
+                  <span className="rounded-full border border-slate-200 bg-white/60 px-3 py-1.5 shadow-sm backdrop-blur">
                     {s.city && <>{s.city}, </>}
                     {s.state}
                   </span>
@@ -224,29 +221,29 @@ export default function AdminDashboard({ suggestions }: Props) {
 
             <form
               onSubmit={(e) => handlePromote(e, s.id)}
-              className="space-y-3 text-xs text-slate-800"
+              className="space-y-4"
             >
-              {/* name + category */}
-              <div className="grid gap-3 sm:grid-cols-[2fr,1fr]">
-                <div className="space-y-1">
-                  <label className="block text-[11px] font-medium text-slate-700">
-                    Business name *
+              {/* Top row */}
+              <div className="grid gap-4 sm:grid-cols-[2fr,1fr]">
+                <div className="space-y-2">
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                    Business name <span className="text-purple-600">*</span>
                   </label>
                   <input
                     name="name"
                     defaultValue={s.name}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="block text-[11px] font-medium text-slate-700">
+                <div className="space-y-2">
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                     Category
                   </label>
                   <select
                     name="category"
                     defaultValue="services"
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
                   >
                     {categories.map((c) => (
                       <option key={c.value} value={c.value}>
@@ -257,101 +254,103 @@ export default function AdminDashboard({ suggestions }: Props) {
                 </div>
               </div>
 
-              {/* address / city / state / zip */}
-              <div className="grid gap-3 sm:grid-cols-[2fr,1fr]">
-                <div className="space-y-1">
-                  <label className="block text-[11px] font-medium text-slate-700">
+              {/* Address row */}
+              <div className="grid gap-4 sm:grid-cols-[2fr,1fr]">
+                <div className="space-y-2">
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                     Street address
                   </label>
                   <input
                     name="address"
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                     placeholder="Street address"
+                    className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
                   />
                 </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="space-y-1">
-                    <label className="block text-[11px] font-medium text-slate-700">
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-2">
+                    <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                       City
                     </label>
                     <input
                       name="city"
                       defaultValue={s.city || ""}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="block text-[11px] font-medium text-slate-700">
+                  <div className="space-y-2">
+                    <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                       State
                     </label>
                     <input
                       name="state"
                       defaultValue={s.state || "FL"}
                       maxLength={2}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs uppercase text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-3 text-sm uppercase text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="block text-[11px] font-medium text-slate-700">
+                  <div className="space-y-2">
+                    <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                       ZIP
                     </label>
                     <input
                       name="zip"
-                      className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* phone + website */}
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <label className="block text-[11px] font-medium text-slate-700">
+              {/* Phone + Website */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                     Phone
                   </label>
                   <input
                     name="phone"
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                     placeholder="e.g. 904-555-1234"
+                    className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="block text-[11px] font-medium text-slate-700">
-                    Website or social link
+                <div className="space-y-2">
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                    Website / social
                   </label>
                   <input
                     name="website"
                     defaultValue={s.website || ""}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
-                    placeholder="https://..."
+                    placeholder="https://…"
+                    className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
                   />
                 </div>
               </div>
 
-              {/* description */}
-              <div className="space-y-1">
-                <label className="block text-[11px] font-medium text-slate-700">
+              {/* Description */}
+              <div className="space-y-2">
+                <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                   Description
                 </label>
                 <textarea
                   name="description"
                   defaultValue={s.notes || ""}
                   rows={3}
-                  className="w-full resize-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                   placeholder="Short description for the directory listing"
+                  className="w-full resize-none rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
                 />
               </div>
 
-              {/* footer actions */}
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <label className="inline-flex items-center gap-2 text-[11px] text-slate-700">
+              <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
                   <input
                     type="checkbox"
                     name="verified"
                     defaultChecked
-                    className="h-3 w-3 rounded border-slate-400 text-purple-600 focus:ring-purple-500"
+                    className="h-4 w-4 accent-purple-600"
                   />
-                  <span>Mark as verified Black-owned</span>
+                  <span className="text-[12px] text-slate-700">
+                    Mark as verified Black-owned
+                  </span>
                 </label>
 
                 <div className="flex items-center gap-2">
@@ -359,7 +358,7 @@ export default function AdminDashboard({ suggestions }: Props) {
                     type="button"
                     onClick={() => handleReject(s.id)}
                     disabled={rejectingId === s.id}
-                    className="inline-flex items-center justify-center rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-[11px] font-semibold text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-2xl border border-red-200 bg-red-50/70 px-4 py-2 text-[12px] font-semibold text-red-700 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {rejectingId === s.id ? "Rejecting…" : "Reject"}
                   </button>
@@ -367,7 +366,7 @@ export default function AdminDashboard({ suggestions }: Props) {
                   <button
                     type="submit"
                     disabled={promotingId === s.id}
-                    className="inline-flex items-center justify-center rounded-lg bg-purple-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-2xl bg-purple-600 px-4 py-2 text-[12px] font-semibold text-white shadow-[0_16px_34px_-22px_rgba(147,51,234,0.65)] transition hover:-translate-y-0.5 hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {promotingId === s.id ? "Promoting…" : "Promote to directory"}
                   </button>
