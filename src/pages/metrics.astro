@@ -22,7 +22,7 @@ if (!supabaseUrl || !serviceKey) {
 
 const supabase = createClient(supabaseUrl, serviceKey);
 
-// Daily metrics from view (last 7 days, most recent first)
+// Daily metrics from view (last 7 days, newest first)
 const { data: dailyMetrics = [], error: metricsError } = await supabase
   .from("daily_metrics")
   .select("*")
@@ -63,27 +63,51 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
 <Layout title="Metrics • VantaJax" fullWidth={true}>
   <div class="bg-white">
     <section class="relative overflow-hidden px-4 pt-14 pb-14">
+      <!-- Luxury background -->
       <div class="pointer-events-none absolute inset-0">
-        <div class="vj-glow vj-glow-a absolute -top-28 left-1/2 h-72 w-184 -translate-x-1/2 rounded-full bg-purple-600/12 blur-3xl"></div>
-        <div class="vj-glow vj-glow-b absolute top-16 left-1/4 h-56 w-96 -translate-x-1/2 rounded-full bg-fuchsia-500/10 blur-3xl"></div>
-        <div class="absolute inset-0 bg-linear-to-b from-slate-50 via-white to-white"></div>
-        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(88,28,135,0.06),transparent_55%)]"></div>
+        <div
+          class="vj-glow vj-glow-a absolute -top-28 left-1/2 h-72 w-[46rem] -translate-x-1/2 rounded-full bg-purple-600/12 blur-3xl"
+        >
+        </div>
+        <div
+          class="vj-glow vj-glow-b absolute top-16 left-1/4 h-56 w-96 -translate-x-1/2 rounded-full bg-fuchsia-500/10 blur-3xl"
+        >
+        </div>
+        <div
+          class="absolute inset-0 bg-linear-to-b from-slate-50 via-white to-white"
+        >
+        </div>
+        <div
+          class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(88,28,135,0.06),transparent_55%)]"
+        >
+        </div>
       </div>
 
       <div class="relative mx-auto w-full max-w-6xl space-y-8">
-        <header class="flex flex-wrap items-end justify-between gap-4" data-reveal data-delay="0">
+        <!-- Header -->
+        <header
+          class="flex flex-wrap items-end justify-between gap-4"
+          data-reveal
+          data-delay="0"
+        >
           <div class="space-y-2">
-            <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-600">
+            <p
+              class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-600"
+            >
               Admin
             </p>
-            <h1 class="text-2xl sm:text-4xl font-semibold tracking-tight text-slate-900">
+            <h1
+              class="text-2xl sm:text-4xl font-semibold tracking-tight text-slate-900"
+            >
               Metrics
             </h1>
             <p class="text-[12px] text-slate-600 max-w-2xl leading-relaxed">
-              High-level analytics based on the last 7 days of activity.
+              High-level directory metrics based on the last 7 days of activity.
             </p>
 
-            <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+            <div
+              class="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500"
+            >
               <a
                 href={"/admin" + adminKeyParam}
                 class="rounded-full border border-slate-200 bg-white/70 px-3 py-1.5 shadow-sm backdrop-blur hover:bg-white"
@@ -102,70 +126,122 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
 
         <!-- Summary cards -->
         <section class="grid gap-4 sm:grid-cols-3" data-reveal data-delay="90">
-          <div class="rounded-3xl border border-slate-200/70 bg-white/70 p-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur">
-            <h2 class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Businesses</h2>
-            <p class="mt-2 text-3xl font-semibold text-slate-900">{totalBusinesses ?? 0}</p>
-            <p class="mt-2 text-[11px] text-slate-500">Total live directory entries.</p>
+          <div
+            class="rounded-[24px] border border-slate-200/70 bg-white/70 p-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur"
+          >
+            <h2
+              class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500"
+            >
+              Businesses
+            </h2>
+            <p class="mt-2 text-3xl font-semibold text-slate-900">
+              {totalBusinesses ?? 0}
+            </p>
+            <p class="mt-2 text-[11px] text-slate-500">
+              Total live directory entries.
+            </p>
           </div>
 
-          <div class="rounded-3xl border border-slate-200/70 bg-white/70 p-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur">
-            <h2 class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Suggestions</h2>
-            <p class="mt-2 text-3xl font-semibold text-slate-900">{totalSuggestions ?? 0}</p>
-            <p class="mt-2 text-[11px] text-slate-500">Community-submitted businesses.</p>
+          <div
+            class="rounded-[24px] border border-slate-200/70 bg-white/70 p-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur"
+          >
+            <h2
+              class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500"
+            >
+              Suggestions
+            </h2>
+            <p class="mt-2 text-3xl font-semibold text-slate-900">
+              {totalSuggestions ?? 0}
+            </p>
+            <p class="mt-2 text-[11px] text-slate-500">
+              Community-submitted businesses.
+            </p>
           </div>
 
-          <div class="rounded-3xl border border-slate-200/70 bg-white/70 p-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur">
-            <h2 class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Searches</h2>
-            <p class="mt-2 text-3xl font-semibold text-slate-900">{totalSearches ?? 0}</p>
-            <p class="mt-2 text-[11px] text-slate-500">Total directory searches logged.</p>
+          <div
+            class="rounded-[24px] border border-slate-200/70 bg-white/70 p-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur"
+          >
+            <h2
+              class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500"
+            >
+              Searches
+            </h2>
+            <p class="mt-2 text-3xl font-semibold text-slate-900">
+              {totalSearches ?? 0}
+            </p>
+            <p class="mt-2 text-[11px] text-slate-500">
+              Total directory searches logged.
+            </p>
           </div>
         </section>
 
         <!-- Today snapshot -->
         <section class="space-y-3" data-reveal data-delay="140">
-          <h2 class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+          <h2
+            class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500"
+          >
             Today
           </h2>
 
-          {todayMetrics ? (
-            <div class="rounded-[28px] border border-slate-200/70 bg-white/70 p-5 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur">
-              <p class="text-[11px] text-slate-500 mb-4">{formatDate(todayMetrics.day)}</p>
+          {
+            todayMetrics ? (
+              <div class="rounded-[28px] border border-slate-200/70 bg-white/70 p-5 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur">
+                <p class="text-[11px] text-slate-500 mb-4">
+                  {formatDate(todayMetrics.day)}
+                </p>
 
-              <div class="grid gap-4 sm:grid-cols-4">
-                <div class="space-y-1">
-                  <p class="text-[11px] text-slate-500">Searches</p>
-                  <p class="text-base font-semibold text-slate-900">{todayMetrics.searches}</p>
-                </div>
-                <div class="space-y-1">
-                  <p class="text-[11px] text-slate-500">Zero-result</p>
-                  <p class="text-base font-semibold text-slate-900">{todayMetrics.zero_result_searches}</p>
-                </div>
-                <div class="space-y-1">
-                  <p class="text-[11px] text-slate-500">Suggestions</p>
-                  <p class="text-base font-semibold text-slate-900">{todayMetrics.suggestions}</p>
-                </div>
-                <div class="space-y-1">
-                  <p class="text-[11px] text-slate-500">New businesses</p>
-                  <p class="text-base font-semibold text-slate-900">{todayMetrics.new_businesses}</p>
+                <div class="grid gap-4 sm:grid-cols-4">
+                  <div class="space-y-1">
+                    <p class="text-[11px] text-slate-500">Searches</p>
+                    <p class="text-base font-semibold text-slate-900">
+                      {todayMetrics.searches}
+                    </p>
+                  </div>
+                  <div class="space-y-1">
+                    <p class="text-[11px] text-slate-500">Zero-result</p>
+                    <p class="text-base font-semibold text-slate-900">
+                      {todayMetrics.zero_result_searches}
+                    </p>
+                  </div>
+                  <div class="space-y-1">
+                    <p class="text-[11px] text-slate-500">Suggestions</p>
+                    <p class="text-base font-semibold text-slate-900">
+                      {todayMetrics.suggestions}
+                    </p>
+                  </div>
+                  <div class="space-y-1">
+                    <p class="text-[11px] text-slate-500">New businesses</p>
+                    <p class="text-base font-semibold text-slate-900">
+                      {todayMetrics.new_businesses}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div class="rounded-3xl border border-slate-200/70 bg-white/70 p-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur">
-              <p class="text-[11px] text-slate-600">No metrics recorded for today yet.</p>
-            </div>
-          )}
+            ) : (
+              <div class="rounded-[24px] border border-slate-200/70 bg-white/70 p-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur">
+                <p class="text-[11px] text-slate-600">
+                  No metrics recorded for today yet.
+                </p>
+              </div>
+            )
+          }
         </section>
 
         <!-- 7-day table -->
         <section class="space-y-3" data-reveal data-delay="190">
-          <h2 class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+          <h2
+            class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500"
+          >
             Last 7 days
           </h2>
 
-          <div class="overflow-x-auto rounded-[28px] border border-slate-200/70 bg-white/70 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur">
+          <div
+            class="vj-table-wrap overflow-x-auto rounded-[28px] border border-slate-200/70 bg-white/70 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur"
+          >
             <table class="min-w-full text-left text-[11px] text-slate-700">
-              <thead class="border-b border-slate-200/70 bg-white/40 text-[10px] uppercase tracking-[0.15em] text-slate-500">
+              <thead
+                class="vj-table-head border-b border-slate-200/70 bg-white/60 text-[10px] uppercase tracking-[0.15em] text-slate-500"
+              >
                 <tr>
                   <th class="px-4 py-3">Day</th>
                   <th class="px-4 py-3">Searches</th>
@@ -176,16 +252,22 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
                 </tr>
               </thead>
               <tbody>
-                {dailyMetrics.map((row) => (
-                  <tr class="border-t border-slate-200/40 hover:bg-white/40 transition">
-                    <td class="px-4 py-3 text-slate-600">{formatDate(row.day)}</td>
-                    <td class="px-4 py-3">{row.searches}</td>
-                    <td class="px-4 py-3">{row.zero_result_searches}</td>
-                    <td class="px-4 py-3">{Number(row.avg_results).toFixed(1)}</td>
-                    <td class="px-4 py-3">{row.suggestions}</td>
-                    <td class="px-4 py-3">{row.new_businesses}</td>
-                  </tr>
-                ))}
+                {
+                  dailyMetrics.map((row) => (
+                    <tr class="border-t border-slate-200/40 hover:bg-white/40 transition">
+                      <td class="px-4 py-3 text-slate-600">
+                        {formatDate(row.day)}
+                      </td>
+                      <td class="px-4 py-3">{row.searches}</td>
+                      <td class="px-4 py-3">{row.zero_result_searches}</td>
+                      <td class="px-4 py-3">
+                        {Number(row.avg_results).toFixed(1)}
+                      </td>
+                      <td class="px-4 py-3">{row.suggestions}</td>
+                      <td class="px-4 py-3">{row.new_businesses}</td>
+                    </tr>
+                  ))
+                }
               </tbody>
             </table>
           </div>
@@ -194,11 +276,12 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
     </section>
   </div>
 
-  <!-- reuse reveal + glow parallax -->
+  <!-- Reveal + parallax -->
   <script is:inline>
     (() => {
       const reduceMotion =
-        window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       const els = Array.from(document.querySelectorAll("[data-reveal]"));
       if (els.length) {
@@ -219,7 +302,7 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
                 observer.unobserve(entry.target);
               });
             },
-            { threshold: 0.12, rootMargin: "0px 0px -10% 0px" }
+            { threshold: 0.12, rootMargin: "0px 0px -10% 0px" },
           );
 
           els.forEach((el) => io.observe(el));
@@ -238,8 +321,16 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
         raf = requestAnimationFrame(() => {
           raf = 0;
           const y = window.scrollY || 0;
-          if (glowA) glowA.style.transform = `translate3d(-50%, ${Math.min(18, y * 0.02)}px, 0)`;
-          if (glowB) glowB.style.transform = `translate3d(-50%, ${Math.min(14, y * 0.015)}px, 0)`;
+          if (glowA)
+            glowA.style.transform = `translate3d(-50%, ${Math.min(
+              18,
+              y * 0.02,
+            )}px, 0)`;
+          if (glowB)
+            glowB.style.transform = `translate3d(-50%, ${Math.min(
+              14,
+              y * 0.015,
+            )}px, 0)`;
         });
       };
 
@@ -249,11 +340,15 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
   </script>
 
   <style>
+    /* reveal */
     [data-reveal].vj-reveal {
       opacity: 0;
       transform: translate3d(0, 10px, 0);
       filter: blur(6px);
-      transition: opacity 700ms ease, transform 700ms ease, filter 700ms ease;
+      transition:
+        opacity 700ms ease,
+        transform 700ms ease,
+        filter 700ms ease;
       will-change: opacity, transform, filter;
     }
     [data-reveal].vj-reveal.vj-reveal-in,
@@ -261,6 +356,23 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
       opacity: 1;
       transform: translate3d(0, 0, 0);
       filter: blur(0);
+    }
+
+    /* sticky table header + numeric scan */
+    .vj-table-wrap {
+      max-height: 520px;
+    }
+    .vj-table-head th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+    tbody tr:nth-child(odd) {
+      background: rgba(255, 255, 255, 0.22);
+    }
+    tbody td {
+      font-variant-numeric: tabular-nums;
     }
   </style>
 </Layout>

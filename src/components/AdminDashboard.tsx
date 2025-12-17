@@ -24,6 +24,14 @@ const categories = [
   { value: "other", label: "Other" },
 ];
 
+function formatWhen(value: string) {
+  try {
+    return new Date(value).toLocaleString();
+  } catch {
+    return value;
+  }
+}
+
 export default function AdminDashboard({ suggestions }: Props) {
   const [items, setItems] = useState<Suggestion[]>(suggestions || []);
   const [promotingId, setPromotingId] = useState<string | null>(null);
@@ -31,6 +39,27 @@ export default function AdminDashboard({ suggestions }: Props) {
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [globalMessage, setGlobalMessage] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
+
+  const normalizedFilter = filter.trim().toLowerCase();
+
+  const filteredItems = useMemo(() => {
+    if (!normalizedFilter) return items;
+    return items.filter((s) => {
+      const haystack = [
+        s.name,
+        s.city ?? "",
+        s.state ?? "",
+        s.notes ?? "",
+        s.website ?? "",
+      ]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(normalizedFilter);
+    });
+  }, [items, normalizedFilter]);
+
+  const totalCount = items.length;
+  const visibleCount = filteredItems.length;
 
   const handlePromote = async (
     e: FormEvent<HTMLFormElement>,
@@ -122,26 +151,12 @@ export default function AdminDashboard({ suggestions }: Props) {
     }
   };
 
-  const normalizedFilter = filter.trim().toLowerCase();
-
-  const filteredItems = useMemo(() => {
-    if (!normalizedFilter) return items;
-
-    return items.filter((s) => {
-      const haystack = [s.name, s.city ?? "", s.state ?? "", s.notes ?? "", s.website ?? ""]
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(normalizedFilter);
-    });
-  }, [items, normalizedFilter]);
-
-  const totalCount = items.length;
-  const visibleCount = filteredItems.length;
-
   if (!totalCount) {
     return (
-      <div className="rounded-3xl border border-slate-200/70 bg-white/60 px-5 py-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur">
-        <p className="text-sm font-semibold text-slate-900">No suggestions waiting for review.</p>
+      <div className="rounded-[24px] border border-slate-200/70 bg-white/60 px-5 py-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur">
+        <p className="text-sm font-semibold text-slate-900">
+          No suggestions waiting for review.
+        </p>
         <p className="mt-2 text-[11px] text-slate-600">
           When supporters submit new businesses, they will appear here.
         </p>
@@ -159,7 +174,7 @@ export default function AdminDashboard({ suggestions }: Props) {
           </span>{" "}
           suggestions visible
           {normalizedFilter && (
-            <span className="text-slate-500"> (filtered by “{filter}”)</span>
+            <span className="text-slate-500"> (filtered)</span>
           )}
         </div>
 
@@ -186,7 +201,7 @@ export default function AdminDashboard({ suggestions }: Props) {
       )}
 
       {/* Suggestion cards */}
-      <div className="space-y-5">
+      <div className="space-y-4">
         {filteredItems.map((s) => (
           <article
             key={s.id}
@@ -201,7 +216,7 @@ export default function AdminDashboard({ suggestions }: Props) {
                   {s.name}
                 </h2>
                 <p className="text-[11px] text-slate-600">
-                  Suggested {new Date(s.created_at).toLocaleString()}
+                  Suggested {formatWhen(s.created_at)}
                 </p>
               </div>
 
@@ -223,7 +238,7 @@ export default function AdminDashboard({ suggestions }: Props) {
               onSubmit={(e) => handlePromote(e, s.id)}
               className="space-y-4"
             >
-              {/* Top row */}
+              {/* Name + category */}
               <div className="grid gap-4 sm:grid-cols-[2fr,1fr]">
                 <div className="space-y-2">
                   <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
@@ -254,7 +269,7 @@ export default function AdminDashboard({ suggestions }: Props) {
                 </div>
               </div>
 
-              {/* Address row */}
+              {/* Address */}
               <div className="grid gap-4 sm:grid-cols-[2fr,1fr]">
                 <div className="space-y-2">
                   <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
@@ -275,7 +290,7 @@ export default function AdminDashboard({ suggestions }: Props) {
                     <input
                       name="city"
                       defaultValue={s.city || ""}
-                      className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+                      className="w-full rounded-2xl border border-slate-200 bg:white/70 px-3 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
                     />
                   </div>
                   <div className="space-y-2">
@@ -301,7 +316,7 @@ export default function AdminDashboard({ suggestions }: Props) {
                 </div>
               </div>
 
-              {/* Phone + Website */}
+              {/* Phone + website */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
@@ -340,6 +355,7 @@ export default function AdminDashboard({ suggestions }: Props) {
                 />
               </div>
 
+              {/* Actions */}
               <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
                   <input
