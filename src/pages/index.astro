@@ -1,75 +1,407 @@
 ---
-import '../styles/global.css';
-import Analytics from '@vercel/analytics/astro';
-import BusinessSearch from '../components/BusinessSearch';
-import SuggestBusinessForm from '../components/SuggestBusinessForm';
+import Layout from "../layouts/Layout.astro";
+import Analytics from "@vercel/analytics/astro";
+import { createClient } from "@supabase/supabase-js";
+
+export const prerender = false;
+
+// Supabase (safe for read-only public data using ANON key)
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Missing PUBLIC_SUPABASE_URL or PUBLIC_SUPABASE_ANON_KEY");
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Pull featured businesses
+const { data: featuredBusinesses, error: featuredError } = await supabase
+  .from("businesses")
+  .select("id, name, category, description, city, state, website, phone")
+  .eq("featured", true)
+  // .eq("verified", true)
+  .order("promoted_at", { ascending: false, nullsFirst: false })
+  .order("created_at", { ascending: false })
+  .limit(4);
+
+if (featuredError) {
+  console.error("Featured fetch error:", featuredError);
+}
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>VantaJax
-    </title>
-      <script
-    defer
-    data-domain="vanta-jax.vercel.app"
-    src="https://plausible.io/js/script.js"
-  ></script>
+<Layout
+  title="VantaJax • Find Black-owned businesses in Jacksonville, FL"
+  description="VantaJax helps you find and support Black-owned businesses across Jacksonville, Florida."
+  fullWidth={true}
+>
+  <div class="bg-white">
+    <!-- HERO (Luxury) -->
+    <section class="relative overflow-hidden px-4 pt-16 pb-10">
+      <div class="pointer-events-none absolute inset-0">
+        <!-- parallax glows -->
+        <div
+          class="vj-glow vj-glow-a absolute -top-28 left-1/2 h-72 'w-184' -translate-x-1/2 rounded-full bg-purple-600/12 blur-3xl"
+          aria-hidden="true"
+        ></div>
+        <div
+          class="vj-glow vj-glow-b absolute top-16 left-1/4 h-56 w-96 -translate-x-1/2 rounded-full bg-fuchsia-500/10 blur-3xl"
+          aria-hidden="true"
+        ></div>
 
-  </head>
-  <body class="min-h-screen bg-black text-slate-50">
-    <div class="relative min-h-screen overflow-hidden">
-      <!-- subtle radial glow in background -->
-      <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(147,51,234,0.35),_transparent_55%),_radial-gradient(circle_at_bottom,_rgba(59,7,100,0.6),_transparent_55%)] opacity-80" />
+        <!-- soft paper gradient + vignette -->
+        <div class="absolute inset-0 bg-linear-to-b from-slate-50 via-white to-white"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(88,28,135,0.06),transparent_55%)]"></div>
+      </div>
 
-      <main class="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
-        <div class="w-full max-w-4xl rounded-3xl border border-purple-900/60 bg-black/80 px-5 py-8 sm:px-8 sm:py-10 shadow-[0_0_60px_rgba(168,85,247,0.35)]">
-          <header class="mb-8 sm:mb-10">
-            <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-300/80">
-              VantaJax Project focused on Jacksonville, FL
-            </p>
-            <h1 class="mt-3 text-3xl sm:text-4xl font-bold tracking-tight">
-              Find Black-owned businesses in your area
-            </h1>
-            <p class="mt-3 max-w-2xl text-sm sm:text-base text-slate-300">
-              Right now Vanta is focused on <span class="font-semibold text-purple-300">Jacksonville, FL</span>.
-              Search by city, ZIP, and category to discover Black-owned food, services, retail, health, and
-              nonprofits — with more cities coming over time.
-            </p>
-          </header>
+      <div class="relative mx-auto w-full max-w-4xl">
+        <div
+          class="vj-panel vj-panel-hero rounded-[28px] border border-slate-200/70 bg-white/70 p-8 sm:p-10 shadow-[0_12px_30px_-18px_rgba(2,6,23,0.35)] backdrop-blur text-center"
+          data-reveal
+          data-delay="0"
+        >
+          <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-700">
+            VantaJax • Jacksonville, FL
+          </p>
 
-          <!-- main content split into two clear sections -->
-          <section class="space-y-10">
-            <div class="space-y-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                Browse the radar
-              </h2>
-              <BusinessSearch client:load />
-            </div>
+          <h1 class="mt-3 text-3xl sm:text-5xl font-semibold tracking-tight text-slate-900">
+            Find Black-owned businesses in Jacksonville.
+          </h1>
 
-            <div class="border-t border-purple-900/50 pt-6">
-              <h2 class="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                Help grow the map
-              </h2>
-              <SuggestBusinessForm client:load />
-            </div>
-          </section>
+          <p class="mt-4 text-sm sm:text-base text-slate-600 mx-auto max-w-3xl leading-relaxed">
+            VantaJax is a curated local directory to help you discover Black-owned spots and professionals.
+            Browse the directory, then suggest missing businesses to help the city stay up to date.
+          </p>
 
-          <footer class="mt-8 border-t border-purple-900/50 pt-4 text-[11px] text-slate-400 flex items-center justify-between flex-wrap gap-2">
-            <span>
-              Built as an MVP to make Black-owned businesses easier to find in
-               <span class="text-purple-300 font-medium"> Jacksonville, FL</span>.
-            </span>
-            <a
-              href="/about"
-              class="text-purple-300 underline underline-offset-2 decoration-purple-400/80 hover:text-purple-200"
-> 
-              About Vanta
+          <div class="mt-7 flex flex-wrap items-center justify-center gap-3">
+            <a href="/businesses" class="vj-btn vj-btn-primary">
+              Browse directory
             </a>
-          </footer>
+          </div>
+
+          <div class="mt-7 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="vj-pill rounded-2xl border border-slate-200/70 bg-white/60 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Local-first</p>
+              <p class="mt-1 text-sm text-slate-700">Jacksonville-focused</p>
+            </div>
+            <div class="vj-pill rounded-2xl border border-slate-200/70 bg-white/60 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Community-sourced</p>
+              <p class="mt-1 text-sm text-slate-700">Keep it accurate</p>
+            </div>
+            <div class="vj-pill rounded-2xl border border-slate-200/70 bg-white/60 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Quick discovery</p>
+              <p class="mt-1 text-sm text-slate-700">Clarity first</p>
+            </div>
+          </div>
+
+          <div class="mt-6 text-[12px] text-slate-500">
+            Not sure what this is?{" "}
+            <a href="/about" class="font-semibold text-purple-700 hover:text-purple-800">
+              Learn how VantaJax works →
+            </a>
+          </div>
         </div>
-      </main>
-    </div>
-    <Analytics />
-  </body>
-</html>
+      </div>
+    </section>
+
+    <!-- FEATURED -->
+    <section class="px-4 pb-10">
+      <div class="mx-auto w-full max-w-4xl">
+        <div class="text-center" data-reveal data-delay="70">
+          <h2 class="text-xl sm:text-4xl font-semibold text-slate-900">
+            Featured highlights
+          </h2>
+          <p class="mt-3 text-sm text-slate-600 mx-auto max-w-4xl">
+            A few spots worth checking out right now — hand-picked from the directory.
+          </p>
+        </div>
+
+        {featuredError ? (
+          <div class="mt-6 vj-panel text-center" data-reveal data-delay="120">
+            <p class="text-sm font-semibold text-slate-900">Featured businesses are temporarily unavailable.</p>
+            <p class="mt-2 text-sm text-slate-600">Try refreshing, or browse the full directory instead.</p>
+            <div class="mt-4">
+              <a href="/businesses" class="vj-btn vj-btn-primary">Browse directory</a>
+            </div>
+          </div>
+        ) : (featuredBusinesses && featuredBusinesses.length > 0) ? (
+          <div class="mt-8 space-y-4">
+            {featuredBusinesses.map((b, idx) => (
+              <a
+                href={`/business/${b.id}`}
+                class="group block vj-card vj-card-link"
+                data-reveal
+                data-delay={`${120 + idx * 70}`}
+              >
+                <div class="text-center">
+                  <h3 class="text-base sm:text-lg font-semibold text-slate-900 group-hover:text-purple-700">
+                    {b.name}
+                  </h3>
+
+                  <p class="mt-2 text-[12px] text-slate-600">
+                    {b.category}
+                    {b.city ? ` • ${b.city}${b.state ? `, ${b.state}` : ""}` : ""}
+                  </p>
+                </div>
+
+                <p class="mt-4 text-sm text-slate-600 text-center leading-relaxed">
+                  {b.description ? b.description : "View listing details in the directory."}
+                </p>
+
+                <div class="mt-5 text-center">
+                  <span class="text-sm font-semibold text-purple-700">
+                    View details →
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div class="mt-6 vj-panel text-center" data-reveal data-delay="120">
+            <p class="text-sm font-semibold text-slate-900">No featured businesses yet.</p>
+            <p class="mt-2 text-sm text-slate-600">
+              Mark a few businesses as <span class="font-semibold">featured</span> in Supabase to have them appear here.
+            </p>
+            <div class="mt-4 flex flex-wrap justify-center gap-3">
+              <a href="/businesses" class="vj-btn vj-btn-primary">Browse directory</a>
+              <a href="/suggest-business" class="vj-btn vj-btn-secondary">Suggest a business</a>
+            </div>
+          </div>
+        )}
+
+        <div class="mt-8 text-center" data-reveal data-delay="420">
+          <a href="/businesses" class="vj-btn vj-btn-secondary">
+            View all businesses →
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="px-4 py-12 bg-slate-50 border-y border-slate-100">
+      <div class="mx-auto w-full max-w-4xl">
+        <div class="mx-auto max-w-4xl text-center" data-reveal data-delay="70">
+          <h2 class="text-xl sm:text-2xl font-semibold text-slate-900">
+            How it works
+          </h2>
+          <p class="mt-2 text-sm text-slate-600 mx-auto max-w-4xl">
+            VantaJax is meant to be simple: discover businesses, get the info you need, and keep the directory growing.
+          </p>
+        </div>
+
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+          <div class="vj-panel vj-panel-soft vj-panel-compact" data-reveal data-delay="140">
+            <p class="text-[12px] font-semibold text-purple-700">Step 1</p>
+            <h3 class="mt-1 font-semibold text-slate-900">Browse</h3>
+            <p class="mt-2 text-sm text-slate-600">
+              Explore businesses and professionals on the directory page using filters.
+            </p>
+          </div>
+
+          <div class="vj-panel vj-panel-soft vj-panel-compact" data-reveal data-delay="210">
+            <p class="text-[12px] font-semibold text-purple-700">Step 2</p>
+            <h3 class="mt-1 font-semibold text-slate-900">Choose</h3>
+            <p class="mt-2 text-sm text-slate-600">
+              Listings focus on clarity: what's offered, where they’re located, and how you can reach them.
+            </p>
+          </div>
+
+          <div class="vj-panel vj-panel-soft vj-panel-compact" data-reveal data-delay="280">
+            <p class="text-[12px] font-semibold text-purple-700">Step 3</p>
+            <h3 class="mt-1 font-semibold text-slate-900">Suggest</h3>
+            <p class="mt-2 text-sm text-slate-600">
+              If something’s missing, submit it — that’s how VantaJax stays accurate and community-driven.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="px-4 py-14">
+      <div class="mx-auto w-full max-w-4xl">
+        <div class="vj-cta text-center" data-reveal data-delay="70">
+          <h2 class="text-lg sm:text-xl font-semibold text-slate-900">
+            Know a business that should be here?
+          </h2>
+          <p class="mt-2 text-sm text-slate-600 mx-auto max-w-3xl">
+            Suggesting a business takes under a minute and helps keep the directory useful for everyone.
+          </p>
+
+          <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <a href="/suggest-business" class="vj-btn vj-btn-primary">
+              Suggest a business
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Scroll reveal + luxury parallax (same feel as about) -->
+  <script is:inline>
+    (() => {
+      const reduceMotion =
+        window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      // Scroll reveal
+      const els = Array.from(document.querySelectorAll("[data-reveal]"));
+      if (els.length) {
+        if (reduceMotion) {
+          els.forEach((el) => el.classList.add("vj-reveal-in"));
+        } else {
+          els.forEach((el) => {
+            el.classList.add("vj-reveal");
+            const d = el.getAttribute("data-delay");
+            if (d) el.style.transitionDelay = `${d}ms`;
+          });
+
+          const io = new IntersectionObserver(
+            (entries, observer) => {
+              entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add("vj-reveal-in");
+                observer.unobserve(entry.target);
+              });
+            },
+            { threshold: 0.12, rootMargin: "0px 0px -10% 0px" }
+          );
+
+          els.forEach((el) => io.observe(el));
+        }
+      }
+
+      // Luxury parallax glows (subtle)
+      if (reduceMotion) return;
+
+      const glowA = document.querySelector(".vj-glow-a");
+      const glowB = document.querySelector(".vj-glow-b");
+      if (!glowA && !glowB) return;
+
+      let raf = 0;
+      const onScroll = () => {
+        if (raf) return;
+        raf = requestAnimationFrame(() => {
+          raf = 0;
+          const y = window.scrollY || 0;
+
+          if (glowA) glowA.style.transform = `translate3d(-50%, ${Math.min(18, y * 0.02)}px, 0)`;
+          if (glowB) glowB.style.transform = `translate3d(-50%, ${Math.min(14, y * 0.015)}px, 0)`;
+        });
+      };
+
+      window.addEventListener("scroll", onScroll, { passive: true });
+      onScroll();
+    })();
+  </script>
+
+  <style>
+    /* Scroll reveal */
+    [data-reveal].vj-reveal {
+      opacity: 0;
+      transform: translate3d(0, 10px, 0);
+      filter: blur(6px);
+      transition:
+        opacity 700ms ease,
+        transform 700ms ease,
+        filter 700ms ease;
+      will-change: opacity, transform, filter;
+    }
+    [data-reveal].vj-reveal.vj-reveal-in,
+    [data-reveal].vj-reveal-in {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+      filter: blur(0);
+    }
+
+    /* Base luxury system (mirrors about.astro) */
+    .vj-panel {
+      border-radius: 28px;
+      border: 1px solid rgba(226, 232, 240, 0.75);
+      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.86));
+      padding: 28px;
+      box-shadow: 0 12px 30px -22px rgba(2, 6, 23, 0.45);
+      transition: transform 200ms ease, box-shadow 200ms ease;
+    }
+    .vj-panel:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 38px -24px rgba(2, 6, 23, 0.55);
+    }
+    .vj-panel-soft {
+      background: linear-gradient(180deg, rgba(248,250,252,0.95), rgba(255,255,255,0.85));
+    }
+    .vj-panel-compact {
+      padding: 22px;
+    }
+
+    .vj-card {
+      border-radius: 24px;
+      border: 1px solid rgba(226, 232, 240, 0.75);
+      background: rgba(255,255,255,0.9);
+      padding: 24px;
+      box-shadow: 0 10px 24px -20px rgba(2, 6, 23, 0.45);
+      transition: transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
+    }
+    .vj-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px -22px rgba(2, 6, 23, 0.55);
+      background: rgba(248, 250, 252, 1);
+    }
+    .vj-card-link {
+      text-decoration: none;
+    }
+
+    .vj-cta {
+      border-radius: 28px;
+      border: 1px solid rgba(233, 213, 255, 0.9);
+      background: linear-gradient(180deg, rgba(250,245,255,0.95), rgba(255,255,255,0.9));
+      padding: 28px;
+      box-shadow: 0 14px 34px -24px rgba(2, 6, 23, 0.5);
+    }
+
+    .vj-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 18px;
+      padding: 12px 20px;
+      font-size: 0.875rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+      outline: none;
+    }
+    .vj-btn:focus {
+      box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.25);
+    }
+    .vj-btn-primary {
+      background: rgba(147, 51, 234, 1);
+      color: white;
+      box-shadow: 0 14px 30px -20px rgba(147, 51, 234, 0.55);
+    }
+    .vj-btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 18px 34px -22px rgba(147, 51, 234, 0.62);
+      background: rgba(126, 34, 206, 1);
+    }
+    .vj-btn-secondary {
+      background: rgba(255,255,255,0.92);
+      color: rgba(15, 23, 42, 1);
+      border: 1px solid rgba(203, 213, 225, 0.9);
+      box-shadow: 0 14px 30px -24px rgba(2, 6, 23, 0.45);
+    }
+    .vj-btn-secondary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 18px 34px -26px rgba(2, 6, 23, 0.55);
+      background: rgba(248,250,252,1);
+    }
+
+    /* Nicer text rendering */
+    .vj-panel, .vj-card, .vj-cta {
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+  </style>
+
+  <Analytics />
+</Layout>

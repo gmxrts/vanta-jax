@@ -1,19 +1,104 @@
 ---
 import "../styles/global.css";
-const { title = "VantaJax" } = Astro.props;
+
+const {
+  title = "VantaJax",
+  description = "",
+  fullWidth = false
+} = Astro.props;
+
+const year = new Date().getFullYear();
 ---
 
-<html lang="en" class="bg-black text-slate-200">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>{title}</title>
-        <link rel="icon" href="/favicon.ico" />
-    </head>
+<html lang="en" class="bg-white text-slate-900">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
 
-    <body class="min-h-screen bg-black text-slate-200 antialiased">
-        <main class="mx-auto max-w-6xl px-4 py-8">
-            <slot />
-        </main>
-    </body>
+    <link rel="icon" href="/favicon.ico" />
+  </head>
+
+  <body class="min-h-screen bg-white text-slate-900 antialiased">
+    <!-- Global header / nav -->
+    <header class="border-b border-slate-200 bg-white">
+      <div
+        class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3"
+      >
+        <!-- "Logo" / brand, always links home -->
+        <a href="/" class="flex items-center gap-2">
+          <div
+            class="flex h-9 w-9 items-center justify-center rounded-full bg-linear-to-br from-purple-600 to-slate-900 text-xs font-bold text-white shadow-sm"
+          >
+            VJ
+          </div>
+          <div class="leading-tight">
+            <span class="block text-sm font-semibold tracking-tight text-slate-900">
+              VantaJax
+            </span>
+            <span class="block text-[11px] text-slate-500">
+              Black-owned • Jacksonville
+            </span>
+          </div>
+        </a>
+
+        <!-- Primary navigation -->
+        <nav class="flex items-center gap-3 text-xs sm:text-sm">
+          <a
+            href="/about"
+            class="text-slate-700 hover:text-purple-700"
+          >
+            About
+          </a>
+          <a
+            href="/businesses"
+            class="text-slate-700 hover:text-purple-700"
+          >
+            Browse
+          </a>
+          <a
+            href="/suggest-business"
+            class="text-slate-700 hover:text-purple-700"
+          >
+            Suggest
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <main
+      class={
+        fullWidth
+          ? "w-full min-h-[calc(100vh-4rem-3rem)] px-4 py-8"
+          : "mx-auto min-h-[calc(100vh-4rem-3rem)] max-w-4xl px-4 py-8"
+      }
+    >
+      <slot />
+    </main>
+
+    <!-- Global footer -->
+    <footer class="border-t border-slate-200 bg-white">
+      <div
+        class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-4 text-[11px] text-slate-500 sm:flex-row"
+      >
+        <span>
+          © {year} VantaJax. Built for Jacksonville, FL.
+        </span>
+
+        <div class="flex gap-3">
+          <a href="/about" class="hover:text-purple-700">
+            About
+          </a>
+          <a href="/businesses" class="hover:text-purple-700">
+            Browse
+          </a>
+          <a href="/suggest-business" class="hover:text-purple-700">
+            Suggest
+          </a>
+        </div>
+      </div>
+    </footer>
+  </body>
 </html>

@@ -1,16 +1,16 @@
 ---
-import "../styles/global.css";
+import Layout from "../layouts/Layout.astro";
 import Analytics from "@vercel/analytics/astro";
 import AdminDashboard from "../components/AdminDashboard";
 import { createClient } from "@supabase/supabase-js";
 
-export const prerender = false; // this page should be server-rendered, not static
+export const prerender = false;
 
 const expectedKey = import.meta.env.ADMIN_ACCESS_KEY;
 const requestUrl = new URL(Astro.request.url);
 const key = requestUrl.searchParams.get("key");
 
-// If no key or wrong key, bounce them to home (or show 404)
+// If no key or wrong key, bounce to home
 if (!expectedKey || key !== expectedKey) {
   return Astro.redirect("/");
 }
@@ -22,10 +22,11 @@ if (!supabaseUrl || !serviceKey) {
   console.warn("Supabase admin credentials are missing. Check env vars.");
 }
 
-const supabase = createClient(supabaseUrl!, serviceKey || "");
+const supabase =
+  supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey) : null;
 
 const { data: suggestions = [], error } =
-  supabaseUrl && serviceKey
+  supabase
     ? await supabase
         .from("business_suggestions")
         .select("*")
@@ -37,52 +38,34 @@ if (error) {
 }
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Admin • Vanta Black-Owned Radar</title>
-  </head>
-  <body class="min-h-screen bg-black text-slate-50">
-    <div class="relative min-h-screen overflow-hidden">
-      <div
-        class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(147,51,234,0.35),_transparent_55%),_radial-gradient(circle_at_bottom,_rgba(59,7,100,0.6),_transparent_55%)] opacity-80"
-      >
-      </div>
-
-      <main
-        class="relative z-10 flex min-h-screen items-center justify-center px-4 py-10"
-      >
-        <div
-          class="w-full max-w-5xl rounded-3xl border border-purple-900/60 bg-black/80 px-5 py-8 sm:px-8 sm:py-10 shadow-[0_0_60px_rgba(168,85,247,0.35)]"
-        >
-          <header class="mb-6 flex items-center justify-between gap-3">
-            <div>
-              <p
-                class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-300/80"
-              >
-                Admin
-              </p>
-              <h1 class="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
-                Business suggestions
-              </h1>
-              <p class="mt-1 text-[11px] sm:text-xs text-slate-400">
-                Internal view for reviewing and promoting suggestions into the
-                main directory. This page is not meant to be public.
-              </p>
-            </div>
-            <a
-              href="/"
-              class="text-[11px] text-purple-300 underline underline-offset-2 decoration-purple-400/80 hover:text-purple-200"
-            >
-              ← Back to search
-            </a>
-          </header>
-
-          <AdminDashboard client:load suggestions={suggestions} />
+<Layout title="Admin • VantaJax">
+  <section class="py-10 px-4">
+    <div class="mx-auto max-w-5xl space-y-6">
+      <header class="flex flex-wrap items-baseline justify-between gap-3">
+        <div class="space-y-1">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-600">
+            Admin
+          </p>
+          <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">
+            Business suggestions
+          </h1>
+          <p class="text-[11px] text-slate-600 max-w-xl">
+            Internal view for reviewing and promoting community-submitted suggestions into
+            the main directory. This page is not public.
+          </p>
         </div>
-      </main>
-    </div>
 
-    <Analytics />
-  </body>
-</html>
+        <a
+          href="/businesses"
+          class="text-[11px] text-purple-700 hover:text-purple-900 underline underline-offset-2"
+        >
+          ← Back to search
+        </a>
+      </header>
+
+      <AdminDashboard client:load suggestions={suggestions} />
+    </div>
+  </section>
+
+  <Analytics />
+</Layout>

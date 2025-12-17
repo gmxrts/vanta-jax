@@ -26,65 +26,65 @@ const fullAddress = business
   : "";
 ---
 
-<Layout title={business ? business.name : "Business"}>
+<Layout title={business ? business.name : "Business • VantaJax"}>
   <main class="min-h-[60vh] px-4 py-8">
     {business ? (
-      <div class="mx-auto max-w-2xl space-y-6 rounded-2xl border border-purple-900/70 bg-black/70 p-5 shadow-[0_0_40px_rgba(76,29,149,0.7)]">
+      <div class="mx-auto max-w-2xl space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <!-- Header -->
         <header class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 class="text-2xl font-bold text-slate-50 sm:text-3xl">
+            <h1 class="text-2xl font-semibold text-slate-900 sm:text-3xl">
               {business.name}
             </h1>
-            <p class="mt-1 text-sm text-slate-400">
+            <p class="mt-1 text-sm text-slate-600 capitalize">
               {business.category}
             </p>
             {business.area && (
-              <p class="mt-0.5 text-xs text-slate-500">
-                {business.area} • {business.city}, {business.state} {business.zip}
+              <p class="mt-1 text-xs text-slate-500">
+                Serving: {business.area}
               </p>
             )}
           </div>
 
           <div class="flex flex-wrap gap-2 justify-start sm:justify-end">
             {business.verified && (
-              <span class="inline-flex items-center rounded-full bg-purple-500/20 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-purple-100">
+              <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 border border-emerald-300">
                 Verified
               </span>
             )}
             {business.featured && (
-              <span class="inline-flex items-center rounded-full bg-amber-500/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-100">
+              <span class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-purple-700 border border-purple-300">
                 Featured
               </span>
             )}
           </div>
         </header>
 
-        <!-- Description -->
+        {/* Description */}
         {business.description && (
           <section class="space-y-1">
-            <h2 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+            <h2 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
               About
             </h2>
-            <p class="text-sm leading-relaxed text-slate-200">
+            <p class="text-sm leading-relaxed text-slate-700">
               {business.description}
             </p>
           </section>
         )}
 
-        <!-- Contact / info -->
+        {/* Contact / info */}
         <section class="grid gap-4 sm:grid-cols-2">
-          <div class="space-y-2">
-            <h2 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-              Contact
+          <div class="space-y-3">
+            <h2 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Details
             </h2>
 
             {business.phone && (
-              <p class="text-sm text-slate-200">
+              <p class="text-sm text-slate-700">
                 📞{" "}
                 <a
                   href={`tel:${business.phone}`}
-                  class="text-purple-300 underline underline-offset-2 decoration-purple-400/80 hover:text-purple-100"
+                  class="text-purple-700 underline underline-offset-2 hover:text-purple-900"
                 >
                   {business.phone}
                 </a>
@@ -92,13 +92,13 @@ const fullAddress = business
             )}
 
             {business.website && (
-              <p class="text-sm text-slate-200">
+              <p class="text-sm text-slate-700">
                 🌐{" "}
                 <a
                   href={business.website}
                   target="_blank"
                   rel="noreferrer"
-                  class="text-purple-300 underline underline-offset-2 decoration-purple-400/80 hover:text-purple-100"
+                  class="text-purple-700 underline underline-offset-2 hover:text-purple-900"
                 >
                   Visit website
                 </a>
@@ -106,72 +106,74 @@ const fullAddress = business
             )}
 
             {fullAddress && (
-              <p class="text-sm text-slate-200">
+              <p class="text-sm text-slate-700">
                 📍 {fullAddress}
               </p>
             )}
           </div>
 
           <div class="space-y-3">
-            <h2 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+            <h2 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
               Location
             </h2>
 
             {fullAddress ? (
-  <>
-    <a
-      id="open-in-maps"
-      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        fullAddress
-      )}`}
-      data-address={fullAddress}
-      target="_blank"
-      rel="noreferrer"
-      class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-purple-500 via-fuchsia-500 to-purple-400 px-4 py-2 text-xs font-semibold text-black shadow-[0_0_25px_rgba(147,51,234,0.8)] hover:brightness-110"
-    >
-      Open in Maps
-    </a>
+              <>
+                <a
+                  id="open-in-maps"
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                    fullAddress
+                  )}`}
+                  data-address={fullAddress}
+                  target="_blank"
+                  rel="noreferrer"
+                  class="inline-flex items-center justify-center rounded-xl border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-medium text-purple-700 shadow-sm hover:bg-purple-100"
+                >
+                  Open in Maps
+                </a>
 
-    <script>
-      // Runs in the browser, not during SSR
-      (function () {
-        const link = document.getElementById('open-in-maps');
-        if (!link) return;
+                <script>
+                  {`
+                  (function () {
+                    const link = document.getElementById('open-in-maps');
+                    if (!link) return;
 
-        const rawAddress = link.getAttribute('data-address') || '';
-        if (!rawAddress) return;
+                    link.addEventListener('click', function (event) {
+                      const address = link.getAttribute('data-address') || '';
+                      const hasNavigator = typeof navigator !== 'undefined';
 
-        const encodedAddress = encodeURIComponent(rawAddress);
-        const ua = navigator.userAgent || navigator.vendor || "";
-        
+                      if (!hasNavigator || !navigator.userAgent) {
+                        return;
+                      }
 
-        const isIOS = /iPhone|iPad|iPod/i.test(ua);
+                      const ua = navigator.userAgent.toLowerCase();
+                      const isIOS =
+                        /iphone|ipad|ipod/.test(ua) && !window.MSStream;
+                      const isAndroid = /android/.test(ua);
 
-        let url;
-
-        if (isIOS) {
-          // Apple Maps for iOS
-          url = `https://maps.apple.com/?q=${encodedAddress}`;
-        } else {
-          // Google Maps for everything else (Android + desktop)
-          url = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
-        }
-
-        link.setAttribute('href', url);
-      })();
-    </script>
-  </>
-) : (
-  <p class="text-xs text-slate-500">
-    No address available for this business.
-  </p>
-)}
-
+                      if (isIOS) {
+                        event.preventDefault();
+                        window.location.href = 'maps://?q=' + encodeURIComponent(address);
+                      } else if (isAndroid) {
+                        event.preventDefault();
+                        window.location.href =
+                          'geo:0,0?q=' + encodeURIComponent(address);
+                      }
+                    });
+                  })();
+                `}
+                </script>
+              </>
+            ) : (
+              <p class="text-sm text-slate-500">
+                No address available for this business.
+              </p>
+            )}
           </div>
         </section>
       </div>
     ) : (
-      <p class="text-center text-sm text-slate-400">
+      <p class="text-center text-sm text-slate-500">
         Business not found.
       </p>
     )}
