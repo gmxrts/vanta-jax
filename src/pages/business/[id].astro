@@ -33,26 +33,30 @@ const safeUrl = (url: any) => {
 const mapsUrl = fullAddress
   ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`
   : "";
+
+// ✅ Logo support (only thing added)
+const logoUrl = business?.logo_url ? String(business.logo_url).trim() : "";
+const initials =
+  business?.name
+    ? business.name
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((w: string) => w[0]?.toUpperCase())
+        .join("")
+    : "—";
 ---
 
 <Layout title={business ? business.name : "Business • VantaJax"}>
   <main class="min-h-[70vh] bg-white">
     {business ? (
-      <section class="relative overflow-hidden px-4 pt-12 pb-16">
-        <!-- Luxury background -->
-        <div class="pointer-events-none absolute inset-0">
-          <div class="absolute -top-28 left-1/2 h-72 w-184 -translate-x-1/2 rounded-full bg-purple-600/10 blur-3xl"></div>
-          <div class="absolute top-20 left-1/4 h-56 w-96 -translate-x-1/2 rounded-full bg-fuchsia-500/10 blur-3xl"></div>
-          <div class="absolute inset-0 bg-linear-to-b from-slate-50 via-white to-white"></div>
-          <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(88,28,135,0.06),transparent_55%)]"></div>
-        </div>
-
-        <div class="relative mx-auto w-full max-w-6xl space-y-6">
+      <section class="px-4 pt-12 pb-16">
+        <div class="mx-auto w-full max-w-6xl space-y-6">
           <!-- Top nav -->
           <div class="flex flex-wrap items-center justify-between gap-3">
             <a
               href="/businesses"
-              class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-4 py-2 text-[12px] font-semibold text-slate-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white"
+              class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-[12px] font-semibold text-slate-800 shadow-sm transition hover:-translate-y-0.5"
             >
               ← Back to search
             </a>
@@ -72,30 +76,49 @@ const mapsUrl = fullAddress
           </div>
 
           <!-- Hero -->
-          <header class="rounded-[28px] border border-slate-200/70 bg-white/70 p-6 sm:p-8 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur">
+          <header class="rounded-[28px] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
             <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-600">
               Business profile
             </p>
 
             <div class="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div class="min-w-0">
-                <h1 class="text-2xl sm:text-4xl font-semibold tracking-tight text-slate-900">
-                  {business.name}
-                </h1>
+                <!-- ✅ Name row with logo -->
+                <div class="flex items-center gap-4">
+                  <div class="h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    {logoUrl ? (
+                      <img
+                        src={logoUrl}
+                        alt={`${business.name} logo`}
+                        class="h-full w-full object-contain p-2"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <div class="h-full w-full grid place-items-center text-[14px] font-semibold text-slate-700">
+                        {initials}
+                      </div>
+                    )}
+                  </div>
 
-                <div class="mt-2 flex flex-wrap items-center gap-2 text-[12px] text-slate-600">
-                  <span class="rounded-full border border-slate-200 bg-white/60 px-3 py-1 shadow-sm backdrop-blur capitalize">
+                  <h1 class="min-w-0 text-2xl sm:text-4xl font-semibold tracking-tight text-slate-900">
+                    {business.name}
+                  </h1>
+                </div>
+
+                <div class="mt-3 flex flex-wrap items-center gap-2 text-[12px] text-slate-600">
+                  <span class="rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm capitalize">
                     {business.category}
                   </span>
 
                   {(business.city || business.state) && (
-                    <span class="rounded-full border border-slate-200 bg-white/60 px-3 py-1 shadow-sm backdrop-blur">
+                    <span class="rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
                       {[business.city, business.state].filter(Boolean).join(", ")}
                     </span>
                   )}
 
                   {business.area && (
-                    <span class="rounded-full border border-slate-200 bg-white/60 px-3 py-1 shadow-sm backdrop-blur">
+                    <span class="rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
                       Serving: {business.area}
                     </span>
                   )}
@@ -105,7 +128,7 @@ const mapsUrl = fullAddress
               <div class="flex flex-wrap items-center gap-2">
                 <button
                   id="copy-link"
-                  class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white/70 px-4 py-2 text-[12px] font-semibold text-slate-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white"
+                  class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-[12px] font-semibold text-slate-800 shadow-sm transition hover:-translate-y-0.5"
                 >
                   Copy link
                 </button>
@@ -117,7 +140,7 @@ const mapsUrl = fullAddress
                     data-address={fullAddress}
                     target="_blank"
                     rel="noreferrer"
-                    class="inline-flex items-center justify-center rounded-2xl bg-purple-600 px-4 py-2 text-[12px] font-semibold text-white shadow-[0_16px_34px_-22px_rgba(147,51,234,0.65)] transition hover:-translate-y-0.5 hover:bg-purple-700"
+                    class="inline-flex items-center justify-center rounded-2xl bg-purple-600 px-4 py-2 text-[12px] font-semibold text-white shadow-[0_16px_34px_-22px_rgba(147,51,234,0.35)] transition hover:-translate-y-0.5 hover:bg-purple-700"
                   >
                     Directions
                   </a>
@@ -137,16 +160,16 @@ const mapsUrl = fullAddress
             )}
           </header>
 
-          <!-- Content grid (no arbitrary template strings) -->
+          <!-- Content grid -->
           <div class="grid gap-6 lg:grid-cols-3">
-            <!-- Left: details (2 cols on desktop) -->
+            <!-- Left: details -->
             <div class="space-y-6 lg:col-span-2">
-              <section class="rounded-[28px] border border-slate-200/70 bg-white/70 p-6 sm:p-8 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur">
+              <section class="rounded-[28px] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
                 <h2 class="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                   Details
                 </h2>
 
-                <div class="mt-5 divide-y divide-slate-200/70">
+                <div class="mt-5 divide-y divide-slate-200">
                   <div class="flex items-start justify-between gap-3 py-3">
                     <div class="flex items-center gap-2">
                       <span class="h-2 w-2 rounded-full bg-slate-300 mt-1.5"></span>
@@ -197,7 +220,7 @@ const mapsUrl = fullAddress
                 </div>
               </section>
 
-              <section class="rounded-[28px] border border-slate-200/70 bg-white/70 p-6 sm:p-8 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur">
+              <section class="rounded-[28px] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
                 <h2 class="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                   Community note
                 </h2>
@@ -207,10 +230,10 @@ const mapsUrl = fullAddress
               </section>
             </div>
 
-            <!-- Right: actions (sticky on desktop) -->
+            <!-- Right: actions -->
             <aside class="lg:col-span-1">
               <div class="space-y-6 lg:sticky lg:top-24">
-                <section class="rounded-[28px] border border-slate-200/70 bg-white/70 p-6 sm:p-8 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur">
+                <section class="rounded-[28px] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
                   <h2 class="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                     Actions
                   </h2>
@@ -223,13 +246,13 @@ const mapsUrl = fullAddress
                         data-address={fullAddress}
                         target="_blank"
                         rel="noreferrer"
-                        class="inline-flex items-center justify-center rounded-2xl bg-purple-600 px-4 py-3 text-[13px] font-semibold text-white shadow-[0_16px_34px_-22px_rgba(147,51,234,0.65)] transition hover:-translate-y-0.5 hover:bg-purple-700"
+                        class="inline-flex items-center justify-center rounded-2xl bg-purple-600 px-4 py-3 text-[13px] font-semibold text-white shadow-[0_16px_34px_-22px_rgba(147,51,234,0.35)] transition hover:-translate-y-0.5 hover:bg-purple-700"
                       >
                         Directions
                       </a>
                     ) : (
                       <button
-                        class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white/60 px-4 py-3 text-[13px] font-semibold text-slate-500 shadow-sm backdrop-blur"
+                        class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[13px] font-semibold text-slate-500 shadow-sm"
                         disabled
                       >
                         Directions unavailable
@@ -241,7 +264,7 @@ const mapsUrl = fullAddress
                         href={safeUrl(business.website)}
                         target="_blank"
                         rel="noreferrer"
-                        class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-[13px] font-semibold text-slate-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white"
+                        class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[13px] font-semibold text-slate-800 shadow-sm transition hover:-translate-y-0.5"
                       >
                         Website
                       </a>
@@ -250,7 +273,7 @@ const mapsUrl = fullAddress
                     {business.phone ? (
                       <a
                         href={`tel:${business.phone}`}
-                        class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-[13px] font-semibold text-slate-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white"
+                        class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[13px] font-semibold text-slate-800 shadow-sm transition hover:-translate-y-0.5"
                       >
                         Call
                       </a>
@@ -258,7 +281,7 @@ const mapsUrl = fullAddress
 
                     <button
                       id="share"
-                      class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-[13px] font-semibold text-slate-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white"
+                      class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[13px] font-semibold text-slate-800 shadow-sm transition hover:-translate-y-0.5"
                     >
                       Share
                     </button>
@@ -337,7 +360,7 @@ const mapsUrl = fullAddress
       </section>
     ) : (
       <section class="px-4 py-16">
-        <div class="mx-auto max-w-2xl rounded-[28px] border border-slate-200/70 bg-white/70 p-8 text-center shadow-sm backdrop-blur">
+        <div class="mx-auto max-w-2xl rounded-[28px] border border-slate-200 bg-white p-8 text-center shadow-sm">
           <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500">
             Not found
           </p>
@@ -349,7 +372,7 @@ const mapsUrl = fullAddress
           </p>
           <a
             href="/businesses"
-            class="mt-6 inline-flex items-center justify-center rounded-2xl bg-purple-600 px-5 py-3 text-[13px] font-semibold text-white shadow-[0_16px_34px_-22px_rgba(147,51,234,0.65)] transition hover:-translate-y-0.5 hover:bg-purple-700"
+            class="mt-6 inline-flex items-center justify-center rounded-2xl bg-purple-600 px-5 py-3 text-[13px] font-semibold text-white shadow-[0_16px_34px_-22px_rgba(147,51,234,0.35)] transition hover:-translate-y-0.5 hover:bg-purple-700"
           >
             Back to search
           </a>
