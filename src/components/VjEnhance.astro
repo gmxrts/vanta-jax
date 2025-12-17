@@ -1,0 +1,59 @@
+---
+// Include once (best from Layout.astro). Adds scroll reveal + hero glow parallax.
+---
+
+<script is:inline>
+  (() => {
+    const reduceMotion =
+      window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // Scroll reveal
+    const els = Array.from(document.querySelectorAll("[data-reveal]"));
+    if (els.length) {
+      if (reduceMotion) {
+        els.forEach((el) => el.classList.add("vj-reveal-in"));
+      } else {
+        els.forEach((el) => {
+          el.classList.add("vj-reveal");
+          const d = el.getAttribute("data-delay");
+          if (d) el.style.transitionDelay = `${d}ms`;
+        });
+
+        const io = new IntersectionObserver(
+          (entries, observer) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              entry.target.classList.add("vj-reveal-in");
+              observer.unobserve(entry.target);
+            });
+          },
+          { threshold: 0.12, rootMargin: "0px 0px -10% 0px" }
+        );
+
+        els.forEach((el) => io.observe(el));
+      }
+    }
+
+    // Luxury parallax glows (subtle)
+    if (reduceMotion) return;
+
+    const glowA = document.querySelector(".vj-glow-a");
+    const glowB = document.querySelector(".vj-glow-b");
+    if (!glowA && !glowB) return;
+
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const y = window.scrollY || 0;
+
+        if (glowA) glowA.style.transform = `translate3d(-50%, ${Math.min(18, y * 0.02)}px, 0)`;
+        if (glowB) glowB.style.transform = `translate3d(-50%, ${Math.min(14, y * 0.015)}px, 0)`;
+      });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  })();
+</script>

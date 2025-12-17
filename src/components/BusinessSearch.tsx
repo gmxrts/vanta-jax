@@ -344,7 +344,7 @@ export default function BusinessSearch() {
       </form>
 
       {/* QUICK FILTER CHIPS */}
-      <div className="w-full max-w-3xl space-y-2">
+      <div className="w-full max-w-4xl space-y-2">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
           Quick filters
         </p>
@@ -373,7 +373,7 @@ export default function BusinessSearch() {
 
       {/* FEATURED SECTION WHEN NOT SEARCHING */}
       {!hasSearched && !error && (
-        <section className="w-full max-w-3xl space-y-3">
+        <section className="w-full max-w-4xl space-y-3">
           <div className="flex items-center justify-between text-[11px] text-slate-500">
             <span className="font-semibold uppercase tracking-[0.18em]">
               Featured

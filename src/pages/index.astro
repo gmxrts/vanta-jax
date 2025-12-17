@@ -15,12 +15,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Pull featured businesses (adjust filters to your preference)
+// Pull featured businesses
 const { data: featuredBusinesses, error: featuredError } = await supabase
   .from("businesses")
   .select("id, name, category, description, city, state, website, phone")
   .eq("featured", true)
-  // If you want to only show verified businesses on the homepage, uncomment:
   // .eq("verified", true)
   .order("promoted_at", { ascending: false, nullsFirst: false })
   .order("created_at", { ascending: false })
@@ -36,11 +35,31 @@ if (featuredError) {
   description="VantaJax helps you find and support Black-owned businesses across Jacksonville, Florida."
   fullWidth={true}
 >
-  <!-- HERO (centered launcher, no search) -->
-  <section class="px-4 pt-16 pb-10">
-    <div class="mx-auto w-full max-w-4xl">
-      <div class="mx-auto max-w-4xl rounded-3xl border border-slate-200 bg-white shadow-sm">
-        <div class="px-6 py-10 sm:px-10 sm:py-12 text-center">
+  <div class="bg-white">
+    <!-- HERO (Luxury) -->
+    <section class="relative overflow-hidden px-4 pt-16 pb-10">
+      <div class="pointer-events-none absolute inset-0">
+        <!-- parallax glows -->
+        <div
+          class="vj-glow vj-glow-a absolute -top-28 left-1/2 h-72 w-[46rem] -translate-x-1/2 rounded-full bg-purple-600/12 blur-3xl"
+          aria-hidden="true"
+        ></div>
+        <div
+          class="vj-glow vj-glow-b absolute top-16 left-1/4 h-56 w-96 -translate-x-1/2 rounded-full bg-fuchsia-500/10 blur-3xl"
+          aria-hidden="true"
+        ></div>
+
+        <!-- soft paper gradient + vignette -->
+        <div class="absolute inset-0 bg-linear-to-b from-slate-50 via-white to-white"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(88,28,135,0.06),transparent_55%)]"></div>
+      </div>
+
+      <div class="relative mx-auto w-full max-w-4xl">
+        <div
+          class="vj-panel vj-panel-hero rounded-[28px] border border-slate-200/70 bg-white/70 p-8 sm:p-10 shadow-[0_12px_30px_-18px_rgba(2,6,23,0.35)] backdrop-blur text-center"
+          data-reveal
+          data-delay="0"
+        >
           <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-700">
             VantaJax • Jacksonville, FL
           </p>
@@ -49,31 +68,30 @@ if (featuredError) {
             Find Black-owned businesses in Jacksonville.
           </h1>
 
-          <p class="mt-4 text-sm sm:text-base text-slate-600 mx-auto max-w-4xl">
+          <p class="mt-4 text-sm sm:text-base text-slate-600 mx-auto max-w-3xl leading-relaxed">
             VantaJax is a curated local directory to help you discover Black-owned spots and professionals.
             Browse the directory, then suggest missing businesses to help the city stay up to date.
           </p>
 
           <div class="mt-7 flex flex-wrap items-center justify-center gap-3">
-            <a
-              href="/businesses"
-              class="inline-flex items-center justify-center rounded-full bg-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-purple-700"
-            >
+            <a href="/businesses" class="vj-btn vj-btn-primary">
               Browse directory
-            </a>
-
-            <a
-              href="/suggest-business"
-              class="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-            >
-              Suggest a business
             </a>
           </div>
 
-          <div class="mt-7 flex flex-wrap items-center justify-center gap-2 text-[12px] text-slate-600">
-            <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">Jacksonville-first</span>
-            <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">Community-sourced</span>
-            <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">Built for quick discovery</span>
+          <div class="mt-7 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="vj-pill rounded-2xl border border-slate-200/70 bg-white/60 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Local-first</p>
+              <p class="mt-1 text-sm text-slate-700">Jacksonville-focused</p>
+            </div>
+            <div class="vj-pill rounded-2xl border border-slate-200/70 bg-white/60 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Community-sourced</p>
+              <p class="mt-1 text-sm text-slate-700">Keep it accurate</p>
+            </div>
+            <div class="vj-pill rounded-2xl border border-slate-200/70 bg-white/60 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Quick discovery</p>
+              <p class="mt-1 text-sm text-slate-700">Clarity first</p>
+            </div>
           </div>
 
           <div class="mt-6 text-[12px] text-slate-500">
@@ -84,115 +102,95 @@ if (featuredError) {
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- FEATURED (from Supabase, editorial highlights) -->
-<section class="px-4 pb-10">
-  <div class="mx-auto w-full max-w-4xl">
-    <div class="text-center">
-      <h2 class="text-xl sm:text-4xl font-semibold text-slate-900">
-        Featured highlights
-      </h2>
-      <p class="mt-3 text-sm text-slate-600 mx-auto max-w-4xl">
-        A few spots worth checking out right now — hand-picked from the directory.
-      </p>
-    </div>
-
-    {featuredError ? (
-      <div class="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm text-center">
-        <p class="text-sm font-semibold text-slate-900">Featured businesses are temporarily unavailable.</p>
-        <p class="mt-2 text-sm text-slate-600">Try refreshing, or browse the full directory instead.</p>
-        <div class="mt-4">
-          <a
-            href="/businesses"
-            class="inline-flex items-center justify-center rounded-full bg-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-purple-700"
-          >
-            Browse directory
-          </a>
+    <!-- FEATURED -->
+    <section class="px-4 pb-10">
+      <div class="mx-auto w-full max-w-4xl">
+        <div class="text-center" data-reveal data-delay="70">
+          <h2 class="text-xl sm:text-4xl font-semibold text-slate-900">
+            Featured highlights
+          </h2>
+          <p class="mt-3 text-sm text-slate-600 mx-auto max-w-4xl">
+            A few spots worth checking out right now — hand-picked from the directory.
+          </p>
         </div>
-      </div>
-    ) : (featuredBusinesses && featuredBusinesses.length > 0) ? (
-      <div class="mt-8 space-y-4">
-        {featuredBusinesses.map((b) => (
-          <a
-            href={`/business/${b.id}`}
-            class="group block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:bg-slate-50"
-          >
-            {/* Title centered */}
-            <div class="text-center">
-              <h3 class="text-base sm:text-lg font-semibold text-slate-900 group-hover:text-purple-700">
-                {b.name}
-              </h3>
 
-              {/* Metadata centered (category + city/state) */}
-              <p class="mt-2 text-[12px] text-slate-600">
-                {b.category}
-                {b.city ? ` • ${b.city}${b.state ? `, ${b.state}` : ""}` : ""}
-              </p>
+        {featuredError ? (
+          <div class="mt-6 vj-panel text-center" data-reveal data-delay="120">
+            <p class="text-sm font-semibold text-slate-900">Featured businesses are temporarily unavailable.</p>
+            <p class="mt-2 text-sm text-slate-600">Try refreshing, or browse the full directory instead.</p>
+            <div class="mt-4">
+              <a href="/businesses" class="vj-btn vj-btn-primary">Browse directory</a>
             </div>
+          </div>
+        ) : (featuredBusinesses && featuredBusinesses.length > 0) ? (
+          <div class="mt-8 space-y-4">
+            {featuredBusinesses.map((b, idx) => (
+              <a
+                href={`/business/${b.id}`}
+                class="group block vj-card vj-card-link"
+                data-reveal
+                data-delay={`${120 + idx * 70}`}
+              >
+                <div class="text-center">
+                  <h3 class="text-base sm:text-lg font-semibold text-slate-900 group-hover:text-purple-700">
+                    {b.name}
+                  </h3>
 
-            {/* Description left-aligned for readability */}
-            <p class="mt-4 text-sm text-slate-600 text-center leading-relaxed">
-              {b.description ? b.description : "View listing details in the directory."}
+                  <p class="mt-2 text-[12px] text-slate-600">
+                    {b.category}
+                    {b.city ? ` • ${b.city}${b.state ? `, ${b.state}` : ""}` : ""}
+                  </p>
+                </div>
+
+                <p class="mt-4 text-sm text-slate-600 text-center leading-relaxed">
+                  {b.description ? b.description : "View listing details in the directory."}
+                </p>
+
+                <div class="mt-5 text-center">
+                  <span class="text-sm font-semibold text-purple-700">
+                    View details →
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div class="mt-6 vj-panel text-center" data-reveal data-delay="120">
+            <p class="text-sm font-semibold text-slate-900">No featured businesses yet.</p>
+            <p class="mt-2 text-sm text-slate-600">
+              Mark a few businesses as <span class="font-semibold">featured</span> in Supabase to have them appear here.
             </p>
-
-            <div class="mt-5 text-center">
-              <span class="text-sm font-semibold text-purple-700">
-                View details →
-              </span>
+            <div class="mt-4 flex flex-wrap justify-center gap-3">
+              <a href="/businesses" class="vj-btn vj-btn-primary">Browse directory</a>
+              <a href="/suggest-business" class="vj-btn vj-btn-secondary">Suggest a business</a>
             </div>
-          </a>
-        ))}
-      </div>
-    ) : (
-      <div class="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm text-center">
-        <p class="text-sm font-semibold text-slate-900">No featured businesses yet.</p>
-        <p class="mt-2 text-sm text-slate-600">
-          Mark a few businesses as <span class="font-semibold">featured</span> in Supabase to have them appear here.
-        </p>
-        <div class="mt-4 flex flex-wrap justify-center gap-3">
-          <a
-            href="/businesses"
-            class="inline-flex items-center justify-center rounded-full bg-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-purple-700"
-          >
-            Browse directory
-          </a>
-          <a
-            href="/suggest-business"
-            class="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-          >
-            Suggest a business
+          </div>
+        )}
+
+        <div class="mt-8 text-center" data-reveal data-delay="420">
+          <a href="/businesses" class="vj-btn vj-btn-secondary">
+            View all businesses →
           </a>
         </div>
       </div>
-    )}
+    </section>
 
-    <div class="mt-8 text-center">
-      <a
-        href="/businesses"
-        class="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-      >
-        View all businesses →
-      </a>
-    </div>
-  </div>
-</section>
-
-
-  <!-- HOW IT WORKS (centered + clearer) -->
-  <section class="px-4 py-12 bg-slate-50 border-y border-slate-100">
-    <div class="mx-auto w-full max-w-4xl">
-      <div class="mx-auto max-w-4xl text-center">
-        <h2 class="text-xl sm:text-2xl font-semibold text-slate-900">
-          How it works
-        </h2>
-        <p class="mt-2 text-sm text-slate-600 mx-auto max-w-4xl">
-          VantaJax is meant to be simple: discover businesses, get the info you need, and keep the directory growing.
-        </p>
+    <!-- HOW IT WORKS -->
+    <section class="px-4 py-12 bg-slate-50 border-y border-slate-100">
+      <div class="mx-auto w-full max-w-4xl">
+        <div class="mx-auto max-w-4xl text-center" data-reveal data-delay="70">
+          <h2 class="text-xl sm:text-2xl font-semibold text-slate-900">
+            How it works
+          </h2>
+          <p class="mt-2 text-sm text-slate-600 mx-auto max-w-4xl">
+            VantaJax is meant to be simple: discover businesses, get the info you need, and keep the directory growing.
+          </p>
+        </div>
 
         <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
-          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="vj-panel vj-panel-soft vj-panel-compact" data-reveal data-delay="140">
             <p class="text-[12px] font-semibold text-purple-700">Step 1</p>
             <h3 class="mt-1 font-semibold text-slate-900">Browse</h3>
             <p class="mt-2 text-sm text-slate-600">
@@ -200,54 +198,210 @@ if (featuredError) {
             </p>
           </div>
 
-          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="vj-panel vj-panel-soft vj-panel-compact" data-reveal data-delay="210">
             <p class="text-[12px] font-semibold text-purple-700">Step 2</p>
             <h3 class="mt-1 font-semibold text-slate-900">Choose</h3>
             <p class="mt-2 text-sm text-slate-600">
-              Listings focus on clarity: what they offer, where they’re located, and how to reach them.
+              Listings focus on clarity: what's offered, where they’re located, and how you can reach them.
             </p>
           </div>
 
-          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="vj-panel vj-panel-soft vj-panel-compact" data-reveal data-delay="280">
             <p class="text-[12px] font-semibold text-purple-700">Step 3</p>
             <h3 class="mt-1 font-semibold text-slate-900">Suggest</h3>
             <p class="mt-2 text-sm text-slate-600">
-              If something’s missing, submit it — that’s how VantaJax stays accurate.
+              If something’s missing, submit it — that’s how VantaJax stays accurate and community-driven.
             </p>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- CTA (centered) -->
-  <section class="px-4 py-14">
-    <div class="mx-auto w-full max-w-6xl">
-      <div class="mx-auto max-w-4xl rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-sm text-center">
-        <h2 class="text-lg sm:text-xl font-semibold text-slate-900">
-          Know a business that should be here?
-        </h2>
-        <p class="mt-2 text-sm text-slate-600 mx-auto max-w-4xl">
-          Suggesting a business takes under a minute and helps keep the directory useful for everyone.
-        </p>
+    <!-- CTA -->
+    <section class="px-4 py-14">
+      <div class="mx-auto w-full max-w-4xl">
+        <div class="vj-cta text-center" data-reveal data-delay="70">
+          <h2 class="text-lg sm:text-xl font-semibold text-slate-900">
+            Know a business that should be here?
+          </h2>
+          <p class="mt-2 text-sm text-slate-600 mx-auto max-w-3xl">
+            Suggesting a business takes under a minute and helps keep the directory useful for everyone.
+          </p>
 
-        <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <a
-            href="/suggest-business"
-            class="inline-flex items-center justify-center rounded-full bg-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-purple-700"
-          >
-            Suggest a business
-          </a>
-          <a
-            href="/businesses"
-            class="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-          >
-            Browse directory
-          </a>
+          <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <a href="/suggest-business" class="vj-btn vj-btn-primary">
+              Suggest a business
+            </a>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
+
+  <!-- Scroll reveal + luxury parallax (same feel as about) -->
+  <script is:inline>
+    (() => {
+      const reduceMotion =
+        window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      // Scroll reveal
+      const els = Array.from(document.querySelectorAll("[data-reveal]"));
+      if (els.length) {
+        if (reduceMotion) {
+          els.forEach((el) => el.classList.add("vj-reveal-in"));
+        } else {
+          els.forEach((el) => {
+            el.classList.add("vj-reveal");
+            const d = el.getAttribute("data-delay");
+            if (d) el.style.transitionDelay = `${d}ms`;
+          });
+
+          const io = new IntersectionObserver(
+            (entries, observer) => {
+              entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add("vj-reveal-in");
+                observer.unobserve(entry.target);
+              });
+            },
+            { threshold: 0.12, rootMargin: "0px 0px -10% 0px" }
+          );
+
+          els.forEach((el) => io.observe(el));
+        }
+      }
+
+      // Luxury parallax glows (subtle)
+      if (reduceMotion) return;
+
+      const glowA = document.querySelector(".vj-glow-a");
+      const glowB = document.querySelector(".vj-glow-b");
+      if (!glowA && !glowB) return;
+
+      let raf = 0;
+      const onScroll = () => {
+        if (raf) return;
+        raf = requestAnimationFrame(() => {
+          raf = 0;
+          const y = window.scrollY || 0;
+
+          if (glowA) glowA.style.transform = `translate3d(-50%, ${Math.min(18, y * 0.02)}px, 0)`;
+          if (glowB) glowB.style.transform = `translate3d(-50%, ${Math.min(14, y * 0.015)}px, 0)`;
+        });
+      };
+
+      window.addEventListener("scroll", onScroll, { passive: true });
+      onScroll();
+    })();
+  </script>
+
+  <style>
+    /* Scroll reveal */
+    [data-reveal].vj-reveal {
+      opacity: 0;
+      transform: translate3d(0, 10px, 0);
+      filter: blur(6px);
+      transition:
+        opacity 700ms ease,
+        transform 700ms ease,
+        filter 700ms ease;
+      will-change: opacity, transform, filter;
+    }
+    [data-reveal].vj-reveal.vj-reveal-in,
+    [data-reveal].vj-reveal-in {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+      filter: blur(0);
+    }
+
+    /* Base luxury system (mirrors about.astro) */
+    .vj-panel {
+      border-radius: 28px;
+      border: 1px solid rgba(226, 232, 240, 0.75);
+      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.86));
+      padding: 28px;
+      box-shadow: 0 12px 30px -22px rgba(2, 6, 23, 0.45);
+      transition: transform 200ms ease, box-shadow 200ms ease;
+    }
+    .vj-panel:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 38px -24px rgba(2, 6, 23, 0.55);
+    }
+    .vj-panel-soft {
+      background: linear-gradient(180deg, rgba(248,250,252,0.95), rgba(255,255,255,0.85));
+    }
+    .vj-panel-compact {
+      padding: 22px;
+    }
+
+    .vj-card {
+      border-radius: 24px;
+      border: 1px solid rgba(226, 232, 240, 0.75);
+      background: rgba(255,255,255,0.9);
+      padding: 24px;
+      box-shadow: 0 10px 24px -20px rgba(2, 6, 23, 0.45);
+      transition: transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
+    }
+    .vj-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px -22px rgba(2, 6, 23, 0.55);
+      background: rgba(248, 250, 252, 1);
+    }
+    .vj-card-link {
+      text-decoration: none;
+    }
+
+    .vj-cta {
+      border-radius: 28px;
+      border: 1px solid rgba(233, 213, 255, 0.9);
+      background: linear-gradient(180deg, rgba(250,245,255,0.95), rgba(255,255,255,0.9));
+      padding: 28px;
+      box-shadow: 0 14px 34px -24px rgba(2, 6, 23, 0.5);
+    }
+
+    .vj-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 18px;
+      padding: 12px 20px;
+      font-size: 0.875rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+      outline: none;
+    }
+    .vj-btn:focus {
+      box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.25);
+    }
+    .vj-btn-primary {
+      background: rgba(147, 51, 234, 1);
+      color: white;
+      box-shadow: 0 14px 30px -20px rgba(147, 51, 234, 0.55);
+    }
+    .vj-btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 18px 34px -22px rgba(147, 51, 234, 0.62);
+      background: rgba(126, 34, 206, 1);
+    }
+    .vj-btn-secondary {
+      background: rgba(255,255,255,0.92);
+      color: rgba(15, 23, 42, 1);
+      border: 1px solid rgba(203, 213, 225, 0.9);
+      box-shadow: 0 14px 30px -24px rgba(2, 6, 23, 0.45);
+    }
+    .vj-btn-secondary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 18px 34px -26px rgba(2, 6, 23, 0.55);
+      background: rgba(248,250,252,1);
+    }
+
+    /* Nicer text rendering */
+    .vj-panel, .vj-card, .vj-cta {
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+  </style>
 
   <Analytics />
 </Layout>
