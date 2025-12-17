@@ -10,7 +10,7 @@ const expectedKey = import.meta.env.ADMIN_ACCESS_KEY;
 const requestUrl = new URL(Astro.request.url);
 const key = requestUrl.searchParams.get("key");
 
-// If no key or wrong key, bounce to home
+// Protect route
 if (!expectedKey || key !== expectedKey) {
   return Astro.redirect("/");
 }
@@ -18,54 +18,132 @@ if (!expectedKey || key !== expectedKey) {
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const serviceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
 
+let suggestions: any[] = [];
+let loadError: string | null = null;
+
 if (!supabaseUrl || !serviceKey) {
-  console.warn("Supabase admin credentials are missing. Check env vars.");
+  loadError = "Supabase admin credentials are missing. Check env vars.";
+} else {
+  try {
+    const supabase = createClient(supabaseUrl, serviceKey);
+    const { data, error } = await supabase
+      .from("business_suggestions")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      loadError = error.message;
+      console.error("Admin suggestions query error:", error);
+    }
+
+    suggestions = data ?? [];
+  } catch (e: any) {
+    loadError = e?.message ?? String(e);
+    console.error("Admin suggestions unexpected error:", e);
+  }
 }
 
-const supabase =
-  supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey) : null;
-
-const { data: suggestions = [], error } =
-  supabase
-    ? await supabase
-        .from("business_suggestions")
-        .select("*")
-        .order("created_at", { ascending: false })
-    : { data: [], error: null };
-
-if (error) {
-  console.error("Error loading suggestions for admin:", error);
-}
+const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
+const suggestionCount = suggestions.length;
 ---
 
-<Layout title="Admin • VantaJax">
-  <section class="py-10 px-4">
-    <div class="mx-auto max-w-5xl space-y-6">
-      <header class="flex flex-wrap items-baseline justify-between gap-3">
-        <div class="space-y-1">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-600">
-            Admin
-          </p>
-          <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">
-            Business suggestions
-          </h1>
-          <p class="text-[11px] text-slate-600 max-w-xl">
-            Internal view for reviewing and promoting community-submitted suggestions into
-            the main directory. This page is not public.
-          </p>
-        </div>
-
-        <a
-          href="/businesses"
-          class="text-[11px] text-purple-700 hover:text-purple-900 underline underline-offset-2"
+<Layout title="Admin • VantaJax" fullWidth={true}>
+  <div class="bg-white">
+    <section class="relative overflow-hidden px-4 pt-14 pb-20">
+      <!-- Luxury background -->
+      <div class="pointer-events-none absolute inset-0">
+        <div
+          class="absolute -top-28 left-1/2 h-72 w-[46rem] -translate-x-1/2 rounded-full bg-purple-600/10 blur-3xl"
         >
-          ← Back to search
-        </a>
-      </header>
+        </div>
+        <div
+          class="absolute top-20 left-1/4 h-56 w-96 -translate-x-1/2 rounded-full bg-fuchsia-500/10 blur-3xl"
+        >
+        </div>
+        <div
+          class="absolute inset-0 bg-linear-to-b from-slate-50 via-white to-white"
+        >
+        </div>
+        <div
+          class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(88,28,135,0.06),transparent_55%)]"
+        >
+        </div>
+      </div>
 
-      <AdminDashboard client:load suggestions={suggestions} />
-    </div>
-  </section>
+      <div class="relative mx-auto w-full max-w-6xl space-y-8">
+        <!-- Header -->
+        <header class="flex flex-wrap items-end justify-between gap-4">
+          <div class="space-y-2">
+            <p
+              class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-600"
+            >
+              Admin
+            </p>
+            <h1
+              class="text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900"
+            >
+              Business suggestions
+            </h1>
+            <p class="text-[12px] text-slate-600 max-w-2xl leading-relaxed">
+              Internal review queue for promoting community submissions into the
+              directory.
+            </p>
+
+            <p class="text-[11px] text-slate-500">
+              <span class="font-semibold text-slate-900">{suggestionCount}</span
+              >
+              {" "}suggestion{suggestionCount === 1 ? "" : "s"} awaiting review
+            </p>
+
+            <div
+              class="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500"
+            >
+              <a
+                href={"/metrics" + adminKeyParam}
+                class="rounded-full border border-slate-200 bg-white/70 px-3 py-1.5 shadow-sm backdrop-blur hover:bg-white"
+              >
+                View metrics →
+              </a>
+              <a
+                href="/businesses"
+                class="rounded-full border border-slate-200 bg-white/70 px-3 py-1.5 shadow-sm backdrop-blur hover:bg-white"
+              >
+                ← Back to search
+              </a>
+            </div>
+          </div>
+
+          <div
+            class="rounded-2xl border border-slate-200/70 bg-white/70 px-4 py-3 shadow-sm backdrop-blur"
+          >
+            <p
+              class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500"
+            >
+              Access
+            </p>
+            <p class="mt-1 text-[12px] text-slate-700">
+              Keyed session • keep link private
+            </p>
+          </div>
+        </header>
+
+        {
+          loadError && (
+            <div class="rounded-[24px] border border-red-200 bg-red-50/80 px-5 py-4 text-[12px] text-red-700 shadow-sm backdrop-blur">
+              <span class="font-semibold">Admin load error:</span> {loadError}
+            </div>
+          )
+        }
+
+        <!-- Admin dashboard -->
+        <div
+          class="rounded-[28px] border border-slate-200/70 bg-white/70 p-6 sm:p-8 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur"
+        >
+          <AdminDashboard client:load suggestions={suggestions} />
+        </div>
+      </div>
+    </section>
+  </div>
 
   <Analytics />
 </Layout>
