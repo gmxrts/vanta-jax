@@ -139,7 +139,7 @@ const suggestionCount = suggestions.length;
         <div
           class="rounded-[28px] border border-slate-200/70 bg-white/70 p-6 sm:p-8 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur"
         >
-          <AdminDashboard client:load suggestions={suggestions} />
+          <AdminDashboard client:only="react" suggestions={suggestions} />
         </div>
       </div>
     </section>
