@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { AddressAutofill } from "@mapbox/search-js-react";
 
 type Suggestion = {
   id: string;
