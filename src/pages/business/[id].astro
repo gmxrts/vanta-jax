@@ -43,6 +43,17 @@ const rawLng = b?.lng ?? b?.longitude ?? b?.lon;
 const lat: number | null = rawLat != null ? parseFloat(String(rawLat)) : null;
 const lng: number | null = rawLng != null ? parseFloat(String(rawLng)) : null;
 const hasCoords = lat != null && !isNaN(lat) && lng != null && !isNaN(lng);
+
+// Logo support
+const logoUrl = business?.logo_url ? String(business.logo_url).trim() : "";
+const initials = business?.name
+  ? business.name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w: string) => w[0]?.toUpperCase())
+      .join("")
+  : "-";
 ---
 
 <Layout title={business ? business.name : "Business • VantaJax"}>
