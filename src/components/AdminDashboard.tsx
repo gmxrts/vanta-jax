@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { AddressAutofill } from "@mapbox/search-js-react";
 
 type Suggestion = {
   id: string;
@@ -75,6 +76,7 @@ function inferStatus(s: Suggestion): "Imported" | "Community" {
 type QuickSettings = { category: string; verified: boolean };
 
 export default function AdminDashboard({ suggestions }: Props) {
+  const MAPBOX_TOKEN = import.meta.env.PUBLIC_MAPBOX_TOKEN as string | undefined;
   const [items, setItems] = useState<Suggestion[]>(suggestions ?? []);
   const [openIds, setOpenIds] = useState<Set<string>>(() => new Set());
   const [editIds, setEditIds] = useState<Set<string>>(() => new Set());
@@ -716,51 +718,66 @@ export default function AdminDashboard({ suggestions }: Props) {
                             </div>
                           </div>
 
-                          <div className="grid gap-4 sm:grid-cols-[2fr,1fr]">
-                            <div className="space-y-2">
-                              <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                                Street address
-                              </label>
-                              <input
-                                name="address"
-                                placeholder="Street address"
-                                className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
-                              />
+                          {!MAPBOX_TOKEN && (
+                            <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-[12px] text-amber-800">
+                              Address autocomplete is disabled (missing <span className="font-semibold">PUBLIC_MAPBOX_TOKEN</span>).
                             </div>
+                          )}
 
-                            <div className="grid grid-cols-3 gap-3">
+                          <AddressAutofill
+                            accessToken={MAPBOX_TOKEN || ""}
+                            options={{ country: "us" }}
+                          >
+                            <div className="grid gap-4 sm:grid-cols-[2fr,1fr]">
                               <div className="space-y-2">
                                 <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                                  City
+                                  Street address
                                 </label>
                                 <input
-                                  name="city"
-                                  defaultValue={s.city || ""}
-                                  className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+                                  name="address"
+                                  autoComplete="address-line1"
+                                  placeholder="Start typing an address…"
+                                  className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
                                 />
                               </div>
-                              <div className="space-y-2">
-                                <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                                  State
-                                </label>
-                                <input
-                                  name="state"
-                                  defaultValue={s.state || "FL"}
-                                  maxLength={2}
-                                  className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-3 text-sm uppercase text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                                  ZIP
-                                </label>
-                                <input
-                                  name="zip"
-                                  className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
-                                />
+
+                              <div className="grid grid-cols-3 gap-3">
+                                <div className="space-y-2">
+                                  <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                    City
+                                  </label>
+                                  <input
+                                    name="city"
+                                    autoComplete="address-level2"
+                                    defaultValue={s.city || ""}
+                                    className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                    State
+                                  </label>
+                                  <input
+                                    name="state"
+                                    autoComplete="address-level1"
+                                    defaultValue={s.state || "FL"}
+                                    maxLength={2}
+                                    className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-3 text-sm uppercase text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                    ZIP
+                                  </label>
+                                  <input
+                                    name="zip"
+                                    autoComplete="postal-code"
+                                    className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+                                  />
+                                </div>
                               </div>
                             </div>
-                          </div>
+                          </AddressAutofill>
 
                           <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
