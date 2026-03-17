@@ -211,7 +211,7 @@ export default function BusinessSearch() {
       <a
         key={b.id}
         href={`/business/${b.id}`}
-        className="vj-card-tight group text-sm text-slate-800 transition hover:-translate-y-0.5 hover:border-purple-500 hover:shadow-md"
+        className="vj-card-tight group block text-sm text-slate-800"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
@@ -229,10 +229,13 @@ export default function BusinessSearch() {
             )}
 
             {b.category && (
-              <p className="text-[11px] text-slate-500 capitalize">
+              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[11px] font-medium capitalize text-slate-600">
                 {b.category}
-                {b.area && <> • {b.area}</>}
-              </p>
+              </span>
+            )}
+
+            {b.area && (
+              <p className="text-[11px] text-slate-500">{b.area}</p>
             )}
           </div>
 
