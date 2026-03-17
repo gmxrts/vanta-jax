@@ -63,6 +63,31 @@ export default function SuggestBusinessForm() {
     }
   };
 
+  if (message) {
+    return (
+      <section className="space-y-5 text-center py-4">
+        <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 border border-emerald-200 mx-auto">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12l5 5L20 7" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+        <div>
+          <h2 className="text-base font-semibold text-slate-900">Suggestion received</h2>
+          <p className="mt-2 text-[13px] text-slate-600 leading-relaxed">
+            Thanks for helping build the directory. We’ll review and add the business soon.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setMessage(null)}
+          className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white/70 px-5 py-2.5 text-[13px] font-semibold text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-white"
+        >
+          Suggest another
+        </button>
+      </section>
+    );
+  }
+
   return (
     <section className="space-y-5">
       <div>
@@ -152,12 +177,6 @@ export default function SuggestBusinessForm() {
         {error && (
           <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-[12px] text-red-700">
             {error}
-          </div>
-        )}
-
-        {message && (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-[12px] text-emerald-700">
-            {message}
           </div>
         )}
 

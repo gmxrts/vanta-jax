@@ -57,20 +57,20 @@ export default function BusinessSearch() {
   const [hasSearched, setHasSearched] = useState(false);
 
   const [featured, setFeatured] = useState<Business[]>([]);
-  const [loadingFeatured, setLoadingFeatured] = useState(true);
+  const [directory, setDirectory] = useState<Business[]>([]);
+  const [loadingDirectory, setLoadingDirectory] = useState(true);
 
   const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(
     null
   );
 
   useEffect(() => {
-    const loadFeatured = async () => {
+    const loadAll = async () => {
       try {
-        setLoadingFeatured(true);
+        setLoadingDirectory(true);
         const { data, error } = await supabase
           .from("businesses")
           .select("*")
-          .eq("featured", true)
           .order("verified", { ascending: false })
           .order("name", { ascending: true });
 
@@ -79,15 +79,17 @@ export default function BusinessSearch() {
           return;
         }
 
-        setFeatured((data || []) as Business[]);
+        const all = (data || []) as Business[];
+        setDirectory(all);
+        setFeatured(all.filter((b) => b.featured));
       } catch (err) {
         console.error(err);
       } finally {
-        setLoadingFeatured(false);
+        setLoadingDirectory(false);
       }
     };
 
-    loadFeatured();
+    loadAll();
   }, []);
 
   const fetchBusinesses = async (opts?: {
@@ -371,30 +373,56 @@ export default function BusinessSearch() {
         </div>
       )}
 
-      {/* FEATURED SECTION WHEN NOT SEARCHING */}
+      {/* FEATURED + FULL DIRECTORY WHEN NOT SEARCHING */}
       {!hasSearched && !error && (
-        <section className="w-full max-w-4xl space-y-3">
-          <div className="flex items-center justify-between text-[11px] text-slate-500">
-            <span className="font-semibold uppercase tracking-[0.18em]">
-              Featured
-            </span>
-            <span>
-              {loadingFeatured
-                ? "Loading featured businesses…"
-                : featured.length === 0
-                ? "No featured businesses yet."
-                : `${featured.length} featured business${
-                    featured.length === 1 ? "" : "es"
-                  }`}
-            </span>
-          </div>
-
+        <>
           {featured.length > 0 && (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {featured.map((b) => renderBusinessCard(b))}
-            </div>
+            <section className="w-full max-w-4xl space-y-3">
+              <div className="flex items-center justify-between text-[11px] text-slate-500">
+                <span className="font-semibold uppercase tracking-[0.18em]">
+                  Featured
+                </span>
+                <span>
+                  {featured.length} featured business{featured.length === 1 ? "" : "es"}
+                </span>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {featured.map((b) => renderBusinessCard(b))}
+              </div>
+            </section>
           )}
-        </section>
+
+          <section className="w-full max-w-4xl space-y-3">
+            <div className="flex items-center justify-between text-[11px] text-slate-500">
+              <span className="font-semibold uppercase tracking-[0.18em]">
+                Directory
+              </span>
+              <span>
+                {loadingDirectory
+                  ? "Loading…"
+                  : `Showing ${directory.length} business${directory.length === 1 ? "" : "es"}`}
+              </span>
+            </div>
+
+            {!loadingDirectory && directory.length > 0 && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {directory.map((b) => renderBusinessCard(b))}
+              </div>
+            )}
+
+            {!loadingDirectory && directory.length === 0 && (
+              <p className="text-[11px] text-slate-500">
+                No businesses in the directory yet.{" "}
+                <a
+                  href="/suggest-business"
+                  className="text-purple-700 underline underline-offset-2 hover:text-purple-900"
+                >
+                  Suggest one.
+                </a>
+              </p>
+            )}
+          </section>
+        </>
       )}
 
       {/* SEARCH RESULTS */}
@@ -440,12 +468,12 @@ export default function BusinessSearch() {
         </section>
       )}
 
-      {/* EMPTY STATE WHEN NO FEATURED + NO SEARCH */}
+      {/* EMPTY STATE WHEN NO DIRECTORY + NO SEARCH */}
       {!error &&
         !hasSearched &&
         !loading &&
-        !loadingFeatured &&
-        featured.length === 0 && (
+        !loadingDirectory &&
+        directory.length === 0 && (
           <p className="w-full max-w-3xl text-[11px] text-slate-500">
             Use the search above to discover Black-owned businesses in your
             area.

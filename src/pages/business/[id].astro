@@ -33,6 +33,16 @@ const safeUrl = (url: any) => {
 const mapsUrl = fullAddress
   ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`
   : "";
+
+const mapboxToken = import.meta.env.PUBLIC_MAPBOX_TOKEN ?? "";
+
+// Support lat/lng, lat/lon, latitude/longitude column naming, and string or number values
+const b = business as any;
+const rawLat = b?.lat ?? b?.latitude;
+const rawLng = b?.lng ?? b?.longitude ?? b?.lon;
+const lat: number | null = rawLat != null ? parseFloat(String(rawLat)) : null;
+const lng: number | null = rawLng != null ? parseFloat(String(rawLng)) : null;
+const hasCoords = lat != null && !isNaN(lat) && lng != null && !isNaN(lng);
 ---
 
 <Layout title={business ? business.name : "Business • VantaJax"}>
@@ -109,19 +119,6 @@ const mapsUrl = fullAddress
                 >
                   Copy link
                 </button>
-
-                {fullAddress && (
-                  <a
-                    id="open-in-maps-hero"
-                    href={mapsUrl}
-                    data-address={fullAddress}
-                    target="_blank"
-                    rel="noreferrer"
-                    class="inline-flex items-center justify-center rounded-2xl bg-purple-600 px-4 py-2 text-[12px] font-semibold text-white shadow-[0_16px_34px_-22px_rgba(147,51,234,0.65)] transition hover:-translate-y-0.5 hover:bg-purple-700"
-                  >
-                    Directions
-                  </a>
-                )}
               </div>
             </div>
 
@@ -195,6 +192,35 @@ const mapsUrl = fullAddress
                     )}
                   </div>
                 </div>
+              </section>
+
+              <!-- Map section -->
+              <section class="rounded-[28px] border border-slate-200/70 bg-white/70 overflow-hidden shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)]">
+                {hasCoords && mapboxToken ? (
+                  <div
+                    id="business-map"
+                    data-lat={lat}
+                    data-lng={lng}
+                    data-name={business.name}
+                    data-token={mapboxToken}
+                    style="height: 260px; width: 100%;"
+                  />
+                ) : fullAddress ? (
+                  <div class="p-6 sm:p-8">
+                    <h2 class="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Location
+                    </h2>
+                    <p class="mt-3 text-[13px] text-slate-700">{fullAddress}</p>
+                    <a
+                      href={mapsUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      class="mt-4 inline-flex items-center gap-1.5 text-[12px] font-semibold text-purple-700 underline underline-offset-2 hover:text-purple-900"
+                    >
+                      View on Google Maps →
+                    </a>
+                  </div>
+                ) : null}
               </section>
 
               <section class="rounded-[28px] border border-slate-200/70 bg-white/70 p-6 sm:p-8 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur">
@@ -273,66 +299,99 @@ const mapsUrl = fullAddress
           </div>
         </div>
 
+        <!-- Mapbox GL JS map init -->
+        <script is:inline>
+          (function () {
+            const el = document.getElementById('business-map');
+            if (!el) return;
+            const lat = parseFloat(el.dataset.lat || '');
+            const lng = parseFloat(el.dataset.lng || '');
+            const token = el.dataset.token || '';
+            const name = el.dataset.name || '';
+            if (!token || isNaN(lat) || isNaN(lng)) return;
+
+            const css = document.createElement('link');
+            css.rel = 'stylesheet';
+            css.href = 'https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css';
+            document.head.appendChild(css);
+
+            const s = document.createElement('script');
+            s.src = 'https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js';
+            s.onload = function () {
+              mapboxgl.accessToken = token;
+              const map = new mapboxgl.Map({
+                container: el,
+                style: 'mapbox://styles/mapbox/light-v11',
+                center: [lng, lat],
+                zoom: 15,
+                interactive: true,
+              });
+              new mapboxgl.Marker({ color: '#9333ea' })
+                .setLngLat([lng, lat])
+                .setPopup(new mapboxgl.Popup({ offset: 25 }).setText(name))
+                .addTo(map);
+            };
+            document.head.appendChild(s);
+          })();
+        </script>
+
         <!-- Keep your deep-link behavior + copy/share -->
         <script is:inline>
-          {`
-            (function () {
-              const copyBtn = document.getElementById('copy-link');
-              if (copyBtn) {
-                copyBtn.addEventListener('click', async function () {
-                  try {
+          (function () {
+            const copyBtn = document.getElementById('copy-link');
+            if (copyBtn) {
+              copyBtn.addEventListener('click', async function () {
+                try {
+                  await navigator.clipboard.writeText(window.location.href);
+                  copyBtn.textContent = 'Copied';
+                  setTimeout(() => (copyBtn.textContent = 'Copy link'), 1200);
+                } catch (e) {
+                  copyBtn.textContent = 'Copy failed';
+                  setTimeout(() => (copyBtn.textContent = 'Copy link'), 1200);
+                }
+              });
+            }
+
+            const shareBtn = document.getElementById('share');
+            if (shareBtn) {
+              shareBtn.addEventListener('click', async function () {
+                const data = { title: document.title, url: window.location.href };
+                try {
+                  if (navigator.share) {
+                    await navigator.share(data);
+                  } else if (navigator.clipboard) {
                     await navigator.clipboard.writeText(window.location.href);
-                    copyBtn.textContent = 'Copied';
-                    setTimeout(() => (copyBtn.textContent = 'Copy link'), 1200);
-                  } catch (e) {
-                    copyBtn.textContent = 'Copy failed';
-                    setTimeout(() => (copyBtn.textContent = 'Copy link'), 1200);
+                    shareBtn.textContent = 'Copied';
+                    setTimeout(() => (shareBtn.textContent = 'Share'), 1200);
                   }
-                });
-              }
+                } catch (e) {}
+              });
+            }
 
-              const shareBtn = document.getElementById('share');
-              if (shareBtn) {
-                shareBtn.addEventListener('click', async function () {
-                  const data = { title: document.title, url: window.location.href };
-                  try {
-                    if (navigator.share) {
-                      await navigator.share(data);
-                    } else if (navigator.clipboard) {
-                      await navigator.clipboard.writeText(window.location.href);
-                      shareBtn.textContent = 'Copied';
-                      setTimeout(() => (shareBtn.textContent = 'Share'), 1200);
-                    }
-                  } catch (e) {}
-                });
-              }
+            function wireMaps(id) {
+              const link = document.getElementById(id);
+              if (!link) return;
 
-              function wireMaps(id) {
-                const link = document.getElementById(id);
-                if (!link) return;
+              link.addEventListener('click', function (event) {
+                const address = link.getAttribute('data-address') || '';
+                if (!navigator || !navigator.userAgent) return;
 
-                link.addEventListener('click', function (event) {
-                  const address = link.getAttribute('data-address') || '';
-                  if (!navigator || !navigator.userAgent) return;
+                const ua = navigator.userAgent.toLowerCase();
+                const isIOS = /iphone|ipad|ipod/.test(ua) && !window.MSStream;
+                const isAndroid = /android/.test(ua);
 
-                  const ua = navigator.userAgent.toLowerCase();
-                  const isIOS = /iphone|ipad|ipod/.test(ua) && !window.MSStream;
-                  const isAndroid = /android/.test(ua);
+                if (isIOS) {
+                  event.preventDefault();
+                  window.location.href = 'maps://?q=' + encodeURIComponent(address);
+                } else if (isAndroid) {
+                  event.preventDefault();
+                  window.location.href = 'geo:0,0?q=' + encodeURIComponent(address);
+                }
+              });
+            }
 
-                  if (isIOS) {
-                    event.preventDefault();
-                    window.location.href = 'maps://?q=' + encodeURIComponent(address);
-                  } else if (isAndroid) {
-                    event.preventDefault();
-                    window.location.href = 'geo:0,0?q=' + encodeURIComponent(address);
-                  }
-                });
-              }
-
-              wireMaps('open-in-maps');
-              wireMaps('open-in-maps-hero');
-            })();
-          `}
+            wireMaps('open-in-maps');
+          })();
         </script>
       </section>
     ) : (
