@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { createClient } from '@supabase/supabase-js';
 
-export const prerender = false; // <-- critical: this makes the route server-only
+export const prerender = false;
 
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const serviceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -39,6 +39,13 @@ export const POST: APIRoute = async ({ request }) => {
     website,
     description,
     verified,
+    latitude,
+    longitude,
+    business_type,
+    is_address_public,
+    logo_url,
+    service_area,
+    public_location_label,
   } = body || {};
 
   if (!suggestionId || !name) {
@@ -48,7 +55,7 @@ export const POST: APIRoute = async ({ request }) => {
     );
   }
 
-  const business = {
+  const business: Record<string, any> = {
     name: String(name).trim(),
     category: category || 'services',
     address: address || null,
@@ -60,6 +67,15 @@ export const POST: APIRoute = async ({ request }) => {
     website: website || null,
     verified: typeof verified === 'boolean' ? verified : true,
   };
+
+  // Phase 3 fields
+  if (latitude != null) business.latitude = Number(latitude);
+  if (longitude != null) business.longitude = Number(longitude);
+  if (business_type) business.business_type = business_type;
+  if (is_address_public != null) business.is_address_public = Boolean(is_address_public);
+  if (logo_url) business.logo_url = logo_url;
+  if (service_area) business.service_area = service_area;
+  if (public_location_label) business.public_location_label = public_location_label;
 
   // Insert into businesses
   const { error: insertError } = await supabase.from('businesses').insert(business);
@@ -74,7 +90,7 @@ export const POST: APIRoute = async ({ request }) => {
     );
   }
 
-  // Remove from suggestions (optional but nice)
+  // Remove from suggestions
   const { error: deleteError } = await supabase
     .from('business_suggestions')
     .delete()
@@ -82,7 +98,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   if (deleteError) {
     console.error('Error deleting suggestion:', deleteError);
-    // Not fatal for the user – insert already succeeded
+    // Not fatal — insert already succeeded
   }
 
   return new Response(JSON.stringify({ success: true }), { status: 200 });

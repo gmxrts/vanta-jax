@@ -375,6 +375,17 @@ const initials = business?.name
           })();
         </script>
 
+        <!-- View count ping (fire-and-forget) -->
+        <script is:inline define:vars={{ businessId: business?.id }}>
+          if (businessId) {
+            fetch('/api/view', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ businessId }),
+            }).catch(() => {});
+          }
+        </script>
+
         <!-- Keep your deep-link behavior + copy/share -->
         <script is:inline>
           (function () {
