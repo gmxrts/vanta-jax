@@ -8,7 +8,6 @@ const expectedKey = import.meta.env.ADMIN_ACCESS_KEY;
 const requestUrl = new URL(Astro.request.url);
 const key = requestUrl.searchParams.get("key");
 
-// Protect route with shared secret
 if (!expectedKey || key !== expectedKey) {
   return Astro.redirect("/");
 }
@@ -22,19 +21,7 @@ if (!supabaseUrl || !serviceKey) {
 
 const supabase = createClient(supabaseUrl, serviceKey);
 
-// Daily metrics from view (last 7 days, newest first)
-const { data: dailyMetrics = [], error: metricsError } = await supabase
-  .from("daily_metrics")
-  .select("*")
-  .order("day", { ascending: false })
-  .limit(7);
-
-if (metricsError) {
-  console.error(metricsError);
-  throw metricsError;
-}
-
-// Totals
+// ── Totals ──────────────────────────────────────────────────────────────────
 const { count: totalBusinesses } = await supabase
   .from("businesses")
   .select("*", { count: "exact", head: true });
@@ -47,15 +34,100 @@ const { count: totalSearches } = await supabase
   .from("search_events")
   .select("*", { count: "exact", head: true });
 
-// Today snapshot
-const todayMetrics =
-  dailyMetrics && dailyMetrics.length > 0 ? dailyMetrics[0] : null;
+// ── Daily metrics (last 7 days) ──────────────────────────────────────────────
+const { data: dailyMetrics = [], error: metricsError } = await supabase
+  .from("daily_metrics")
+  .select("*")
+  .order("day", { ascending: false })
+  .limit(7);
 
+if (metricsError) {
+  console.error(metricsError);
+}
+
+const todayMetrics = dailyMetrics && dailyMetrics.length > 0 ? dailyMetrics[0] : null;
+
+// ── Category breakdown (live businesses) ────────────────────────────────────
+const { data: businessesRaw = [] } = await supabase
+  .from("businesses")
+  .select("category")
+  .eq("verified", true);
+
+const categoryMap: Record<string, number> = {};
+for (const b of businessesRaw ?? []) {
+  const cat = (b.category as string) || "other";
+  categoryMap[cat] = (categoryMap[cat] || 0) + 1;
+}
+const categoryBreakdown = Object.entries(categoryMap)
+  .map(([category, count]) => ({ category, count }))
+  .sort((a, b) => b.count - a.count);
+
+const categoryMax = categoryBreakdown[0]?.count || 1;
+
+const categoryLabels: Record<string, string> = {
+  food: "Food & Dining",
+  retail: "Retail",
+  services: "Services",
+  health: "Health & Wellness",
+  nonprofit: "Nonprofit & Community",
+  other: "Other",
+};
+
+// ── Most viewed businesses ───────────────────────────────────────────────────
+const { data: mostViewed = [] } = await supabase
+  .from("businesses")
+  .select("id, name, category, view_count")
+  .order("view_count", { ascending: false })
+  .limit(10);
+
+// ── Search activity ──────────────────────────────────────────────────────────
+const { data: searchEventsRaw = [] } = await supabase
+  .from("search_events")
+  .select("location, category, result_count")
+  .order("created_at", { ascending: false })
+  .limit(1000);
+
+const categorySearchMap: Record<string, number> = {};
+const locationSearchMap: Record<string, number> = {};
+const zeroResultMap: Record<string, number> = {};
+let totalZeroResults = 0;
+
+for (const e of searchEventsRaw ?? []) {
+  if (e.category) {
+    categorySearchMap[e.category] = (categorySearchMap[e.category] || 0) + 1;
+  }
+  if (e.location && (e.location as string).trim()) {
+    const loc = (e.location as string).trim().toLowerCase();
+    locationSearchMap[loc] = (locationSearchMap[loc] || 0) + 1;
+  }
+  if ((e.result_count as number) === 0) {
+    totalZeroResults++;
+    const parts = [e.category, e.location].filter(Boolean);
+    const key = parts.length ? parts.join(" + ") : "no filter";
+    zeroResultMap[key] = (zeroResultMap[key] || 0) + 1;
+  }
+}
+
+const topCategorySearches = Object.entries(categorySearchMap)
+  .map(([category, count]) => ({ category, count }))
+  .sort((a, b) => b.count - a.count)
+  .slice(0, 8);
+
+const topLocationSearches = Object.entries(locationSearchMap)
+  .map(([location, count]) => ({ location, count }))
+  .sort((a, b) => b.count - a.count)
+  .slice(0, 10);
+
+const topZeroResultSearches = Object.entries(zeroResultMap)
+  .map(([query, count]) => ({ query, count }))
+  .sort((a, b) => b.count - a.count)
+  .slice(0, 10);
+
+const locationMax = topLocationSearches[0]?.count || 1;
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
 const formatDate = (value: string | Date) =>
-  new Date(value).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+  new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
 ---
@@ -63,51 +135,24 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
 <Layout title="Metrics • VantaJax" fullWidth={true}>
   <div class="bg-white">
     <section class="relative overflow-hidden px-4 pt-14 pb-14">
-      <!-- Luxury background -->
+      <!-- Background -->
       <div class="pointer-events-none absolute inset-0">
-        <div
-          class="vj-glow vj-glow-a absolute -top-28 left-1/2 h-72 w-184 -translate-x-1/2 rounded-full bg-purple-600/12 blur-3xl"
-        >
-        </div>
-        <div
-          class="vj-glow vj-glow-b absolute top-16 left-1/4 h-56 w-96 -translate-x-1/2 rounded-full bg-fuchsia-500/10 blur-3xl"
-        >
-        </div>
-        <div
-          class="absolute inset-0 bg-linear-to-b from-slate-50 via-white to-white"
-        >
-        </div>
-        <div
-          class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(88,28,135,0.06),transparent_55%)]"
-        >
-        </div>
+        <div class="vj-glow vj-glow-a absolute -top-28 left-1/2 h-72 w-184 -translate-x-1/2 rounded-full bg-purple-600/12 blur-3xl"></div>
+        <div class="vj-glow vj-glow-b absolute top-16 left-1/4 h-56 w-96 -translate-x-1/2 rounded-full bg-fuchsia-500/10 blur-3xl"></div>
+        <div class="absolute inset-0 bg-linear-to-b from-slate-50 via-white to-white"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(88,28,135,0.06),transparent_55%)]"></div>
       </div>
 
-      <div class="relative mx-auto w-full max-w-6xl space-y-8">
+      <div class="relative mx-auto w-full max-w-6xl space-y-10">
         <!-- Header -->
-        <header
-          class="flex flex-wrap items-end justify-between gap-4"
-          data-reveal
-          data-delay="0"
-        >
+        <header class="flex flex-wrap items-end justify-between gap-4" data-reveal data-delay="0">
           <div class="space-y-2">
-            <p
-              class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-600"
-            >
-              Admin
-            </p>
-            <h1
-              class="text-2xl sm:text-4xl font-semibold tracking-tight text-slate-900"
-            >
-              Metrics
-            </h1>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-600">Admin</p>
+            <h1 class="text-2xl sm:text-4xl font-semibold tracking-tight text-slate-900">Metrics</h1>
             <p class="text-[12px] text-slate-600 max-w-2xl leading-relaxed">
-              High-level directory metrics based on the last 7 days of activity.
+              Real-time directory insights — category gaps, search demand, and activity trends.
             </p>
-
-            <div
-              class="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500"
-            >
+            <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
               <a
                 href={"/admin" + adminKeyParam}
                 class="rounded-full border border-slate-200 bg-white/70 px-3 py-1.5 shadow-sm backdrop-blur hover:bg-white"
@@ -125,123 +170,263 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
         </header>
 
         <!-- Summary cards -->
-        <section class="grid gap-4 sm:grid-cols-3" data-reveal data-delay="90">
-          <div
-            class="rounded-3xl border border-slate-200/70 bg-white/70 p-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur"
-          >
-            <h2
-              class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500"
-            >
-              Businesses
-            </h2>
-            <p class="mt-2 text-3xl font-semibold text-slate-900">
-              {totalBusinesses ?? 0}
-            </p>
-            <p class="mt-2 text-[11px] text-slate-500">
-              Total live directory entries.
-            </p>
+        <section class="grid gap-4 sm:grid-cols-3" data-reveal data-delay="60">
+          <div class="rounded-3xl border border-slate-200/70 bg-white/70 p-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur">
+            <h2 class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Businesses</h2>
+            <p class="mt-2 text-3xl font-semibold text-slate-900">{totalBusinesses ?? 0}</p>
+            <p class="mt-2 text-[11px] text-slate-500">Total live directory entries.</p>
           </div>
-
-          <div
-            class="rounded-3xl border border-slate-200/70 bg-white/70 p-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur"
-          >
-            <h2
-              class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500"
-            >
-              Suggestions
-            </h2>
-            <p class="mt-2 text-3xl font-semibold text-slate-900">
-              {totalSuggestions ?? 0}
-            </p>
-            <p class="mt-2 text-[11px] text-slate-500">
-              Community-submitted businesses.
-            </p>
+          <div class="rounded-3xl border border-slate-200/70 bg-white/70 p-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur">
+            <h2 class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Suggestions</h2>
+            <p class="mt-2 text-3xl font-semibold text-slate-900">{totalSuggestions ?? 0}</p>
+            <p class="mt-2 text-[11px] text-slate-500">Community-submitted businesses.</p>
           </div>
-
-          <div
-            class="rounded-3xl border border-slate-200/70 bg-white/70 p-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur"
-          >
-            <h2
-              class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500"
-            >
-              Searches
-            </h2>
-            <p class="mt-2 text-3xl font-semibold text-slate-900">
-              {totalSearches ?? 0}
-            </p>
-            <p class="mt-2 text-[11px] text-slate-500">
-              Total directory searches logged.
-            </p>
+          <div class="rounded-3xl border border-slate-200/70 bg-white/70 p-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur">
+            <h2 class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Searches</h2>
+            <p class="mt-2 text-3xl font-semibold text-slate-900">{totalSearches ?? 0}</p>
+            <p class="mt-2 text-[11px] text-slate-500">Total directory searches logged.</p>
           </div>
         </section>
 
-        <!-- Today snapshot -->
-        <section class="space-y-3" data-reveal data-delay="140">
-          <h2
-            class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500"
-          >
-            Today
-          </h2>
+        <!-- ① Category Breakdown ──────────────────────────────────────────── -->
+        <section class="space-y-4" data-reveal data-delay="100">
+          <div class="flex items-baseline gap-3">
+            <h2 class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Businesses by category
+            </h2>
+            <span class="text-[11px] text-slate-400">{businessesRaw?.length ?? 0} verified</span>
+          </div>
 
-          {
-            todayMetrics ? (
-              <div class="rounded-[28px] border border-slate-200/70 bg-white/70 p-5 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur">
-                <p class="text-[11px] text-slate-500 mb-4">
-                  {formatDate(todayMetrics.day)}
-                </p>
+          {categoryBreakdown.length > 0 ? (
+            <div class="rounded-[28px] border border-slate-200/70 bg-white/70 p-6 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur space-y-3">
+              {categoryBreakdown.map(({ category, count }) => {
+                const pct = Math.round((count / categoryMax) * 100);
+                const label = categoryLabels[category] ?? category;
+                return (
+                  <div class="space-y-1.5">
+                    <div class="flex items-center justify-between text-[12px]">
+                      <span class="font-medium text-slate-700 capitalize">{label}</span>
+                      <span class="font-semibold text-slate-900 tabular-nums">{count}</span>
+                    </div>
+                    <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        class="h-full rounded-full bg-purple-500"
+                        style={`width: ${pct}%`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div class="rounded-3xl border border-slate-200/70 bg-white/70 p-5 backdrop-blur">
+              <p class="text-[12px] text-slate-500">No verified businesses found.</p>
+            </div>
+          )}
+        </section>
 
-                <div class="grid gap-4 sm:grid-cols-4">
-                  <div class="space-y-1">
-                    <p class="text-[11px] text-slate-500">Searches</p>
-                    <p class="text-base font-semibold text-slate-900">
-                      {todayMetrics.searches}
-                    </p>
-                  </div>
-                  <div class="space-y-1">
-                    <p class="text-[11px] text-slate-500">Zero-result</p>
-                    <p class="text-base font-semibold text-slate-900">
-                      {todayMetrics.zero_result_searches}
-                    </p>
-                  </div>
-                  <div class="space-y-1">
-                    <p class="text-[11px] text-slate-500">Suggestions</p>
-                    <p class="text-base font-semibold text-slate-900">
-                      {todayMetrics.suggestions}
-                    </p>
-                  </div>
-                  <div class="space-y-1">
-                    <p class="text-[11px] text-slate-500">New businesses</p>
-                    <p class="text-base font-semibold text-slate-900">
-                      {todayMetrics.new_businesses}
-                    </p>
-                  </div>
+        <!-- ② Most Viewed Businesses ────────────────────────────────────── -->
+        <section class="space-y-4" data-reveal data-delay="140">
+          <div class="flex items-baseline gap-3">
+            <h2 class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Most viewed businesses
+            </h2>
+            <span class="text-[11px] text-slate-400">by page views</span>
+          </div>
+
+          {(mostViewed ?? []).length > 0 ? (
+            <div class="vj-table-wrap overflow-x-auto rounded-[28px] border border-slate-200/70 bg-white/70 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur">
+              <table class="min-w-full text-left text-[11px] text-slate-700">
+                <thead class="vj-table-head border-b border-slate-200/70 bg-white/60 text-[10px] uppercase tracking-[0.15em] text-slate-500">
+                  <tr>
+                    <th class="px-5 py-3">#</th>
+                    <th class="px-5 py-3">Business</th>
+                    <th class="px-5 py-3">Category</th>
+                    <th class="px-5 py-3 text-right">Views</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(mostViewed ?? []).map((b: any, i: number) => (
+                    <tr class="border-t border-slate-200/40 hover:bg-white/40 transition">
+                      <td class="px-5 py-3 text-slate-400 tabular-nums">{i + 1}</td>
+                      <td class="px-5 py-3">
+                        <a
+                          href={`/business/${b.id}`}
+                          class="font-medium text-slate-900 hover:text-purple-700 underline underline-offset-2"
+                        >
+                          {b.name}
+                        </a>
+                      </td>
+                      <td class="px-5 py-3 capitalize text-slate-600">{b.category ?? "—"}</td>
+                      <td class="px-5 py-3 text-right font-semibold text-purple-700 tabular-nums">
+                        {b.view_count ?? 0}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div class="rounded-3xl border border-slate-200/70 bg-white/70 p-5 backdrop-blur">
+              <p class="text-[12px] text-slate-500">No view data yet — add the <code class="font-mono text-purple-600">view_count</code> column to start tracking.</p>
+            </div>
+          )}
+        </section>
+
+        <!-- ③ Search Activity ─────────────────────────────────────────────── -->
+        <section class="space-y-4" data-reveal data-delay="180">
+          <div class="flex items-baseline gap-3">
+            <h2 class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Search activity
+            </h2>
+            <span class="text-[11px] text-slate-400">what people are looking for</span>
+          </div>
+
+          <div class="grid gap-6 lg:grid-cols-2">
+            <!-- Top searched categories -->
+            <div class="rounded-[28px] border border-slate-200/70 bg-white/70 p-6 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur space-y-4">
+              <h3 class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Category filters used
+              </h3>
+              {topCategorySearches.length > 0 ? (
+                <div class="space-y-2">
+                  {topCategorySearches.map(({ category, count }) => {
+                    const label = categoryLabels[category] ?? category;
+                    const pct = Math.round((count / (topCategorySearches[0]?.count || 1)) * 100);
+                    return (
+                      <div class="space-y-1">
+                        <div class="flex items-center justify-between text-[11px]">
+                          <span class="text-slate-700 capitalize">{label}</span>
+                          <span class="font-semibold text-slate-900 tabular-nums">{count}</span>
+                        </div>
+                        <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            class="h-full rounded-full bg-purple-400"
+                            style={`width: ${pct}%`}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p class="text-[11px] text-slate-400">No category searches yet.</p>
+              )}
+            </div>
+
+            <!-- Top searched locations -->
+            <div class="rounded-[28px] border border-slate-200/70 bg-white/70 p-6 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur space-y-4">
+              <h3 class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Top locations searched
+              </h3>
+              {topLocationSearches.length > 0 ? (
+                <div class="space-y-2">
+                  {topLocationSearches.map(({ location, count }) => {
+                    const pct = Math.round((count / locationMax) * 100);
+                    return (
+                      <div class="space-y-1">
+                        <div class="flex items-center justify-between text-[11px]">
+                          <span class="text-slate-700 capitalize">{location}</span>
+                          <span class="font-semibold text-slate-900 tabular-nums">{count}</span>
+                        </div>
+                        <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            class="h-full rounded-full bg-fuchsia-400"
+                            style={`width: ${pct}%`}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p class="text-[11px] text-slate-400">No location searches yet.</p>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <!-- ④ Zero-Result Searches ──────────────────────────────────────── -->
+        <section class="space-y-4" data-reveal data-delay="220">
+          <div class="flex items-baseline gap-3">
+            <h2 class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Zero-result searches
+            </h2>
+            <span class="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold text-amber-700">
+              {totalZeroResults} total
+            </span>
+            <span class="text-[11px] text-slate-400">recruitment opportunities</span>
+          </div>
+
+          {topZeroResultSearches.length > 0 ? (
+            <div class="vj-table-wrap overflow-x-auto rounded-[28px] border border-slate-200/70 bg-white/70 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur">
+              <table class="min-w-full text-left text-[11px] text-slate-700">
+                <thead class="vj-table-head border-b border-slate-200/70 bg-white/60 text-[10px] uppercase tracking-[0.15em] text-slate-500">
+                  <tr>
+                    <th class="px-5 py-3">Search (category + location)</th>
+                    <th class="px-5 py-3 text-right">Times searched</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topZeroResultSearches.map(({ query, count }) => (
+                    <tr class="border-t border-slate-200/40 hover:bg-amber-50/30 transition">
+                      <td class="px-5 py-3">
+                        <span class="inline-flex items-center gap-1.5">
+                          <span class="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span class="capitalize">{query}</span>
+                        </span>
+                      </td>
+                      <td class="px-5 py-3 text-right font-semibold text-amber-700 tabular-nums">{count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div class="rounded-3xl border border-slate-200/70 bg-white/70 p-5 backdrop-blur">
+              <p class="text-[12px] text-slate-500">No zero-result searches yet — great coverage!</p>
+            </div>
+          )}
+        </section>
+
+        <!-- ⑤ Today snapshot ────────────────────────────────────────────── -->
+        <section class="space-y-3" data-reveal data-delay="260">
+          <h2 class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Today</h2>
+          {todayMetrics ? (
+            <div class="rounded-[28px] border border-slate-200/70 bg-white/70 p-5 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur">
+              <p class="text-[11px] text-slate-500 mb-4">{formatDate(todayMetrics.day)}</p>
+              <div class="grid gap-4 sm:grid-cols-4">
+                <div class="space-y-1">
+                  <p class="text-[11px] text-slate-500">Searches</p>
+                  <p class="text-base font-semibold text-slate-900">{todayMetrics.searches}</p>
+                </div>
+                <div class="space-y-1">
+                  <p class="text-[11px] text-slate-500">Zero-result</p>
+                  <p class="text-base font-semibold text-slate-900">{todayMetrics.zero_result_searches}</p>
+                </div>
+                <div class="space-y-1">
+                  <p class="text-[11px] text-slate-500">Suggestions</p>
+                  <p class="text-base font-semibold text-slate-900">{todayMetrics.suggestions}</p>
+                </div>
+                <div class="space-y-1">
+                  <p class="text-[11px] text-slate-500">New businesses</p>
+                  <p class="text-base font-semibold text-slate-900">{todayMetrics.new_businesses}</p>
                 </div>
               </div>
-            ) : (
-              <div class="rounded-3xl border border-slate-200/70 bg-white/70 p-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur">
-                <p class="text-[11px] text-slate-600">
-                  No metrics recorded for today yet.
-                </p>
-              </div>
-            )
-          }
+            </div>
+          ) : (
+            <div class="rounded-3xl border border-slate-200/70 bg-white/70 p-5 backdrop-blur">
+              <p class="text-[11px] text-slate-600">No metrics recorded for today yet.</p>
+            </div>
+          )}
         </section>
 
-        <!-- 7-day table -->
-        <section class="space-y-3" data-reveal data-delay="190">
-          <h2
-            class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500"
-          >
-            Last 7 days
-          </h2>
-
-          <div
-            class="vj-table-wrap overflow-x-auto rounded-[28px] border border-slate-200/70 bg-white/70 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur"
-          >
+        <!-- ⑥ 7-day table ────────────────────────────────────────────────── -->
+        <section class="space-y-3" data-reveal data-delay="300">
+          <h2 class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Last 7 days</h2>
+          <div class="vj-table-wrap overflow-x-auto rounded-[28px] border border-slate-200/70 bg-white/70 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur">
             <table class="min-w-full text-left text-[11px] text-slate-700">
-              <thead
-                class="vj-table-head border-b border-slate-200/70 bg-white/60 text-[10px] uppercase tracking-[0.15em] text-slate-500"
-              >
+              <thead class="vj-table-head border-b border-slate-200/70 bg-white/60 text-[10px] uppercase tracking-[0.15em] text-slate-500">
                 <tr>
                   <th class="px-4 py-3">Day</th>
                   <th class="px-4 py-3">Searches</th>
@@ -252,22 +437,16 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
                 </tr>
               </thead>
               <tbody>
-                {
-                  dailyMetrics.map((row) => (
-                    <tr class="border-t border-slate-200/40 hover:bg-white/40 transition">
-                      <td class="px-4 py-3 text-slate-600">
-                        {formatDate(row.day)}
-                      </td>
-                      <td class="px-4 py-3">{row.searches}</td>
-                      <td class="px-4 py-3">{row.zero_result_searches}</td>
-                      <td class="px-4 py-3">
-                        {Number(row.avg_results).toFixed(1)}
-                      </td>
-                      <td class="px-4 py-3">{row.suggestions}</td>
-                      <td class="px-4 py-3">{row.new_businesses}</td>
-                    </tr>
-                  ))
-                }
+                {(dailyMetrics ?? []).map((row: any) => (
+                  <tr class="border-t border-slate-200/40 hover:bg-white/40 transition">
+                    <td class="px-4 py-3 text-slate-600">{formatDate(row.day)}</td>
+                    <td class="px-4 py-3">{row.searches}</td>
+                    <td class="px-4 py-3">{row.zero_result_searches}</td>
+                    <td class="px-4 py-3">{Number(row.avg_results).toFixed(1)}</td>
+                    <td class="px-4 py-3">{row.suggestions}</td>
+                    <td class="px-4 py-3">{row.new_businesses}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -280,8 +459,7 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
   <script is:inline>
     (() => {
       const reduceMotion =
-        window.matchMedia &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       const els = Array.from(document.querySelectorAll("[data-reveal]"));
       if (els.length) {
@@ -302,7 +480,7 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
                 observer.unobserve(entry.target);
               });
             },
-            { threshold: 0.12, rootMargin: "0px 0px -10% 0px" },
+            { threshold: 0.08, rootMargin: "0px 0px -8% 0px" }
           );
 
           els.forEach((el) => io.observe(el));
@@ -321,16 +499,8 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
         raf = requestAnimationFrame(() => {
           raf = 0;
           const y = window.scrollY || 0;
-          if (glowA)
-            glowA.style.transform = `translate3d(-50%, ${Math.min(
-              18,
-              y * 0.02,
-            )}px, 0)`;
-          if (glowB)
-            glowB.style.transform = `translate3d(-50%, ${Math.min(
-              14,
-              y * 0.015,
-            )}px, 0)`;
+          if (glowA) glowA.style.transform = `translate3d(-50%, ${Math.min(18, y * 0.02)}px, 0)`;
+          if (glowB) glowB.style.transform = `translate3d(-50%, ${Math.min(14, y * 0.015)}px, 0)`;
         });
       };
 
@@ -340,15 +510,11 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
   </script>
 
   <style>
-    /* reveal */
     [data-reveal].vj-reveal {
       opacity: 0;
       transform: translate3d(0, 10px, 0);
       filter: blur(6px);
-      transition:
-        opacity 700ms ease,
-        transform 700ms ease,
-        filter 700ms ease;
+      transition: opacity 700ms ease, transform 700ms ease, filter 700ms ease;
       will-change: opacity, transform, filter;
     }
     [data-reveal].vj-reveal.vj-reveal-in,
@@ -358,21 +524,14 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
       filter: blur(0);
     }
 
-    /* sticky table header + numeric scan */
-    .vj-table-wrap {
-      max-height: 520px;
-    }
+    .vj-table-wrap { max-height: 520px; }
     .vj-table-head th {
       position: sticky;
       top: 0;
       z-index: 10;
       backdrop-filter: blur(10px);
     }
-    tbody tr:nth-child(odd) {
-      background: rgba(255, 255, 255, 0.22);
-    }
-    tbody td {
-      font-variant-numeric: tabular-nums;
-    }
+    tbody tr:nth-child(odd) { background: rgba(255, 255, 255, 0.22); }
+    tbody td { font-variant-numeric: tabular-nums; }
   </style>
 </Layout>
