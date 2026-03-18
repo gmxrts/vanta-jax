@@ -66,6 +66,13 @@ function getLocationLabel(b: Business): string | null {
 
 const MAPBOX_TOKEN = import.meta.env.PUBLIC_MAPBOX_TOKEN ?? "";
 
+/** Strip the "Type: …\n\n" prefix that SuggestBusinessForm prepends to notes. */
+function cleanDescription(desc: string | null | undefined): string | null {
+  if (!desc) return null;
+  const cleaned = desc.replace(/^Type:\s*[^\n]+\n\n?/i, "").replace(/^Serves:\s*[^\n]+\n\n?/i, "").trim();
+  return cleaned || null;
+}
+
 export default function BusinessSearch() {
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState("");
@@ -196,52 +203,68 @@ export default function BusinessSearch() {
     const locationLabel = getLocationLabel(b);
     const isOnline = b.business_type === "online_only";
     const isMobile = b.business_type === "service_based";
+    const desc = cleanDescription(b.description);
+    const initials =
+      b.name
+        ?.split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((w: string) => w[0]?.toUpperCase())
+        .join("") || "?";
 
     return (
       <a
         key={b.id}
         href={`/business/${b.id}`}
-        className="vj-card-tight group block text-sm text-slate-800"
+        className="vj-card-tight group block"
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-1 min-w-0">
-            <h3 className="text-sm font-semibold text-slate-900 group-hover:text-purple-700">
-              {b.name}
-            </h3>
+        <div className="flex items-start gap-4">
+          {/* Initials avatar */}
+          <div className="h-12 w-12 shrink-0 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center text-[13px] font-bold text-slate-500 shadow-sm">
+            {initials}
+          </div>
 
-            {locationLabel && (
-              <p className="text-[11px] text-slate-500 truncate">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="text-base font-bold text-slate-900 group-hover:text-purple-700 leading-tight">
+                {b.name}
+              </h3>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                {b.verified && <span className="vj-badge-verified">Verified</span>}
+                {b.featured && <span className="vj-badge-featured">Featured</span>}
+              </div>
+            </div>
+
+            {b.category && (
+              <span className="mt-1.5 inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                {b.category}
+              </span>
+            )}
+
+            {(locationLabel || isOnline) && (
+              <p className="mt-1 text-[11px] text-slate-400">
                 {isMobile && (
                   <span className="mr-1 inline-flex items-center rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
                     Mobile
                   </span>
                 )}
-                {locationLabel}
+                {isOnline ? "Online only" : locationLabel}
               </p>
             )}
-
-            {isOnline && (
-              <p className="text-[11px] text-slate-500">Online only</p>
-            )}
-
-            {b.category && (
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[11px] font-medium capitalize text-slate-600">
-                {b.category}
-              </span>
-            )}
-          </div>
-
-          <div className="flex flex-col items-end gap-1 shrink-0">
-            {b.verified && <span className="vj-badge-verified">Verified</span>}
-            {b.featured && <span className="vj-badge-featured">Featured</span>}
           </div>
         </div>
 
-        {b.description && (
-          <p className="mt-3 line-clamp-2 text-[12px] text-slate-700">
-            {b.description}
+        {desc && (
+          <p className="mt-4 line-clamp-2 text-sm text-slate-600 leading-relaxed">
+            {desc}
           </p>
         )}
+
+        <div className="mt-4">
+          <span className="text-[12px] font-semibold text-purple-700 group-hover:text-purple-800">
+            View details →
+          </span>
+        </div>
       </a>
     );
   };
@@ -333,6 +356,33 @@ export default function BusinessSearch() {
             <span>Verified only</span>
           </label>
 
+          {MAPBOX_TOKEN && (
+            <div className="flex items-center rounded-full border border-slate-200 bg-white/80 p-0.5 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setViewMode("list")}
+                className={`rounded-full px-3 py-1 text-[11px] font-semibold transition ${
+                  viewMode === "list"
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                List
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("map")}
+                className={`rounded-full px-3 py-1 text-[11px] font-semibold transition ${
+                  viewMode === "map"
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Map
+              </button>
+            </div>
+          )}
+
           <span className="text-[11px] text-slate-500">
             Searches are focused on Jacksonville, FL.
           </span>
@@ -347,7 +397,7 @@ export default function BusinessSearch() {
 
       {/* FEATURED SECTION (only when not searching) */}
       {!hasSearched && !error && featured.length > 0 && (
-        <section className="w-full max-w-4xl space-y-3">
+        <section className="w-full space-y-3">
           <div className="flex items-center justify-between text-[11px] text-slate-500">
             <span className="font-semibold uppercase tracking-[0.18em]">
               Featured
@@ -364,8 +414,13 @@ export default function BusinessSearch() {
 
       {/* DIRECTORY / SEARCH RESULTS */}
       {!error && (hasSearched || directory.length > 0) && (
-        <section className="w-full max-w-4xl space-y-3">
-          {/* Header row: label + count + view toggle */}
+        <section className="w-full space-y-3">
+          {/* Separator between Featured and Directory (only when both visible) */}
+          {!hasSearched && featured.length > 0 && (
+            <div className="border-t border-slate-200" />
+          )}
+
+          {/* Header row: label + count */}
           <div className="flex items-center justify-between gap-2 text-[11px] text-slate-500">
             <div className="flex items-center gap-3">
               <span className="font-semibold uppercase tracking-[0.18em]">
@@ -387,38 +442,10 @@ export default function BusinessSearch() {
                 <button
                   type="button"
                   onClick={handleClearSearch}
-                  className="mr-2 text-[11px] text-purple-700 hover:text-purple-900 underline underline-offset-2"
+                  className="text-[11px] text-purple-700 hover:text-purple-900 underline underline-offset-2"
                 >
                   Reset
                 </button>
-              )}
-
-              {/* List / Map toggle */}
-              {MAPBOX_TOKEN && (
-                <div className="flex items-center rounded-full border border-slate-200 bg-white/80 p-0.5 shadow-sm">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("list")}
-                    className={`rounded-full px-3 py-1 text-[11px] font-semibold transition ${
-                      viewMode === "list"
-                        ? "bg-slate-900 text-white"
-                        : "text-slate-600 hover:text-slate-900"
-                    }`}
-                  >
-                    List
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("map")}
-                    className={`rounded-full px-3 py-1 text-[11px] font-semibold transition ${
-                      viewMode === "map"
-                        ? "bg-slate-900 text-white"
-                        : "text-slate-600 hover:text-slate-900"
-                    }`}
-                  >
-                    Map
-                  </button>
-                </div>
               )}
             </div>
           </div>
@@ -481,7 +508,7 @@ export default function BusinessSearch() {
         !loading &&
         !loadingDirectory &&
         directory.length === 0 && (
-          <p className="w-full max-w-3xl text-[11px] text-slate-500">
+          <p className="w-full text-[11px] text-slate-500">
             Use the search above to discover Black-owned businesses in your
             area.
           </p>
