@@ -35,6 +35,8 @@ export const POST: APIRoute = async ({ request }) => {
     'phone', 'website', 'logo_url', 'business_type', 'is_address_public',
     'public_location_label', 'service_area', 'latitude', 'longitude',
     'verified', 'featured',
+    // Phase 6
+    'hours', 'instagram_url', 'facebook_url', 'tiktok_url',
   ];
 
   const update: Record<string, any> = {};
