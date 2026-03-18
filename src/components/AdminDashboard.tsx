@@ -14,7 +14,30 @@ type Suggestion = {
 
 type Props = {
   suggestions: Suggestion[];
+  businesses?: LiveBusiness[];
   mapboxToken?: string;
+};
+
+type LiveBusiness = {
+  id: string;
+  name: string;
+  category: string | null;
+  city: string | null;
+  state: string | null;
+  address: string | null;
+  zip: string | null;
+  phone: string | null;
+  website: string | null;
+  description: string | null;
+  verified: boolean;
+  featured: boolean | null;
+  business_type: string | null;
+  is_address_public: boolean | null;
+  public_location_label: string | null;
+  service_area: string | null;
+  logo_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 type GeoFeature = {
@@ -558,9 +581,349 @@ function EditForm({
   );
 }
 
+// ─── EditListingForm ─────────────────────────────────────────────────────────
+
+function EditListingForm({
+  business,
+  mapboxToken,
+  onSaved,
+  onCancel,
+}: {
+  business: LiveBusiness;
+  mapboxToken?: string;
+  onSaved: (updated: LiveBusiness) => void;
+  onCancel: () => void;
+}) {
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [businessType, setBusinessType] = useState(business.business_type ?? "");
+  const [isAddressPublic, setIsAddressPublic] = useState(business.is_address_public !== false);
+  const [address, setAddress] = useState(business.address ?? "");
+  const [city, setCity] = useState(business.city ?? "");
+  const [stateVal, setStateVal] = useState(business.state ?? "");
+  const [zip, setZip] = useState(business.zip ?? "");
+  const [lat, setLat] = useState<number | null>(business.latitude ?? null);
+  const [lng, setLng] = useState<number | null>(business.longitude ?? null);
+  const [coordsFilled, setCoordsFilled] = useState(false);
+
+  const handleTypeChange = (type: string) => {
+    setBusinessType(type);
+    setIsAddressPublic(type === "brick_and_mortar");
+  };
+
+  const handleGeoSelect = (data: { address: string; city: string; state: string; zip: string; lat: number; lng: number }) => {
+    setAddress(data.address);
+    setCity(data.city);
+    setStateVal(data.state);
+    setZip(data.zip);
+    setLat(data.lat);
+    setLng(data.lng);
+    setCoordsFilled(true);
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    setSaving(true);
+    const fd = new FormData(e.currentTarget);
+
+    const payload: Record<string, any> = {
+      businessId: business.id,
+      name: (fd.get("name") as string)?.trim(),
+      category: (fd.get("category") as string) || "services",
+      business_type: businessType || null,
+      is_address_public: isAddressPublic,
+      address: address.trim() || null,
+      city: city.trim() || null,
+      state: stateVal.trim() || null,
+      zip: zip.trim() || null,
+      phone: (fd.get("phone") as string)?.trim() || null,
+      website: (fd.get("website") as string)?.trim() || null,
+      logo_url: (fd.get("logo_url") as string)?.trim() || null,
+      description: (fd.get("description") as string)?.trim() || null,
+      service_area: (fd.get("service_area") as string)?.trim() || null,
+      public_location_label: (fd.get("public_location_label") as string)?.trim() || null,
+      verified: fd.get("verified") === "on",
+      featured: fd.get("featured") === "on",
+    };
+    if (lat !== null) payload.latitude = lat;
+    if (lng !== null) payload.longitude = lng;
+
+    try {
+      const res = await fetch("/api/edit-listing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Failed to save changes.");
+      onSaved({ ...business, ...payload, id: business.id });
+    } catch (err: any) {
+      setError(err?.message || "Unexpected error saving.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const showAddress = businessType !== "online_only";
+  const showServiceArea = businessType === "service_based";
+  const showLocationLabel = businessType === "service_based" || (businessType !== "" && !isAddressPublic);
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {error && (
+        <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-[12px] text-red-700">{error}</div>
+      )}
+
+      {/* Name + Category */}
+      <div className="grid gap-4 sm:grid-cols-[2fr,1fr]">
+        <div className="space-y-2">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Business name <span className="text-purple-600">*</span></label>
+          <input name="name" defaultValue={business.name} required className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+        </div>
+        <div className="space-y-2">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Category</label>
+          <select name="category" defaultValue={business.category ?? "services"} className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200">
+            {categories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {/* Business type */}
+      <div className="space-y-2">
+        <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Business type</label>
+        <div className="grid grid-cols-3 gap-2">
+          {businessTypes.map((t) => (
+            <button key={t.value} type="button" onClick={() => handleTypeChange(t.value)}
+              className={"rounded-2xl border px-3 py-2.5 text-[12px] font-semibold transition " + (businessType === t.value ? "border-purple-300 bg-purple-50 text-purple-700 shadow-sm" : "border-slate-200 bg-white/70 text-slate-700 hover:border-purple-200 hover:bg-purple-50/40")}
+            >{t.label}</button>
+          ))}
+        </div>
+        {businessType && (
+          <div className="flex items-center gap-2 text-[11px]">
+            <span className="text-slate-500">Address public:</span>
+            <span className={isAddressPublic ? "font-semibold text-emerald-600" : "font-semibold text-amber-600"}>
+              {isAddressPublic ? "Yes" : "No (private)"}
+            </span>
+            {businessType !== "online_only" && (
+              <button type="button" onClick={() => setIsAddressPublic((v) => !v)} className="ml-1 text-slate-400 underline underline-offset-2 hover:text-slate-600">override</button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Address section */}
+      {showAddress && (
+        <div className="rounded-[18px] border border-slate-200/80 bg-slate-50/60 p-4 space-y-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            Address{mapboxToken && <span className="ml-1 font-normal normal-case tracking-normal text-purple-500">— type to search & auto-fill coordinates</span>}
+          </p>
+          {mapboxToken && <AddressAutofill token={mapboxToken} onSelect={handleGeoSelect} />}
+          <div className="grid gap-3 sm:grid-cols-[2fr,1fr]">
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-semibold text-slate-500">Street address</label>
+              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 Main St" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-2.5 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-semibold text-slate-500">City</label>
+                <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-semibold text-slate-500">State</label>
+                <input type="text" value={stateVal} onChange={(e) => setStateVal(e.target.value)} maxLength={2} className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-sm uppercase text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-semibold text-slate-500">ZIP</label>
+                <input type="text" value={zip} onChange={(e) => setZip(e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+              </div>
+            </div>
+          </div>
+          {coordsFilled && lat !== null && lng !== null ? (
+            <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/80 px-3 py-2">
+              <span className="text-emerald-500 text-[13px]">✓</span>
+              <span className="text-[11px] text-emerald-700 font-medium">Coordinates: <span className="font-mono">{lat.toFixed(5)}, {lng.toFixed(5)}</span></span>
+            </div>
+          ) : lat !== null ? (
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white/50 px-3 py-2">
+              <span className="text-slate-400 text-[13px]">○</span>
+              <span className="text-[11px] text-slate-500">Current coords: {lat?.toFixed(5)}, {lng?.toFixed(5)}</span>
+            </div>
+          ) : mapboxToken ? (
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white/50 px-3 py-2">
+              <span className="text-slate-400 text-[13px]">○</span>
+              <span className="text-[11px] text-slate-500">Search above to auto-fill lat/lng</span>
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {showServiceArea && (
+        <div className="space-y-2">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Service area</label>
+          <input name="service_area" defaultValue={business.service_area ?? ""} placeholder="e.g. Jacksonville & surrounding areas" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+        </div>
+      )}
+
+      {showLocationLabel && (
+        <div className="space-y-2">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Public location label <span className="normal-case font-normal tracking-normal text-slate-400">(shown instead of address)</span></label>
+          <input name="public_location_label" defaultValue={business.public_location_label ?? ""} placeholder="e.g. Jacksonville, FL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+        </div>
+      )}
+
+      {/* Contact */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Phone</label>
+          <input name="phone" defaultValue={business.phone ?? ""} placeholder="e.g. 904-555-1234" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+        </div>
+        <div className="space-y-2">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Website / social</label>
+          <input name="website" defaultValue={business.website ?? ""} placeholder="https://…" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+        </div>
+      </div>
+
+      {/* Logo URL */}
+      <div className="space-y-2">
+        <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Logo URL</label>
+        <input name="logo_url" defaultValue={business.logo_url ?? ""} placeholder="https://… (direct image link)" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+      </div>
+
+      {/* Description */}
+      <div className="space-y-2">
+        <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Description</label>
+        <textarea name="description" defaultValue={business.description ?? ""} rows={3} placeholder="Short description for the directory listing" className="w-full resize-none rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+      </div>
+
+      {/* Footer */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-1">
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
+            <input type="checkbox" name="verified" defaultChecked={business.verified} className="h-4 w-4 accent-purple-600" />
+            <span className="text-[12px] text-slate-700">Verified</span>
+          </label>
+          <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
+            <input type="checkbox" name="featured" defaultChecked={business.featured ?? false} className="h-4 w-4 accent-purple-600" />
+            <span className="text-[12px] text-slate-700">Featured</span>
+          </label>
+        </div>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={onCancel} className="rounded-2xl border border-slate-200 bg-white/70 px-5 py-2.5 text-[13px] font-semibold text-slate-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white">
+            Cancel
+          </button>
+          <button type="submit" disabled={saving} className="inline-flex items-center justify-center rounded-2xl bg-purple-600 px-5 py-2.5 text-[13px] font-semibold text-white shadow-[0_16px_34px_-22px_rgba(147,51,234,0.75)] transition hover:-translate-y-0.5 hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60">
+            {saving ? "Saving…" : "Save changes"}
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+// ─── LiveListings ─────────────────────────────────────────────────────────────
+
+function LiveListings({ businesses, mapboxToken }: { businesses: LiveBusiness[]; mapboxToken?: string }) {
+  const [items, setItems] = useState<LiveBusiness[]>(businesses ?? []);
+  const [filter, setFilter] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const normalized = filter.trim().toLowerCase();
+  const filtered = normalized
+    ? items.filter((b) => [b.name, b.city ?? "", b.category ?? ""].join(" ").toLowerCase().includes(normalized))
+    : items;
+
+  const handleSaved = (updated: LiveBusiness) => {
+    setItems((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
+    setEditingId(null);
+    setMessage(`"${updated.name}" updated successfully.`);
+    setTimeout(() => setMessage(null), 4000);
+  };
+
+  if (!items.length) {
+    return (
+      <div className="rounded-3xl border border-slate-200/70 bg-white/60 px-5 py-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur">
+        <p className="text-sm font-semibold text-slate-900">No live listings yet.</p>
+        <p className="mt-2 text-[11px] text-slate-600">Approved businesses will appear here for editing.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-[11px] text-slate-600">
+          <span className="font-semibold text-slate-900">{filtered.length} / {items.length}</span>{" "}listings visible
+          {normalized && <span className="text-slate-500"> (filtered)</span>}
+        </div>
+        <input
+          type="text"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder="Filter by name, city, category…"
+          className="w-full sm:w-[320px] rounded-2xl border border-slate-200 bg-white/70 px-4 py-2.5 text-[12px] text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+        />
+      </div>
+
+      {message && (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-[12px] text-emerald-700">{message}</div>
+      )}
+
+      <div className="space-y-4">
+        {filtered.map((b) => {
+          const isEditing = editingId === b.id;
+          return (
+            <article key={b.id} className="rounded-[28px] border border-slate-200/70 bg-white/70 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur overflow-hidden">
+              <div className="px-5 sm:px-7 py-4 sm:py-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <h2 className="text-base sm:text-lg font-semibold text-slate-900 truncate">{b.name}</h2>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
+                      {b.category && (
+                        <span className="rounded-full border border-slate-200 bg-white/60 px-3 py-1 shadow-sm capitalize">{b.category}</span>
+                      )}
+                      <span className="rounded-full border border-slate-200 bg-white/60 px-3 py-1 shadow-sm">{compactLocation(b.city, b.state)}</span>
+                      {b.verified && <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700 shadow-sm">Verified</span>}
+                      {b.featured && <span className="rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-purple-700 shadow-sm">Featured</span>}
+                    </div>
+                  </div>
+                  <div className="shrink-0 flex items-center gap-2">
+                    <a href={`/business/${b.id}`} target="_blank" rel="noreferrer" className="rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-[12px] font-semibold text-slate-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white">
+                      View →
+                    </a>
+                    <button type="button" onClick={() => setEditingId(isEditing ? null : b.id)}
+                      className={"rounded-2xl border px-3 py-2 text-[12px] font-semibold shadow-sm backdrop-blur transition hover:-translate-y-0.5 " + (isEditing ? "border-purple-300 bg-purple-50 text-purple-700" : "border-slate-200 bg-white/70 text-slate-800 hover:bg-white")}
+                    >
+                      {isEditing ? "Cancel" : "Edit"}
+                    </button>
+                  </div>
+                </div>
+
+                {isEditing && (
+                  <div className="mt-5">
+                    <div className="h-px w-full bg-slate-200/70 mb-5" />
+                    <EditListingForm
+                      business={b}
+                      mapboxToken={mapboxToken}
+                      onSaved={handleSaved}
+                      onCancel={() => setEditingId(null)}
+                    />
+                  </div>
+                )}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── AdminDashboard ──────────────────────────────────────────────────────────
 
-export default function AdminDashboard({ suggestions, mapboxToken }: Props) {
+export default function AdminDashboard({ suggestions, businesses, mapboxToken }: Props) {
+  const [activeTab, setActiveTab] = useState<"suggestions" | "live">("suggestions");
   const [items, setItems] = useState<Suggestion[]>(suggestions ?? []);
   const [openIds, setOpenIds] = useState<Set<string>>(() => new Set());
   const [editIds, setEditIds] = useState<Set<string>>(() => new Set());
@@ -782,19 +1145,54 @@ export default function AdminDashboard({ suggestions, mapboxToken }: Props) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [filteredItems, selectedId, openIds, editIds, quickSettings]);
 
-  if (!totalCount) {
+  const tabBar = (
+    <div className="flex items-center gap-1 rounded-2xl border border-slate-200 bg-white/70 p-1 shadow-sm w-fit backdrop-blur">
+      <button
+        type="button"
+        onClick={() => setActiveTab("suggestions")}
+        className={`rounded-xl px-4 py-2 text-[12px] font-semibold transition ${activeTab === "suggestions" ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+      >
+        Suggestions{" "}
+        <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] ${activeTab === "suggestions" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
+          {totalCount}
+        </span>
+      </button>
+      <button
+        type="button"
+        onClick={() => setActiveTab("live")}
+        className={`rounded-xl px-4 py-2 text-[12px] font-semibold transition ${activeTab === "live" ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+      >
+        Live Listings{" "}
+        <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] ${activeTab === "live" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
+          {businesses?.length ?? 0}
+        </span>
+      </button>
+    </div>
+  );
+
+  if (!totalCount && activeTab === "suggestions") {
     return (
-      <div className="rounded-3xl border border-slate-200/70 bg-white/60 px-5 py-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur">
-        <p className="text-sm font-semibold text-slate-900">No suggestions waiting for review.</p>
-        <p className="mt-2 text-[11px] text-slate-600">
-          When supporters submit new businesses, they will appear here.
-        </p>
+      <div className="space-y-5">
+        {tabBar}
+        {activeTab === "suggestions" ? (
+          <div className="rounded-3xl border border-slate-200/70 bg-white/60 px-5 py-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur">
+            <p className="text-sm font-semibold text-slate-900">No suggestions waiting for review.</p>
+            <p className="mt-2 text-[11px] text-slate-600">When supporters submit new businesses, they will appear here.</p>
+          </div>
+        ) : (
+          <LiveListings businesses={businesses ?? []} mapboxToken={mapboxToken} />
+        )}
       </div>
     );
   }
 
   return (
     <div className="space-y-5">
+      {tabBar}
+      {activeTab === "live" && (
+        <LiveListings businesses={businesses ?? []} mapboxToken={mapboxToken} />
+      )}
+      {activeTab === "suggestions" && <div className="space-y-5">
       {/* Control bar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-[11px] text-slate-600">
@@ -856,8 +1254,7 @@ export default function AdminDashboard({ suggestions, mapboxToken }: Props) {
       )}
 
       {/* Cards */}
-      <div className="space-y-4">
-        {filteredItems.map((s) => {
+      <div className="space-y-4">{filteredItems.map((s) => {
           const isOpen = openIds.has(s.id);
           const isEditing = editIds.has(s.id);
           const isSelected = selectedId === s.id;
@@ -921,17 +1318,8 @@ export default function AdminDashboard({ suggestions, mapboxToken }: Props) {
                         )}
                       </div>
                     </div>
-                    <div className="shrink-0 flex items-center gap-2">
-                      <span
-                        className={
-                          isOpen
-                            ? "rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-[11px] font-semibold text-purple-700"
-                            : "rounded-full border border-slate-200 bg-white/60 px-3 py-1 text-[11px] font-semibold text-slate-700"
-                        }
-                      >
-                        {isOpen ? "Open" : "Closed"}
-                      </span>
-                      <span className="text-slate-400 text-[12px]">{isOpen ? "▾" : "▸"}</span>
+                    <div className="shrink-0 flex items-center">
+                      <span className="text-slate-400 text-base leading-none">{isOpen ? "▾" : "▸"}</span>
                     </div>
                   </div>
                 </button>
@@ -1074,6 +1462,7 @@ export default function AdminDashboard({ suggestions, mapboxToken }: Props) {
           );
         })}
       </div>
-    </div>
+    </div>}
+  </div>
   );
 }

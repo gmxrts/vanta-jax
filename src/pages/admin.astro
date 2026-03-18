@@ -19,6 +19,7 @@ const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const serviceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
 
 let suggestions: any[] = [];
+let liveBusinesses: any[] = [];
 let loadError: string | null = null;
 
 if (!supabaseUrl || !serviceKey) {
@@ -26,20 +27,24 @@ if (!supabaseUrl || !serviceKey) {
 } else {
   try {
     const supabase = createClient(supabaseUrl, serviceKey);
-    const { data, error } = await supabase
-      .from("business_suggestions")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const [{ data: suggestionsData, error: suggestionsError }, { data: businessesData, error: businessesError }] = await Promise.all([
+      supabase.from("business_suggestions").select("*").order("created_at", { ascending: false }),
+      supabase.from("businesses").select("*").order("name", { ascending: true }),
+    ]);
 
-    if (error) {
-      loadError = error.message;
-      console.error("Admin suggestions query error:", error);
+    if (suggestionsError) {
+      loadError = suggestionsError.message;
+      console.error("Admin suggestions query error:", suggestionsError);
+    }
+    if (businessesError) {
+      console.error("Admin businesses query error:", businessesError);
     }
 
-    suggestions = data ?? [];
+    suggestions = suggestionsData ?? [];
+    liveBusinesses = businessesData ?? [];
   } catch (e: any) {
     loadError = e?.message ?? String(e);
-    console.error("Admin suggestions unexpected error:", e);
+    console.error("Admin unexpected error:", e);
   }
 }
 
@@ -70,7 +75,7 @@ const suggestionCount = suggestions.length;
         </div>
       </div>
 
-      <div class="relative mx-auto w-full max-w-6xl space-y-8">
+      <div class="relative mx-auto w-full max-w-[1100px] space-y-8">
         <!-- Header -->
         <header class="flex flex-wrap items-end justify-between gap-4">
           <div class="space-y-2">
@@ -139,7 +144,7 @@ const suggestionCount = suggestions.length;
         <div
           class="rounded-[28px] border border-slate-200/70 bg-white/70 p-6 sm:p-8 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur"
         >
-          <AdminDashboard client:load suggestions={suggestions} mapboxToken={import.meta.env.PUBLIC_MAPBOX_TOKEN ?? ""} />
+          <AdminDashboard client:load suggestions={suggestions} businesses={liveBusinesses} mapboxToken={import.meta.env.PUBLIC_MAPBOX_TOKEN ?? ""} />
         </div>
       </div>
     </section>
