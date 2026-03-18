@@ -18,6 +18,9 @@ type Props = {
   mapboxToken?: string;
 };
 
+type DayHours = { open: string | null; close: string | null; closed: boolean };
+type HoursState = Record<string, DayHours>;
+
 type LiveBusiness = {
   id: string;
   name: string;
@@ -38,6 +41,10 @@ type LiveBusiness = {
   logo_url: string | null;
   latitude: number | null;
   longitude: number | null;
+  hours: HoursState | null;
+  instagram_url: string | null;
+  facebook_url: string | null;
+  tiktok_url: string | null;
 };
 
 type GeoFeature = {
@@ -63,6 +70,167 @@ const businessTypes = [
 ];
 
 type QuickSettings = { category: string; verified: boolean };
+
+// ─── Hours helpers ───────────────────────────────────────────────────────────
+
+const DAY_KEYS = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"] as const;
+const DAY_LABELS: Record<string, string> = {
+  monday: "Monday", tuesday: "Tuesday", wednesday: "Wednesday", thursday: "Thursday",
+  friday: "Friday", saturday: "Saturday", sunday: "Sunday",
+};
+
+function makeDefaultHours(): HoursState {
+  return {
+    monday:    { open: "09:00", close: "17:00", closed: false },
+    tuesday:   { open: "09:00", close: "17:00", closed: false },
+    wednesday: { open: "09:00", close: "17:00", closed: false },
+    thursday:  { open: "09:00", close: "17:00", closed: false },
+    friday:    { open: "09:00", close: "17:00", closed: false },
+    saturday:  { open: "10:00", close: "14:00", closed: false },
+    sunday:    { open: null,    close: null,     closed: true  },
+  };
+}
+
+function HoursEditor({ hours, onChange }: { hours: HoursState; onChange: (h: HoursState) => void }) {
+  const update = (day: string, patch: Partial<DayHours>) => {
+    onChange({ ...hours, [day]: { ...hours[day], ...patch } });
+  };
+  return (
+    <div className="space-y-2">
+      {DAY_KEYS.map((day) => {
+        const dh = hours[day] ?? { open: "09:00", close: "17:00", closed: false };
+        return (
+          <div key={day} className="flex items-center gap-2 flex-wrap">
+            <span className="w-24 text-[11px] font-semibold text-slate-600">{DAY_LABELS[day]}</span>
+            <label className="flex items-center gap-1 text-[11px] text-slate-500 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={dh.closed}
+                onChange={(e) => update(day, { closed: e.target.checked, open: e.target.checked ? null : (dh.open ?? "09:00"), close: e.target.checked ? null : (dh.close ?? "17:00") })}
+                className="h-3.5 w-3.5 accent-purple-600"
+              />
+              Closed
+            </label>
+            {!dh.closed && (
+              <>
+                <input
+                  type="time"
+                  value={dh.open ?? ""}
+                  onChange={(e) => update(day, { open: e.target.value || null })}
+                  className="rounded-xl border border-slate-200 bg-white/70 px-2 py-1 text-[11px] text-slate-900 focus:outline-none focus:ring-1 focus:ring-purple-300"
+                />
+                <span className="text-[11px] text-slate-400">–</span>
+                <input
+                  type="time"
+                  value={dh.close ?? ""}
+                  onChange={(e) => update(day, { close: e.target.value || null })}
+                  className="rounded-xl border border-slate-200 bg-white/70 px-2 py-1 text-[11px] text-slate-900 focus:outline-none focus:ring-1 focus:ring-purple-300"
+                />
+              </>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Google Places Enrichment ─────────────────────────────────────────────────
+
+type PlacesResult = {
+  id: string;
+  name: string;
+  address: string;
+  phone: string | null;
+  website: string | null;
+  description: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  hours: HoursState | null;
+};
+
+function PlacesEnrichButton({
+  businessName,
+  city,
+  onEnrich,
+}: {
+  businessName: string;
+  city: string;
+  onEnrich: (result: PlacesResult) => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<PlacesResult[] | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const search = async () => {
+    if (!businessName.trim()) { setMessage("Enter a business name first."); return; }
+    setLoading(true);
+    setResults(null);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/places-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ businessName: businessName.trim(), city: city || "Jacksonville" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || `Places API error (HTTP ${res.status}).`);
+      const places: PlacesResult[] = data.places ?? [];
+      if (!places.length) { setMessage("No match found — fill in manually."); return; }
+      if (places.length === 1) {
+        onEnrich(places[0]);
+        setMessage("✓ Pre-filled from Google Places. Review and adjust as needed.");
+      } else {
+        setResults(places);
+      }
+    } catch (err: any) {
+      setMessage(err?.message || "Error reaching Google Places.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 flex-wrap">
+        <button
+          type="button"
+          onClick={search}
+          disabled={loading}
+          className="inline-flex items-center gap-1.5 rounded-2xl border border-purple-300 bg-purple-50 px-4 py-2 text-[12px] font-semibold text-purple-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-purple-100 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loading ? "Searching Places…" : "Auto-fill from Google Places"}
+        </button>
+        <span className="text-[10px] text-slate-400">~$0.02 per lookup</span>
+      </div>
+      {message && (
+        <p className={`text-[11px] ${
+          message.startsWith("✓") ? "text-emerald-600" :
+          message.startsWith("No match") ? "text-slate-500" :
+          "text-red-600"
+        }`}>{message}</p>
+      )}
+      {results && results.length > 1 && (
+        <div className="rounded-[18px] border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <p className="px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+            Multiple results — select the correct one
+          </p>
+          {results.map((r) => (
+            <button
+              key={r.id}
+              type="button"
+              onClick={() => { onEnrich(r); setResults(null); setMessage("✓ Pre-filled from Google Places. Review and adjust as needed."); }}
+              className="w-full border-t border-slate-100 px-4 py-3 text-left text-[12px] text-slate-700 transition hover:bg-purple-50 first:border-t-0"
+            >
+              <span className="font-semibold">{r.name}</span>
+              <span className="ml-2 text-slate-400">{r.address}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -244,6 +412,17 @@ function EditForm({
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const [coordsFilled, setCoordsFilled] = useState(false);
+  // Phase 6 — controlled fields + enrichment
+  const [phone, setPhone] = useState("");
+  const [website, setWebsite] = useState(suggestion.website ?? "");
+  const [description, setDescription] = useState(suggestion.notes ?? "");
+  const [hours, setHours] = useState<HoursState | null>(null);
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [tiktokUrl, setTiktokUrl] = useState("");
+
+  // Business name for Places enrichment (tracks form input)
+  const [nameValue, setNameValue] = useState(suggestion.name ?? "");
 
   const handleTypeChange = (type: string) => {
     setBusinessType(type);
@@ -267,6 +446,25 @@ function EditForm({
     setCoordsFilled(true);
   };
 
+  const handleEnrich = (result: PlacesResult) => {
+    if (result.address) {
+      // Split formatted address into street vs city/state/zip
+      const parts = result.address.split(",").map((s) => s.trim());
+      setAddress(parts[0] ?? "");
+      if (parts[1]) setCity(parts[1]);
+      if (parts[2]) setState(parts[2].replace(/\s*\d{5}.*$/, "").trim());
+      const zipMatch = result.address.match(/\b(\d{5})\b/);
+      if (zipMatch) setZip(zipMatch[1]);
+    }
+    if (result.latitude != null) setLat(result.latitude);
+    if (result.longitude != null) setLng(result.longitude);
+    if (result.phone) setPhone(result.phone);
+    if (result.website) setWebsite(result.website);
+    if (result.description) setDescription(result.description);
+    if (result.hours) { setHours(result.hours); }
+    setCoordsFilled(true);
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
@@ -281,18 +479,22 @@ function EditForm({
       city: city.trim() || null,
       state: state.trim() || null,
       zip: zip.trim() || null,
-      phone: (fd.get("phone") as string)?.trim() || null,
-      website: (fd.get("website") as string)?.trim() || null,
+      phone: phone.trim() || null,
+      website: website.trim() || null,
       logo_url: (fd.get("logo_url") as string)?.trim() || null,
-      description: (fd.get("description") as string)?.trim() || null,
+      description: description.trim() || null,
       service_area: (fd.get("service_area") as string)?.trim() || null,
       public_location_label:
         (fd.get("public_location_label") as string)?.trim() || null,
       verified: fd.get("verified") === "on",
+      instagram_url: instagramUrl.trim() || null,
+      facebook_url: facebookUrl.trim() || null,
+      tiktok_url: tiktokUrl.trim() || null,
     };
 
     if (lat !== null) payload.latitude = lat;
     if (lng !== null) payload.longitude = lng;
+    if (hours !== null) payload.hours = hours;
 
     await onSubmit(payload);
   };
@@ -313,7 +515,8 @@ function EditForm({
           </label>
           <input
             name="name"
-            defaultValue={suggestion.name}
+            value={nameValue}
+            onChange={(e) => setNameValue(e.target.value)}
             required
             className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
           />
@@ -335,6 +538,13 @@ function EditForm({
           </select>
         </div>
       </div>
+
+      {/* Google Places enrichment */}
+      <PlacesEnrichButton
+        businessName={nameValue}
+        city={city || suggestion.city || "Jacksonville"}
+        onEnrich={handleEnrich}
+      />
 
       {/* Business type */}
       <div className="space-y-2">
@@ -511,18 +721,21 @@ function EditForm({
             Phone
           </label>
           <input
-            name="phone"
+            type="text"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
             placeholder="e.g. 904-555-1234"
             className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
           />
         </div>
         <div className="space-y-2">
           <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-            Website / social
+            Website
           </label>
           <input
-            name="website"
-            defaultValue={suggestion.website ?? ""}
+            type="text"
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
             placeholder="https://…"
             className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
           />
@@ -547,12 +760,44 @@ function EditForm({
           Description
         </label>
         <textarea
-          name="description"
-          defaultValue={suggestion.notes ?? ""}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           rows={3}
           placeholder="Short description for the directory listing"
           className="w-full resize-none rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
         />
+      </div>
+
+      {/* Social media */}
+      <div className="space-y-2">
+        <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+          Social links <span className="normal-case font-normal tracking-normal text-slate-400">(optional)</span>
+        </label>
+        <div className="grid gap-2 sm:grid-cols-3">
+          <input type="url" value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} placeholder="Instagram URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+          <input type="url" value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} placeholder="Facebook URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+          <input type="url" value={tiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} placeholder="TikTok URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+        </div>
+      </div>
+
+      {/* Hours of operation */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+            Hours of operation <span className="normal-case font-normal tracking-normal text-slate-400">(optional)</span>
+          </label>
+          {!hours && (
+            <button type="button" onClick={() => setHours(makeDefaultHours())} className="text-[11px] font-semibold text-purple-600 hover:text-purple-800">
+              + Add hours
+            </button>
+          )}
+          {hours && (
+            <button type="button" onClick={() => setHours(null)} className="text-[11px] text-slate-400 hover:text-slate-600">
+              Remove
+            </button>
+          )}
+        </div>
+        {hours && <HoursEditor hours={hours} onChange={setHours} />}
       </div>
 
       {/* Footer */}
@@ -605,6 +850,15 @@ function EditListingForm({
   const [lat, setLat] = useState<number | null>(business.latitude ?? null);
   const [lng, setLng] = useState<number | null>(business.longitude ?? null);
   const [coordsFilled, setCoordsFilled] = useState(false);
+  // Phase 6
+  const [phone, setPhone] = useState(business.phone ?? "");
+  const [website, setWebsite] = useState(business.website ?? "");
+  const [description, setDescription] = useState(business.description ?? "");
+  const [hours, setHours] = useState<HoursState | null>(business.hours ?? null);
+  const [instagramUrl, setInstagramUrl] = useState(business.instagram_url ?? "");
+  const [facebookUrl, setFacebookUrl] = useState(business.facebook_url ?? "");
+  const [tiktokUrl, setTiktokUrl] = useState(business.tiktok_url ?? "");
+  const [nameValue, setNameValue] = useState(business.name ?? "");
 
   const handleTypeChange = (type: string) => {
     setBusinessType(type);
@@ -621,6 +875,24 @@ function EditListingForm({
     setCoordsFilled(true);
   };
 
+  const handleEnrich = (result: PlacesResult) => {
+    if (result.address) {
+      const parts = result.address.split(",").map((s) => s.trim());
+      setAddress(parts[0] ?? "");
+      if (parts[1]) setCity(parts[1]);
+      if (parts[2]) setStateVal(parts[2].replace(/\s*\d{5}.*$/, "").trim());
+      const zipMatch = result.address.match(/\b(\d{5})\b/);
+      if (zipMatch) setZip(zipMatch[1]);
+    }
+    if (result.latitude != null) setLat(result.latitude);
+    if (result.longitude != null) setLng(result.longitude);
+    if (result.phone) setPhone(result.phone);
+    if (result.website) setWebsite(result.website);
+    if (result.description) setDescription(result.description);
+    if (result.hours) setHours(result.hours);
+    setCoordsFilled(true);
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -629,7 +901,7 @@ function EditListingForm({
 
     const payload: Record<string, any> = {
       businessId: business.id,
-      name: (fd.get("name") as string)?.trim(),
+      name: nameValue.trim(),
       category: (fd.get("category") as string) || "services",
       business_type: businessType || null,
       is_address_public: isAddressPublic,
@@ -637,14 +909,18 @@ function EditListingForm({
       city: city.trim() || null,
       state: stateVal.trim() || null,
       zip: zip.trim() || null,
-      phone: (fd.get("phone") as string)?.trim() || null,
-      website: (fd.get("website") as string)?.trim() || null,
+      phone: phone.trim() || null,
+      website: website.trim() || null,
       logo_url: (fd.get("logo_url") as string)?.trim() || null,
-      description: (fd.get("description") as string)?.trim() || null,
+      description: description.trim() || null,
       service_area: (fd.get("service_area") as string)?.trim() || null,
       public_location_label: (fd.get("public_location_label") as string)?.trim() || null,
       verified: fd.get("verified") === "on",
       featured: fd.get("featured") === "on",
+      instagram_url: instagramUrl.trim() || null,
+      facebook_url: facebookUrl.trim() || null,
+      tiktok_url: tiktokUrl.trim() || null,
+      hours: hours,
     };
     if (lat !== null) payload.latitude = lat;
     if (lng !== null) payload.longitude = lng;
@@ -679,7 +955,7 @@ function EditListingForm({
       <div className="grid gap-4 sm:grid-cols-[2fr,1fr]">
         <div className="space-y-2">
           <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Business name <span className="text-purple-600">*</span></label>
-          <input name="name" defaultValue={business.name} required className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+          <input value={nameValue} onChange={(e) => setNameValue(e.target.value)} required className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
         </div>
         <div className="space-y-2">
           <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Category</label>
@@ -688,6 +964,13 @@ function EditListingForm({
           </select>
         </div>
       </div>
+
+      {/* Google Places enrichment */}
+      <PlacesEnrichButton
+        businessName={nameValue}
+        city={city || business.city || "Jacksonville"}
+        onEnrich={handleEnrich}
+      />
 
       {/* Business type */}
       <div className="space-y-2">
@@ -776,11 +1059,11 @@ function EditListingForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Phone</label>
-          <input name="phone" defaultValue={business.phone ?? ""} placeholder="e.g. 904-555-1234" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+          <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 904-555-1234" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
         </div>
         <div className="space-y-2">
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Website / social</label>
-          <input name="website" defaultValue={business.website ?? ""} placeholder="https://…" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Website</label>
+          <input type="text" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://…" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
         </div>
       </div>
 
@@ -793,7 +1076,39 @@ function EditListingForm({
       {/* Description */}
       <div className="space-y-2">
         <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Description</label>
-        <textarea name="description" defaultValue={business.description ?? ""} rows={3} placeholder="Short description for the directory listing" className="w-full resize-none rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+        <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Short description for the directory listing" className="w-full resize-none rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+      </div>
+
+      {/* Social media */}
+      <div className="space-y-2">
+        <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+          Social links <span className="normal-case font-normal tracking-normal text-slate-400">(optional)</span>
+        </label>
+        <div className="grid gap-2 sm:grid-cols-3">
+          <input type="url" value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} placeholder="Instagram URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+          <input type="url" value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} placeholder="Facebook URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+          <input type="url" value={tiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} placeholder="TikTok URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+        </div>
+      </div>
+
+      {/* Hours of operation */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+            Hours of operation <span className="normal-case font-normal tracking-normal text-slate-400">(optional)</span>
+          </label>
+          {!hours && (
+            <button type="button" onClick={() => setHours(makeDefaultHours())} className="text-[11px] font-semibold text-purple-600 hover:text-purple-800">
+              + Add hours
+            </button>
+          )}
+          {hours && (
+            <button type="button" onClick={() => setHours(null)} className="text-[11px] text-slate-400 hover:text-slate-600">
+              Remove
+            </button>
+          )}
+        </div>
+        {hours && <HoursEditor hours={hours} onChange={setHours} />}
       </div>
 
       {/* Footer */}

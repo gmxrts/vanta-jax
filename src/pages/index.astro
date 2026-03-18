@@ -15,6 +15,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Count verified businesses (social proof)
+const { count: verifiedCount } = await supabase
+  .from("businesses")
+  .select("*", { count: "exact", head: true })
+  .eq("verified", true);
+
 // Pull featured businesses
 const { data: featuredBusinesses, error: featuredError } = await supabase
   .from("businesses")
@@ -78,6 +84,12 @@ if (featuredError) {
               Browse directory
             </a>
           </div>
+
+          {verifiedCount != null && verifiedCount > 0 && (
+            <p class="mt-3 text-[12px] text-slate-500">
+              {verifiedCount} verified {verifiedCount === 1 ? "business" : "businesses"} in Jacksonville
+            </p>
+          )}
 
           <div class="mt-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="vj-pill rounded-2xl border border-slate-200/70 bg-white/60 p-5 text-center">

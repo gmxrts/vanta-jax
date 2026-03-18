@@ -46,6 +46,10 @@ export const POST: APIRoute = async ({ request }) => {
     logo_url,
     service_area,
     public_location_label,
+    hours,
+    instagram_url,
+    facebook_url,
+    tiktok_url,
   } = body || {};
 
   if (!suggestionId || !name) {
@@ -76,6 +80,12 @@ export const POST: APIRoute = async ({ request }) => {
   if (logo_url) business.logo_url = logo_url;
   if (service_area) business.service_area = service_area;
   if (public_location_label) business.public_location_label = public_location_label;
+
+  // Phase 6 fields
+  if (hours != null) business.hours = hours;
+  if (instagram_url) business.instagram_url = instagram_url;
+  if (facebook_url) business.facebook_url = facebook_url;
+  if (tiktok_url) business.tiktok_url = tiktok_url;
 
   // Insert into businesses
   const { error: insertError } = await supabase.from('businesses').insert(business);
