@@ -19,13 +19,15 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 const { count: verifiedCount } = await supabase
   .from("businesses")
   .select("*", { count: "exact", head: true })
-  .eq("verified", true);
+  .eq("verified", true)
+  .or("is_archived.is.null,is_archived.eq.false");
 
 // Pull featured businesses
 const { data: featuredBusinesses, error: featuredError } = await supabase
   .from("businesses")
   .select("id, name, category, description, city, state, website, phone, verified, logo_url")
   .eq("featured", true)
+  .or("is_archived.is.null,is_archived.eq.false")
   // .eq("verified", true)
   .order("promoted_at", { ascending: false, nullsFirst: false })
   .order("created_at", { ascending: false })

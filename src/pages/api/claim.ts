@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "../../lib/supabaseServer";
+import { sendClaimSubmitted } from "../../lib/email";
 
 export const prerender = false;
 
@@ -55,6 +56,13 @@ export const POST: APIRoute = async (context) => {
     return new Response(JSON.stringify({ error: "You already have a claim for this business.", status: existing.status }), { status: 409 });
   }
 
+  // Fetch business name for the confirmation email
+  const { data: bizFull } = await adminSb
+    .from("businesses")
+    .select("name")
+    .eq("id", businessId)
+    .single();
+
   // Create the claim
   const { error } = await adminSb.from("business_claims").insert({
     business_id: businessId,
@@ -66,6 +74,12 @@ export const POST: APIRoute = async (context) => {
   if (error) {
     console.error("Claim insert error:", error);
     return new Response(JSON.stringify({ error: "Failed to create claim." }), { status: 500 });
+  }
+
+  // Send confirmation email (fire-and-forget)
+  const ownerEmail = session.user.email;
+  if (ownerEmail && bizFull?.name) {
+    sendClaimSubmitted(ownerEmail, bizFull.name).catch(() => {});
   }
 
   return new Response(JSON.stringify({ ok: true }), { status: 200 });
