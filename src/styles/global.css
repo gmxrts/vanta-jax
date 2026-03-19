@@ -374,6 +374,14 @@ body {
   border-color: var(--border);
   color: var(--text-primary);
 }
+[data-theme="dark"]:not([data-vj-admin]) .card:hover,
+[data-theme="dark"]:not([data-vj-admin]) .vj-card:hover,
+[data-theme="dark"]:not([data-vj-admin]) .vj-card-tight:hover,
+[data-theme="dark"]:not([data-vj-admin]) .vj-card-comfortable:hover {
+  background: #342b42;
+  border-color: rgba(167, 139, 250, 0.25);
+  box-shadow: 0 14px 30px -22px rgba(167, 139, 250, 0.2);
+}
 
 [data-theme="dark"]:not([data-vj-admin]) .vj-panel {
   background: linear-gradient(180deg, #2C2438, #241d33);
