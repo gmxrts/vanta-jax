@@ -97,6 +97,7 @@ export default function BusinessSearch() {
         const { data, error } = await supabase
           .from("businesses")
           .select("*")
+          .not("is_archived", "is", true)
           .order("verified", { ascending: false })
           .order("name", { ascending: true });
 
