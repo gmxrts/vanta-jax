@@ -228,6 +228,33 @@ body {
   }
 }
 
+  /* Claim CTA button on business detail pages */
+  .claim-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    border-radius: 16px;
+    border: 2px solid #9333ea;
+    background: #9333ea;
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    transition: transform 180ms ease, background-color 180ms ease;
+    margin-top: 12px;
+  }
+  .claim-cta:hover {
+    background: #7e22ce;
+    transform: translateY(-1px);
+    color: #ffffff !important;
+  }
+  .claim-cta svg {
+    flex-shrink: 0;
+  }
+
 @layer utilities {
   .vj-rounded-full {
     border-radius: 9999px;

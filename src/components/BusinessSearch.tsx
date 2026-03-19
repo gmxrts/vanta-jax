@@ -18,6 +18,7 @@ type Business = {
   verified: boolean;
   featured?: boolean | null;
   area?: string | null;
+  logo_url?: string | null;
   // Privacy & type fields
   business_type?: string | null;
   is_address_public?: boolean | null;
@@ -219,9 +220,22 @@ export default function BusinessSearch() {
         className="vj-card-tight group block"
       >
         <div className="flex items-start gap-4">
-          {/* Initials avatar */}
-          <div className="h-12 w-12 shrink-0 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center text-[13px] font-bold text-slate-500 shadow-sm">
-            {initials}
+          {/* Logo or initials avatar */}
+          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            {b.logo_url ? (
+              <img
+                src={b.logo_url}
+                alt={`${b.name} logo`}
+                className="h-full w-full object-contain p-1.5"
+                loading="lazy"
+                decoding="async"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+              />
+            ) : (
+              <div className="h-full w-full grid place-items-center text-[13px] font-bold text-slate-500 bg-slate-50">
+                {initials}
+              </div>
+            )}
           </div>
 
           <div className="min-w-0 flex-1">

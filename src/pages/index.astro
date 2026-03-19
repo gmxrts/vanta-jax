@@ -24,7 +24,7 @@ const { count: verifiedCount } = await supabase
 // Pull featured businesses
 const { data: featuredBusinesses, error: featuredError } = await supabase
   .from("businesses")
-  .select("id, name, category, description, city, state, website, phone, verified")
+  .select("id, name, category, description, city, state, website, phone, verified, logo_url")
   .eq("featured", true)
   // .eq("verified", true)
   .order("promoted_at", { ascending: false, nullsFirst: false })
@@ -149,8 +149,20 @@ if (featuredError) {
                 data-delay={`${120 + idx * 70}`}
               >
                 <div class="flex items-start gap-4">
-                  <div class="h-12 w-12 shrink-0 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center text-[13px] font-bold text-slate-500 shadow-sm">
-                    {b.name?.split(" ").filter(Boolean).slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join("") || "?"}
+                  <div class="h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    {b.logo_url ? (
+                      <img
+                        src={b.logo_url}
+                        alt={`${b.name} logo`}
+                        class="h-full w-full object-contain p-1.5"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <div class="h-full w-full grid place-items-center text-[13px] font-bold text-slate-500 bg-slate-50">
+                        {b.name?.split(" ").filter(Boolean).slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join("") || "?"}
+                      </div>
+                    )}
                   </div>
                   <div class="min-w-0 flex-1">
                     <div class="flex items-start justify-between gap-2">
