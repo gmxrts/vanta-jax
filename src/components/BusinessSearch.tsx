@@ -127,7 +127,7 @@ export default function BusinessSearch() {
     const cat = opts?.category || "";
     const verified = opts?.verifiedOnly || false;
 
-    let query = supabase.from("businesses").select("*").or("is_archived.is.null,is_archived.eq.false");
+    let query = supabase.from("businesses").select("*").not("is_archived", "is", true);
 
     if (loc) {
       const pattern = `%${loc}%`;
