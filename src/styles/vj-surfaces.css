@@ -195,3 +195,50 @@
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
+
+/* ================================
+   Dark Mode Overrides
+   ================================ */
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-panel {
+  background: linear-gradient(180deg, rgba(44, 36, 56, 0.95), rgba(44, 36, 56, 0.88));
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-panel-soft {
+  background: linear-gradient(180deg, rgba(28, 28, 28, 0.97), rgba(44, 36, 56, 0.9));
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-card {
+  background: rgba(44, 36, 56, 0.9);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-cta {
+  background: linear-gradient(180deg, rgba(44, 36, 56, 0.95), rgba(28, 28, 28, 0.9));
+  border-color: rgba(167, 139, 250, 0.2);
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-btn-secondary {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+[data-theme="dark"]:not([data-vj-admin]) .vj-btn-secondary:hover {
+  background-color: #352d45;
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-step {
+  background: rgba(44, 36, 56, 0.92);
+  border-color: var(--border);
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-h2 {
+  color: rgba(196, 176, 255, 0.55);
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-card-signature {
+  background: rgba(28, 28, 28, 0.75);
+}

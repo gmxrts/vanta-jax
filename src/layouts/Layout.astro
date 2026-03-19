@@ -4,14 +4,23 @@ import "../styles/global.css";
 const {
   title = "VantaJax",
   description = "",
-  fullWidth = false
+  fullWidth = false,
+  isAdmin = false,
 } = Astro.props;
 
 const year = new Date().getFullYear();
 ---
 
-<html lang="en" class="bg-white text-slate-900">
+<html lang="en" data-vj-admin={isAdmin ? "" : undefined}>
   <head>
+    <!-- Flash prevention: must be first script, before stylesheets render -->
+    <script is:inline>
+      (function () {
+        var saved = localStorage.getItem('vanta-theme');
+        var system = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', saved || system);
+      })();
+    </script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
@@ -20,15 +29,15 @@ const year = new Date().getFullYear();
     <link rel="icon" href="/favicon.ico" />
   </head>
 
-  <body class="min-h-screen bg-white text-slate-900 antialiased">
+  <body class="min-h-screen antialiased">
     <!-- Global header / nav -->
-    <header class="border-b border-slate-200 bg-white">
+    <header class="border-b border-slate-200">
       <div
         class="mx-auto flex max-w-[1100px] items-center justify-between gap-4 px-4 py-3"
       >
         <!-- Wordmark, always links home -->
         <a href="/" class="flex flex-col items-start gap-0.5">
-          <!-- VANTA wordmark — charcoal on light bg, JAX in brand purple -->
+          <!-- VANTA wordmark — inherits text color for theme, JAX in brand purple -->
           <svg
             xmlns="http://www.w3.org/2000/svg"
             height="28"
@@ -43,7 +52,7 @@ const year = new Date().getFullYear();
               font-weight="800"
               font-size="22"
               letter-spacing="2"
-              fill="#0f172a"
+              fill="currentColor"
             >VANTA<tspan fill="#9333ea">JAX</tspan></text>
           </svg>
           <span class="text-[11px] text-slate-500 leading-none">
@@ -87,6 +96,30 @@ const year = new Date().getFullYear();
           >
             Owner login
           </a>
+          {!isAdmin && (
+            <button
+              id="theme-toggle"
+              aria-label="Switch to dark mode"
+              style="background:none;border:none;cursor:pointer;padding:4px;display:inline-flex;align-items:center;justify-content:center;color:inherit;opacity:0.65;transition:opacity 150ms ease;"
+              onmouseover="this.style.opacity='1'"
+              onmouseout="this.style.opacity='0.65'"
+            >
+              <svg class="theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+              <svg class="theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/>
+                <line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+            </button>
+          )}
         </nav>
       </div>
     </header>
@@ -103,7 +136,7 @@ const year = new Date().getFullYear();
     </main>
 
     <!-- Global footer -->
-    <footer class="border-t border-slate-200 bg-white">
+    <footer class="border-t border-slate-200">
       <div
         class="mx-auto flex max-w-[1100px] flex-col items-center justify-between gap-2 px-4 py-4 text-[11px] text-slate-500 sm:flex-row"
       >
@@ -127,8 +160,7 @@ const year = new Date().getFullYear();
   </body>
 
   <script is:inline>
-    // createBrowserClient stores session in cookies — check for sb- auth cookie
-    // This is synchronous and fast (no network request needed)
+    // Auth: check for Supabase session cookie
     (function () {
       const isLoggedIn = document.cookie.split(';').some(function(c) {
         return c.trim().match(/^sb-[^=]+-auth-token/);
@@ -139,6 +171,27 @@ const year = new Date().getFullYear();
         if (loginLink) loginLink.style.display = "none";
         if (authLink) authLink.style.display = "";
       }
+    })();
+
+    // Theme toggle
+    (function () {
+      var btn = document.getElementById('theme-toggle');
+      if (!btn) return;
+
+      function updateLabel(theme) {
+        btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+      }
+
+      // Set initial aria-label to match current theme
+      updateLabel(document.documentElement.getAttribute('data-theme') || 'light');
+
+      btn.addEventListener('click', function () {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('vanta-theme', next);
+        updateLabel(next);
+      });
     })();
   </script>
 </html>

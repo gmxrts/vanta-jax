@@ -2,12 +2,39 @@
 
 @import "tailwindcss";
 
+/* ================================
+   Theme CSS Variables
+   ================================ */
+
+:root,
+[data-theme="light"] {
+  --bg-primary: #F0EEFF;
+  --bg-secondary: #FFFFFF;
+  --text-primary: #1C1C1C;
+  --text-secondary: #444441;
+  --accent: #A78BFA;
+  --accent-light: #C4B0FF;
+  --border: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"]:not([data-vj-admin]) {
+  --bg-primary: #1C1C1C;
+  --bg-secondary: #2C2438;
+  --text-primary: #F0EEFF;
+  --text-secondary: #C4B0FF;
+  --accent: #A78BFA;
+  --accent-light: #C4B0FF;
+  --border: rgba(255, 255, 255, 0.1);
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  @apply bg-white text-slate-900 antialiased;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   line-height: 1.6;
@@ -266,4 +293,204 @@ body {
   .vj-text-subtle {
     @apply text-slate-400;
   }
+}
+
+/* ================================
+   Dark Mode Overrides
+   (public pages only — admin excluded via :not([data-vj-admin]))
+   ================================ */
+
+[data-theme="dark"]:not([data-vj-admin]) {
+  color-scheme: dark;
+}
+
+/* Header / footer surfaces */
+[data-theme="dark"]:not([data-vj-admin]) header,
+[data-theme="dark"]:not([data-vj-admin]) footer {
+  background-color: var(--bg-secondary);
+  border-color: var(--border);
+}
+
+/* Tailwind bg utilities — solid and opacity variants */
+[data-theme="dark"]:not([data-vj-admin]) .bg-white,
+[data-theme="dark"]:not([data-vj-admin]) .bg-white\/60,
+[data-theme="dark"]:not([data-vj-admin]) .bg-white\/70,
+[data-theme="dark"]:not([data-vj-admin]) .bg-white\/80,
+[data-theme="dark"]:not([data-vj-admin]) .bg-white\/90,
+[data-theme="dark"]:not([data-vj-admin]) .bg-white\/95 {
+  background-color: var(--bg-secondary);
+}
+[data-theme="dark"]:not([data-vj-admin]) .bg-slate-50 {
+  background-color: var(--bg-secondary);
+}
+[data-theme="dark"]:not([data-vj-admin]) .bg-slate-100 {
+  background-color: #352d45;
+}
+/* Hero gradient overlays — make them transparent in dark mode */
+[data-theme="dark"]:not([data-vj-admin]) .from-slate-50 {
+  --tw-gradient-from: transparent;
+}
+[data-theme="dark"]:not([data-vj-admin]) .via-white {
+  --tw-gradient-via: transparent;
+}
+[data-theme="dark"]:not([data-vj-admin]) .to-white {
+  --tw-gradient-to: transparent;
+}
+
+/* Tailwind text utilities */
+[data-theme="dark"]:not([data-vj-admin]) .text-slate-900 {
+  color: var(--text-primary);
+}
+[data-theme="dark"]:not([data-vj-admin]) .text-slate-800 {
+  color: var(--text-primary);
+}
+[data-theme="dark"]:not([data-vj-admin]) .text-slate-700 {
+  color: var(--text-secondary);
+}
+[data-theme="dark"]:not([data-vj-admin]) .text-slate-600 {
+  color: var(--text-secondary);
+}
+[data-theme="dark"]:not([data-vj-admin]) .text-slate-500 {
+  color: rgba(196, 176, 255, 0.55);
+}
+[data-theme="dark"]:not([data-vj-admin]) .text-slate-400 {
+  color: rgba(196, 176, 255, 0.4);
+}
+
+/* Tailwind border utilities */
+[data-theme="dark"]:not([data-vj-admin]) .border-slate-200 {
+  border-color: var(--border);
+}
+[data-theme="dark"]:not([data-vj-admin]) .border-slate-300 {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* CSS component classes */
+[data-theme="dark"]:not([data-vj-admin]) .card,
+[data-theme="dark"]:not([data-vj-admin]) .vj-card,
+[data-theme="dark"]:not([data-vj-admin]) .vj-card-tight,
+[data-theme="dark"]:not([data-vj-admin]) .vj-card-comfortable {
+  background: var(--bg-secondary);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-panel {
+  background: linear-gradient(180deg, #2C2438, #241d33);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+[data-theme="dark"]:not([data-vj-admin]) .vj-panel-soft {
+  background: linear-gradient(180deg, #241d33, #2C2438);
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-cta {
+  background: linear-gradient(180deg, #2C2438, #1C1C1C);
+  border-color: rgba(167, 139, 250, 0.2);
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-step {
+  background: rgba(44, 36, 56, 0.92);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(196, 176, 255, 0.9);
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-h2 {
+  color: rgba(196, 176, 255, 0.55);
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-icon {
+  background: rgba(167, 139, 250, 0.15);
+  box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.18);
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .btn-secondary,
+[data-theme="dark"]:not([data-vj-admin]) .vj-btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+[data-theme="dark"]:not([data-vj-admin]) .vj-btn-secondary:hover {
+  background: #352d45;
+}
+[data-theme="dark"]:not([data-vj-admin]) .btn-ghost {
+  color: var(--text-secondary);
+}
+[data-theme="dark"]:not([data-vj-admin]) .btn-ghost:hover {
+  background-color: rgba(167, 139, 250, 0.1);
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-chip-default {
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+[data-theme="dark"]:not([data-vj-admin]) .vj-chip-active {
+  background-color: rgba(167, 139, 250, 0.2);
+  border-color: rgba(167, 139, 250, 0.6);
+  color: var(--accent-light);
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-input,
+[data-theme="dark"]:not([data-vj-admin]) .vj-input-pill,
+[data-theme="dark"]:not([data-vj-admin]) .vj-select {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+[data-theme="dark"]:not([data-vj-admin]) .vj-input::placeholder,
+[data-theme="dark"]:not([data-vj-admin]) .vj-input-pill::placeholder {
+  color: rgba(196, 176, 255, 0.4);
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-searchbar {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+[data-theme="dark"]:not([data-vj-admin]) .vj-searchbar::placeholder {
+  color: rgba(196, 176, 255, 0.45);
+}
+[data-theme="dark"]:not([data-vj-admin]) .vj-searchbar-sheen {
+  background: linear-gradient(
+    to bottom,
+    rgba(167, 139, 250, 0.07),
+    rgba(167, 139, 250, 0)
+  );
+}
+[data-theme="dark"]:not([data-vj-admin]) .vj-searchbar-icon-btn {
+  color: rgba(196, 176, 255, 0.6);
+}
+[data-theme="dark"]:not([data-vj-admin]) .vj-searchbar-icon-btn:hover {
+  background: rgba(167, 139, 250, 0.12);
+  color: var(--accent-light);
+}
+
+/* Nav auth pill button */
+[data-theme="dark"]:not([data-vj-admin]) #nav-auth-link,
+[data-theme="dark"]:not([data-vj-admin]) #nav-login-link {
+  background-color: var(--bg-secondary);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+[data-theme="dark"]:not([data-vj-admin]) #nav-auth-link:hover,
+[data-theme="dark"]:not([data-vj-admin]) #nav-login-link:hover {
+  border-color: rgba(167, 139, 250, 0.5);
+  color: var(--accent-light);
+}
+
+/* Theme toggle icon visibility */
+[data-theme="light"] .theme-icon-moon,
+html:not([data-theme]) .theme-icon-moon {
+  display: inline-flex;
+}
+[data-theme="light"] .theme-icon-sun,
+html:not([data-theme]) .theme-icon-sun {
+  display: none;
+}
+[data-theme="dark"] .theme-icon-sun {
+  display: inline-flex;
+}
+[data-theme="dark"] .theme-icon-moon {
+  display: none;
 }
