@@ -108,6 +108,9 @@ const initials = business?.name
       .map((w: string) => w[0]?.toUpperCase())
       .join("")
   : "-";
+
+// Ownership
+const isClaimed: boolean = b?.is_claimed === true;
 ---
 
 <Layout title={business ? business.name : "Business • VantaJax"}>
@@ -160,9 +163,19 @@ const initials = business?.name
                     )}
                   </div>
 
-                  <h1 class="min-w-0 text-2xl sm:text-4xl font-semibold tracking-tight text-slate-900">
-                    {business.name}
-                  </h1>
+                  <div class="min-w-0">
+                    <h1 class="min-w-0 text-2xl sm:text-4xl font-semibold tracking-tight text-slate-900">
+                      {business.name}
+                    </h1>
+                    {isClaimed && (
+                      <p class="mt-1 text-[11px] text-slate-400 flex items-center gap-1">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor"/>
+                        </svg>
+                        Managed by owner
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div class="mt-3 flex flex-wrap items-center gap-2 text-[12px] text-slate-600">
@@ -457,13 +470,31 @@ const initials = business?.name
                     </button>
                   </div>
 
-                  <p class="mt-4 text-[11px] text-slate-500 leading-relaxed">
+                  <p class=”mt-4 text-[11px] text-slate-500 leading-relaxed”>
                     Tip: If a link doesn’t open correctly on mobile, try “Copy link” and paste into your browser.
                   </p>
+
                 </section>
               </div>
             </aside>
           </div>
+
+          <!-- Claim banner (unclaimed only) -->
+          {!isClaimed && (
+            <div class="rounded-[20px] border border-purple-200 bg-purple-50 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <p class="text-[13px] font-semibold text-purple-900">Is this your business?</p>
+                <p class="text-[12px] text-purple-700 mt-0.5">Claim this listing to manage your info, add a logo, and more.</p>
+              </div>
+              <a href={`/claim/${business.id}`} class="claim-cta" style="width:auto; white-space:nowrap; margin-top:0;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Claim this listing →
+              </a>
+            </div>
+          )}
         </div>
 
         <!-- Mapbox GL JS map init -->

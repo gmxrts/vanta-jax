@@ -26,21 +26,29 @@ const year = new Date().getFullYear();
       <div
         class="mx-auto flex max-w-[1100px] items-center justify-between gap-4 px-4 py-3"
       >
-        <!-- "Logo" / brand, always links home -->
-        <a href="/" class="flex items-center gap-2">
-          <div
-            class="flex h-9 w-9 items-center justify-center rounded-full bg-linear-to-br from-purple-600 to-slate-900 text-xs font-bold text-white shadow-sm"
+        <!-- Wordmark, always links home -->
+        <a href="/" class="flex flex-col items-start gap-0.5">
+          <!-- VANTA wordmark — charcoal on light bg, JAX in brand purple -->
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            height="28"
+            viewBox="0 0 160 28"
+            role="img"
+            aria-label="VantaJax"
           >
-            VJ
-          </div>
-          <div class="leading-tight">
-            <span class="block text-sm font-semibold tracking-tight text-slate-900">
-              VantaJax
-            </span>
-            <span class="block text-[11px] text-slate-500">
-              Black-owned • Jacksonville
-            </span>
-          </div>
+            <text
+              x="0"
+              y="22"
+              font-family="system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif"
+              font-weight="800"
+              font-size="22"
+              letter-spacing="2"
+              fill="#0f172a"
+            >VANTA<tspan fill="#9333ea">JAX</tspan></text>
+          </svg>
+          <span class="text-[11px] text-slate-500 leading-none">
+            Black-owned • Jacksonville
+          </span>
         </a>
 
         <!-- Primary navigation -->
@@ -62,6 +70,22 @@ const year = new Date().getFullYear();
             class="text-slate-700 hover:text-purple-700"
           >
             Suggest
+          </a>
+          <!-- Auth nav item: shown/hidden by client script -->
+          <a
+            id="nav-auth-link"
+            href="/login"
+            class="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:border-purple-300 hover:text-purple-700"
+            style="display:none"
+          >
+            Dashboard
+          </a>
+          <a
+            id="nav-login-link"
+            href="/login"
+            class="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:border-purple-300 hover:text-purple-700"
+          >
+            Owner login
           </a>
         </nav>
       </div>
@@ -101,4 +125,20 @@ const year = new Date().getFullYear();
       </div>
     </footer>
   </body>
+
+  <script is:inline>
+    // createBrowserClient stores session in cookies — check for sb- auth cookie
+    // This is synchronous and fast (no network request needed)
+    (function () {
+      const isLoggedIn = document.cookie.split(';').some(function(c) {
+        return c.trim().match(/^sb-[^=]+-auth-token/);
+      });
+      const loginLink = document.getElementById("nav-login-link");
+      const authLink = document.getElementById("nav-auth-link");
+      if (isLoggedIn) {
+        if (loginLink) loginLink.style.display = "none";
+        if (authLink) authLink.style.display = "";
+      }
+    })();
+  </script>
 </html>

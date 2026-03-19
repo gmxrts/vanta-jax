@@ -12,10 +12,25 @@ type Suggestion = {
   promoted_to_business_id?: string | null;
 };
 
+type Claim = {
+  id: string;
+  business_id: string;
+  user_id: string;
+  status: "pending" | "approved" | "rejected";
+  verification_method: string | null;
+  claimed_at: string;
+  approved_at: string | null;
+  notes: string | null;
+  profiles: { email: string; full_name: string | null } | null;
+  businesses: { name: string } | null;
+};
+
 type Props = {
   suggestions: Suggestion[];
   businesses?: LiveBusiness[];
   mapboxToken?: string;
+  claims?: Claim[];
+  adminKey?: string;
 };
 
 type DayHours = { open: string | null; close: string | null; closed: boolean };
@@ -1235,10 +1250,166 @@ function LiveListings({ businesses, mapboxToken }: { businesses: LiveBusiness[];
   );
 }
 
+// ─── ClaimsTab ────────────────────────────────────────────────────────────────
+
+function ClaimsTab({ claims, adminKey }: { claims: Claim[]; adminKey: string }) {
+  const [localClaims, setLocalClaims] = useState<Claim[]>(claims);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [messages, setMessages] = useState<Record<string, { text: string; ok: boolean }>>({});
+
+  const pending = localClaims.filter((c) => c.status === "pending");
+  const reviewed = localClaims.filter((c) => c.status !== "pending");
+
+  const setMsg = (id: string, text: string, ok: boolean) =>
+    setMessages((prev) => ({ ...prev, [id]: { text, ok } }));
+
+  const handle = async (claimId: string, action: "approve" | "reject") => {
+    setLoadingId(claimId);
+    try {
+      const res = await fetch(`/api/admin/${action}-claim`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
+        body: JSON.stringify({ claimId, notes: notes[claimId] || undefined }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMsg(claimId, data?.error || "Error.", false);
+      } else {
+        setMsg(claimId, action === "approve" ? "Approved!" : "Rejected.", true);
+        setLocalClaims((prev) =>
+          prev.map((c) =>
+            c.id === claimId
+              ? { ...c, status: action === "approve" ? "approved" : "rejected", approved_at: action === "approve" ? new Date().toISOString() : null }
+              : c
+          )
+        );
+      }
+    } catch {
+      setMsg(claimId, "Network error.", false);
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  if (!localClaims.length) {
+    return (
+      <div className="rounded-3xl border border-slate-200/70 bg-white/60 px-5 py-5 shadow-sm backdrop-blur">
+        <p className="text-sm font-semibold text-slate-900">No claims yet.</p>
+        <p className="mt-1 text-[11px] text-slate-500">When business owners claim their listings, they'll appear here.</p>
+      </div>
+    );
+  }
+
+  const renderClaim = (claim: Claim) => {
+    const msg = messages[claim.id];
+    const isPending = claim.status === "pending";
+    return (
+      <div
+        key={claim.id}
+        className={`rounded-3xl border px-5 py-5 shadow-sm backdrop-blur ${
+          isPending
+            ? "border-purple-200/80 bg-purple-50/40"
+            : claim.status === "approved"
+              ? "border-emerald-200/70 bg-emerald-50/30"
+              : "border-red-200/70 bg-red-50/30"
+        }`}
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-0.5">
+            <p className="text-[13px] font-semibold text-slate-900">
+              {claim.businesses?.name ?? "Unknown business"}
+            </p>
+            <p className="text-[11px] text-slate-600">
+              <span className="font-medium">{claim.profiles?.email ?? "Unknown email"}</span>
+              {claim.profiles?.full_name ? ` · ${claim.profiles.full_name}` : ""}
+            </p>
+            <p className="text-[10px] text-slate-400">
+              Via {claim.verification_method ?? "email"} · {new Date(claim.claimed_at).toLocaleDateString()}
+            </p>
+          </div>
+          <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+            claim.status === "pending" ? "bg-purple-100 text-purple-700" :
+            claim.status === "approved" ? "bg-emerald-100 text-emerald-700" :
+            "bg-red-100 text-red-700"
+          }`}>
+            {claim.status}
+          </span>
+        </div>
+
+        {msg && (
+          <p className={`mt-3 text-[11px] font-medium ${msg.ok ? "text-emerald-700" : "text-red-700"}`}>
+            {msg.text}
+          </p>
+        )}
+
+        {isPending && !msg?.ok && (
+          <div className="mt-4 space-y-3">
+            <textarea
+              placeholder="Admin notes (optional)"
+              value={notes[claim.id] ?? ""}
+              onChange={(e) => setNotes((prev) => ({ ...prev, [claim.id]: e.target.value }))}
+              rows={2}
+              className="w-full rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-[11px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-purple-300 resize-none"
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={loadingId === claim.id}
+                onClick={() => handle(claim.id, "approve")}
+                className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-[11px] font-semibold text-emerald-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-100 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loadingId === claim.id ? "…" : "Approve"}
+              </button>
+              <button
+                type="button"
+                disabled={loadingId === claim.id}
+                onClick={() => handle(claim.id, "reject")}
+                className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-[11px] font-semibold text-red-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loadingId === claim.id ? "…" : "Reject"}
+              </button>
+              <a
+                href={`/business/${claim.business_id}`}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5"
+              >
+                View listing ↗
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      {pending.length > 0 && (
+        <>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+            Pending · {pending.length}
+          </p>
+          {pending.map(renderClaim)}
+        </>
+      )}
+      {reviewed.length > 0 && (
+        <>
+          <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+            Reviewed · {reviewed.length}
+          </p>
+          {reviewed.map(renderClaim)}
+        </>
+      )}
+    </div>
+  );
+}
+
 // ─── AdminDashboard ──────────────────────────────────────────────────────────
 
-export default function AdminDashboard({ suggestions, businesses, mapboxToken }: Props) {
-  const [activeTab, setActiveTab] = useState<"suggestions" | "live">("suggestions");
+export default function AdminDashboard({ suggestions, businesses, mapboxToken, claims = [], adminKey = "" }: Props) {
+  const [activeTab, setActiveTab] = useState<"suggestions" | "live" | "claims">("suggestions");
   const [items, setItems] = useState<Suggestion[]>(suggestions ?? []);
   const [openIds, setOpenIds] = useState<Set<string>>(() => new Set());
   const [editIds, setEditIds] = useState<Set<string>>(() => new Set());
@@ -1460,6 +1631,8 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken }:
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [filteredItems, selectedId, openIds, editIds, quickSettings]);
 
+  const pendingClaimsCount = claims.filter((c) => c.status === "pending").length;
+
   const tabBar = (
     <div className="flex items-center gap-1 rounded-2xl border border-slate-200 bg-white/70 p-1 shadow-sm w-fit backdrop-blur">
       <button
@@ -1482,6 +1655,18 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken }:
           {businesses?.length ?? 0}
         </span>
       </button>
+      <button
+        type="button"
+        onClick={() => setActiveTab("claims")}
+        className={`rounded-xl px-4 py-2 text-[12px] font-semibold transition ${activeTab === "claims" ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+      >
+        Claims{" "}
+        {pendingClaimsCount > 0 && (
+          <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] ${activeTab === "claims" ? "bg-purple-400/30 text-white" : "bg-purple-100 text-purple-700"}`}>
+            {pendingClaimsCount}
+          </span>
+        )}
+      </button>
     </div>
   );
 
@@ -1489,13 +1674,17 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken }:
     return (
       <div className="space-y-5">
         {tabBar}
-        {activeTab === "suggestions" ? (
+        {activeTab === "suggestions" && (
           <div className="rounded-3xl border border-slate-200/70 bg-white/60 px-5 py-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur">
             <p className="text-sm font-semibold text-slate-900">No suggestions waiting for review.</p>
             <p className="mt-2 text-[11px] text-slate-600">When supporters submit new businesses, they will appear here.</p>
           </div>
-        ) : (
+        )}
+        {activeTab === "live" && (
           <LiveListings businesses={businesses ?? []} mapboxToken={mapboxToken} />
+        )}
+        {activeTab === "claims" && (
+          <ClaimsTab claims={claims} adminKey={adminKey} />
         )}
       </div>
     );
@@ -1506,6 +1695,9 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken }:
       {tabBar}
       {activeTab === "live" && (
         <LiveListings businesses={businesses ?? []} mapboxToken={mapboxToken} />
+      )}
+      {activeTab === "claims" && (
+        <ClaimsTab claims={claims} adminKey={adminKey} />
       )}
       {activeTab === "suggestions" && <div className="space-y-5">
       {/* Control bar */}

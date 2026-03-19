@@ -1,0 +1,518 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { createSupabaseServerClient } from "../lib/supabaseServer";
+import { createClient } from "@supabase/supabase-js";
+
+export const prerender = false;
+
+const supabase = createSupabaseServerClient(Astro);
+const { data: { session } } = await supabase.auth.getSession();
+
+// Middleware handles the redirect if no session, but guard here too
+if (!session) {
+  return Astro.redirect("/login?next=/dashboard");
+}
+
+const userId = session.user.id;
+
+// Fetch the owner's approved claim + linked business
+const { data: claim } = await supabase
+  .from("business_claims")
+  .select("id, status, claimed_at, approved_at, business_id")
+  .eq("user_id", userId)
+  .order("claimed_at", { ascending: false })
+  .limit(1)
+  .maybeSingle();
+
+let business: any = null;
+if (claim?.status === "approved" && claim.business_id) {
+  // Use service role for fetching business data (owner RLS may limit fields)
+  const adminSb = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+  const { data } = await adminSb
+    .from("businesses")
+    .select("*")
+    .eq("id", claim.business_id)
+    .single();
+  business = data;
+}
+
+const userEmail = session.user.email ?? "";
+const userName = session.user.user_metadata?.full_name ?? session.user.user_metadata?.name ?? "";
+
+const dayOrder = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"] as const;
+const dayLabels: Record<string, string> = {
+  monday: "Monday", tuesday: "Tuesday", wednesday: "Wednesday", thursday: "Thursday",
+  friday: "Friday", saturday: "Saturday", sunday: "Sunday",
+};
+
+function makeDefaultHours() {
+  return {
+    monday:    { open: "09:00", close: "17:00", closed: false },
+    tuesday:   { open: "09:00", close: "17:00", closed: false },
+    wednesday: { open: "09:00", close: "17:00", closed: false },
+    thursday:  { open: "09:00", close: "17:00", closed: false },
+    friday:    { open: "09:00", close: "17:00", closed: false },
+    saturday:  { open: "10:00", close: "14:00", closed: false },
+    sunday:    { open: null,    close: null,     closed: true  },
+  };
+}
+
+const hoursData = business?.hours ?? null;
+---
+
+<Layout title="My Dashboard • VantaJax">
+  <div class="bg-white min-h-[70vh]">
+    <section class="relative overflow-hidden px-4 pt-12 pb-16">
+      <!-- Background -->
+      <div class="pointer-events-none absolute inset-0">
+        <div class="absolute -top-28 left-1/2 h-72 w-184 -translate-x-1/2 rounded-full bg-purple-600/10 blur-3xl"></div>
+        <div class="absolute inset-0 bg-linear-to-b from-slate-50 via-white to-white"></div>
+      </div>
+
+      <div class="relative mx-auto w-full max-w-[1100px] space-y-6">
+
+        <!-- Header -->
+        <header class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-700">Owner Dashboard</p>
+            <h1 class="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+              {userName ? `Welcome, ${userName.split(" ")[0]}` : "Your dashboard"}
+            </h1>
+            <p class="mt-1 text-[12px] text-slate-500">{userEmail}</p>
+          </div>
+
+          <form action="/api/auth/signout" method="POST">
+            <button
+              type="submit"
+              class="rounded-full border border-slate-200 bg-white px-4 py-2 text-[12px] font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50"
+            >
+              Sign out
+            </button>
+          </form>
+        </header>
+
+        {/* ─── No claim yet ─── */}
+        {!claim && (
+          <div class="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm text-center">
+            <p class="text-base font-semibold text-slate-900">You haven't claimed a listing yet.</p>
+            <p class="mt-2 text-[13px] text-slate-600 max-w-md mx-auto">
+              Find your business in the directory and click "Is this your business?" to start the claim process.
+            </p>
+            <a
+              href="/businesses"
+              class="mt-5 inline-flex items-center justify-center rounded-2xl bg-purple-600 px-5 py-3 text-[13px] font-semibold text-white shadow-[0_14px_30px_-20px_rgba(147,51,234,0.55)] transition hover:-translate-y-0.5 hover:bg-purple-700"
+            >
+              Browse the directory →
+            </a>
+          </div>
+        )}
+
+        {/* ─── Claim pending ─── */}
+        {claim?.status === "pending" && (
+          <div class="rounded-[28px] border border-purple-200 bg-purple-50 p-8 shadow-sm">
+            <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-purple-600">Claim pending</p>
+            <p class="mt-2 text-base font-semibold text-slate-900">Your claim is under review.</p>
+            <p class="mt-2 text-[13px] text-slate-600">
+              We review all claims manually to ensure accuracy. You'll receive an email at <span class="font-medium">{userEmail}</span> once it's approved.
+            </p>
+          </div>
+        )}
+
+        {/* ─── Claim rejected ─── */}
+        {claim?.status === "rejected" && (
+          <div class="rounded-[28px] border border-red-200 bg-red-50 p-8 shadow-sm">
+            <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-red-600">Claim not approved</p>
+            <p class="mt-2 text-base font-semibold text-slate-900">We couldn't approve your claim.</p>
+            <p class="mt-2 text-[13px] text-slate-600">
+              Contact us at <a href="mailto:vantajacksonville@gmail.com" class="font-semibold text-purple-700">vantajacksonville@gmail.com</a> for more information.
+            </p>
+          </div>
+        )}
+
+        {/* ─── Approved: show dashboard ─── */}
+        {claim?.status === "approved" && business && (
+          <>
+            <!-- Stats -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm text-center">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Total views</p>
+                <p class="mt-2 text-3xl font-bold text-slate-900">{business.view_count ?? 0}</p>
+              </div>
+              <div class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm text-center">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Direction clicks</p>
+                <p class="mt-2 text-3xl font-bold text-slate-900">{business.direction_clicks ?? "—"}</p>
+              </div>
+              <div class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm text-center">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Website clicks</p>
+                <p class="mt-2 text-3xl font-bold text-slate-900">{business.website_clicks ?? "—"}</p>
+              </div>
+            </div>
+
+            <!-- Edit listing -->
+            <div class="rounded-[28px] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+              <h2 class="text-xs font-medium tracking-wide text-slate-400 mb-5">Edit your listing</h2>
+
+              <div id="update-status" class="hidden mb-4 rounded-2xl border px-4 py-3 text-[12px] font-medium"></div>
+
+              <form id="owner-edit-form" class="space-y-5">
+                <input type="hidden" name="businessId" value={business.id} />
+
+                <!-- Name -->
+                <div>
+                  <label class="label-field">Business name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={business.name}
+                    required
+                    class="vj-input"
+                  />
+                </div>
+
+                <!-- Description -->
+                <div>
+                  <label class="label-field">Description</label>
+                  <textarea
+                    name="description"
+                    rows={3}
+                    class="vj-input resize-none"
+                  >{business.description ?? ""}</textarea>
+                </div>
+
+                <!-- Phone + Website -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="label-field">Phone</label>
+                    <input type="tel" name="phone" value={business.phone ?? ""} class="vj-input" />
+                  </div>
+                  <div>
+                    <label class="label-field">Website</label>
+                    <input type="url" name="website" value={business.website ?? ""} placeholder="https://" class="vj-input" />
+                  </div>
+                </div>
+
+                <!-- Service area (only for service-based) -->
+                {(business.business_type === "service_based") && (
+                  <div>
+                    <label class="label-field">Service area</label>
+                    <input type="text" name="service_area" value={business.service_area ?? ""} placeholder="e.g. Northside Jacksonville" class="vj-input" />
+                  </div>
+                )}
+
+                <!-- Social links -->
+                <div>
+                  <p class="label-field mb-3">Social media</p>
+                  <div class="space-y-3">
+                    <div class="flex items-center gap-3">
+                      <span class="text-[11px] w-20 text-slate-500 font-semibold">Instagram</span>
+                      <input type="url" name="instagram_url" value={business.instagram_url ?? ""} placeholder="https://instagram.com/..." class="vj-input flex-1" />
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <span class="text-[11px] w-20 text-slate-500 font-semibold">Facebook</span>
+                      <input type="url" name="facebook_url" value={business.facebook_url ?? ""} placeholder="https://facebook.com/..." class="vj-input flex-1" />
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <span class="text-[11px] w-20 text-slate-500 font-semibold">TikTok</span>
+                      <input type="url" name="tiktok_url" value={business.tiktok_url ?? ""} placeholder="https://tiktok.com/@..." class="vj-input flex-1" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Hours -->
+                <div>
+                  <p class="label-field mb-3">Hours of operation</p>
+                  <div id="hours-editor" class="space-y-2">
+                    {dayOrder.map((day) => {
+                      const dh = (hoursData as any)?.[day] ?? { open: "09:00", close: "17:00", closed: false };
+                      return (
+                        <div class="flex items-center gap-2 flex-wrap" data-day={day}>
+                          <span class="w-24 text-[11px] font-semibold text-slate-600">{dayLabels[day]}</span>
+                          <label class="flex items-center gap-1 text-[11px] text-slate-500 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              data-day-closed={day}
+                              checked={dh.closed}
+                              class="h-3.5 w-3.5 accent-purple-600"
+                            />
+                            Closed
+                          </label>
+                          <span data-day-times={day} class={dh.closed ? "hidden" : ""}>
+                            <input
+                              type="time"
+                              data-day-open={day}
+                              value={dh.open ?? ""}
+                              class="rounded-xl border border-slate-200 bg-white/70 px-2 py-1 text-[11px] text-slate-900 focus:outline-none focus:ring-1 focus:ring-purple-300"
+                            />
+                            <span class="mx-1 text-[11px] text-slate-400">–</span>
+                            <input
+                              type="time"
+                              data-day-close={day}
+                              value={dh.close ?? ""}
+                              class="rounded-xl border border-slate-200 bg-white/70 px-2 py-1 text-[11px] text-slate-900 focus:outline-none focus:ring-1 focus:ring-purple-300"
+                            />
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  class="inline-flex items-center justify-center rounded-2xl bg-purple-600 px-5 py-3 text-[13px] font-semibold text-white shadow-[0_14px_30px_-20px_rgba(147,51,234,0.55)] transition hover:-translate-y-0.5 hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  Save changes
+                </button>
+              </form>
+            </div>
+
+            <!-- Logo upload -->
+            <div class="rounded-[28px] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+              <h2 class="text-xs font-medium tracking-wide text-slate-400 mb-4">Logo</h2>
+
+              <!-- Current logo preview -->
+              <div class="flex items-center gap-4 mb-5">
+                <div class="h-16 w-16 rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center">
+                  {business.logo_url ? (
+                    <img
+                      id="logo-preview"
+                      src={business.logo_url}
+                      alt="Current logo"
+                      class="h-full w-full object-contain p-2"
+                    />
+                  ) : (
+                    <div id="logo-preview" class="h-full w-full grid place-items-center text-[14px] font-bold text-slate-500">
+                      {business.name?.split(" ").filter(Boolean).slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join("") || "?"}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p class="text-[12px] font-semibold text-slate-700">
+                    {business.logo_url ? "Current logo" : "No logo uploaded"}
+                  </p>
+                  <p class="text-[11px] text-slate-400 mt-0.5">PNG, JPG, SVG, or WEBP · max 2 MB</p>
+                </div>
+              </div>
+
+              <div id="logo-status" class="hidden mb-4 rounded-2xl border px-4 py-3 text-[12px] font-medium"></div>
+
+              <input
+                type="file"
+                id="logo-input"
+                accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                class="hidden"
+              />
+              <button
+                type="button"
+                id="logo-upload-btn"
+                class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-[12px] font-semibold text-slate-800 shadow-sm transition hover:-translate-y-0.5"
+              >
+                Upload new logo
+              </button>
+            </div>
+
+            <!-- Can't edit section -->
+            <div class="rounded-[28px] border border-slate-200 bg-slate-50 p-6 shadow-sm">
+              <h2 class="text-xs font-medium tracking-wide text-slate-400 mb-3">Need to change something else?</h2>
+              <p class="text-[12px] text-slate-600 leading-relaxed mb-4">
+                Category, business type, and verification status are managed by VantaJax. Send us a note and we'll update it.
+              </p>
+              <a
+                href={`mailto:vantajacksonville@gmail.com?subject=Listing update: ${encodeURIComponent(business.name)}&body=Hi, I'd like to update the following for my listing:%0A%0A`}
+                class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-[12px] font-semibold text-slate-800 shadow-sm transition hover:-translate-y-0.5"
+              >
+                Send a note →
+              </a>
+            </div>
+
+            <!-- View listing link -->
+            <div class="text-center">
+              <a
+                href={`/business/${business.id}`}
+                class="text-[12px] font-semibold text-purple-700 hover:text-purple-900"
+              >
+                View your public listing →
+              </a>
+            </div>
+          </>
+        )}
+
+      </div>
+    </section>
+  </div>
+</Layout>
+
+{claim?.status === "approved" && business && (
+  <script define:vars={{ businessId: business.id }}>
+    // Hours toggle behavior
+    document.querySelectorAll("[data-day-closed]").forEach((checkbox) => {
+      const day = checkbox.dataset.dayClosed;
+      checkbox.addEventListener("change", () => {
+        const timesEl = document.querySelector(`[data-day-times="${day}"]`);
+        if (timesEl) timesEl.classList.toggle("hidden", checkbox.checked);
+      });
+    });
+
+    // Owner edit form submit
+    const editForm = document.getElementById("owner-edit-form");
+    const updateStatus = document.getElementById("update-status");
+
+    function showUpdateStatus(msg, isError = false) {
+      updateStatus.textContent = msg;
+      updateStatus.className = `mb-4 rounded-2xl border px-4 py-3 text-[12px] font-medium ${
+        isError ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"
+      }`;
+    }
+
+    editForm?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const submitBtn = editForm.querySelector("[type=submit]");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Saving…";
+
+      // Collect hours from DOM
+      const hours = {};
+      document.querySelectorAll("[data-day]").forEach((row) => {
+        const day = row.dataset.day;
+        const closedEl = row.querySelector(`[data-day-closed="${day}"]`);
+        const openEl = row.querySelector(`[data-day-open="${day}"]`);
+        const closeEl = row.querySelector(`[data-day-close="${day}"]`);
+        const closed = closedEl?.checked ?? false;
+        hours[day] = {
+          closed,
+          open: closed ? null : (openEl?.value || null),
+          close: closed ? null : (closeEl?.value || null),
+        };
+      });
+
+      const formData = new FormData(editForm);
+      const payload = {
+        businessId: formData.get("businessId"),
+        name: formData.get("name"),
+        description: formData.get("description"),
+        phone: formData.get("phone"),
+        website: formData.get("website"),
+        service_area: formData.get("service_area"),
+        instagram_url: formData.get("instagram_url"),
+        facebook_url: formData.get("facebook_url"),
+        tiktok_url: formData.get("tiktok_url"),
+        hours,
+      };
+
+      try {
+        const res = await fetch("/api/owner/update-listing", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showUpdateStatus(data?.error || "Save failed.", true);
+        } else {
+          showUpdateStatus("Changes saved!");
+        }
+      } catch {
+        showUpdateStatus("Network error — please try again.", true);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Save changes";
+      }
+    });
+
+    // Logo upload
+    const logoInput = document.getElementById("logo-input");
+    const logoUploadBtn = document.getElementById("logo-upload-btn");
+    const logoStatus = document.getElementById("logo-status");
+
+    function showLogoStatus(msg, isError = false) {
+      logoStatus.textContent = msg;
+      logoStatus.className = `mb-4 rounded-2xl border px-4 py-3 text-[12px] font-medium ${
+        isError ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"
+      }`;
+    }
+
+    logoUploadBtn?.addEventListener("click", () => logoInput?.click());
+
+    logoInput?.addEventListener("change", async () => {
+      const file = logoInput.files?.[0];
+      if (!file) return;
+
+      if (file.size > 2 * 1024 * 1024) {
+        showLogoStatus("File too large — max 2 MB.", true);
+        return;
+      }
+
+      logoUploadBtn.disabled = true;
+      logoUploadBtn.textContent = "Uploading…";
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("businessId", businessId);
+
+      try {
+        const res = await fetch("/api/owner/upload-logo", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showLogoStatus(data?.error || "Upload failed.", true);
+        } else {
+          showLogoStatus("Logo updated!");
+          // Update preview
+          const preview = document.getElementById("logo-preview");
+          if (preview && data.logo_url) {
+            if (preview.tagName === "IMG") {
+              preview.src = data.logo_url;
+            } else {
+              const img = document.createElement("img");
+              img.src = data.logo_url;
+              img.alt = "Logo";
+              img.className = "h-full w-full object-contain p-2";
+              img.id = "logo-preview";
+              preview.replaceWith(img);
+            }
+          }
+        }
+      } catch {
+        showLogoStatus("Network error — please try again.", true);
+      } finally {
+        logoUploadBtn.disabled = false;
+        logoUploadBtn.textContent = "Upload new logo";
+        logoInput.value = "";
+      }
+    });
+  </script>
+)}
+
+<style>
+  .label-field {
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgb(100 116 139);
+    margin-bottom: 6px;
+  }
+  .vj-input {
+    width: 100%;
+    border-radius: 16px;
+    border: 1px solid rgb(226 232 240);
+    background: white;
+    padding: 10px 14px;
+    font-size: 0.8125rem;
+    color: rgb(15 23 42);
+    transition: box-shadow 150ms ease;
+  }
+  .vj-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
+  }
+  .vj-input::placeholder {
+    color: rgb(148 163 184);
+  }
+</style>
