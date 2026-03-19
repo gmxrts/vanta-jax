@@ -60,8 +60,12 @@ type LiveBusiness = {
   instagram_url: string | null;
   facebook_url: string | null;
   tiktok_url: string | null;
+  is_claimed?: boolean | null;
+  claimed_by?: string | null;
   is_archived?: boolean | null;
   archived_at?: string | null;
+  outreach_sent_at?: string | null;
+  outreach_count?: number | null;
 };
 
 type GeoFeature = {
@@ -316,10 +320,35 @@ function buildClaimRejectedMailto(ownerEmail: string, bizName: string, notes?: s
   return `mailto:${ownerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
-function DraftEmailButton({ name, id, email }: { name: string; id: string; email?: string | null }) {
+function DraftEmailButton({
+  name, id, email, adminKey = "",
+  onTracked,
+}: {
+  name: string;
+  id: string;
+  email?: string | null;
+  adminKey?: string;
+  onTracked?: (count: number, sentAt: string) => void;
+}) {
+  const handleClick = () => {
+    // Fire-and-forget tracking — open mailto regardless
+    fetch("/api/admin/track-outreach", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
+      body: JSON.stringify({ businessId: id }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.ok && onTracked) onTracked(data.outreach_count, data.outreach_sent_at);
+      })
+      .catch(() => {});
+    window.location.href = buildClaimMailto(name, id, email);
+  };
+
   return (
-    <a
-      href={buildClaimMailto(name, id, email)}
+    <button
+      type="button"
+      onClick={handleClick}
       className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-[12px] font-semibold text-slate-700 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white"
     >
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -327,7 +356,7 @@ function DraftEmailButton({ name, id, email }: { name: string; id: string; email
         <polyline points="22,6 12,13 2,6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
       Draft claim email
-    </a>
+    </button>
   );
 }
 
@@ -1237,22 +1266,109 @@ function EditListingForm({
 
 // ─── LiveListings ─────────────────────────────────────────────────────────────
 
-function LiveListings({ businesses, mapboxToken, adminKey = "" }: { businesses: LiveBusiness[]; mapboxToken?: string; adminKey?: string }) {
+type QuickFilter = "all" | "not_contacted" | "awaiting_response" | "claim_pending" | "claimed" | "archived";
+type SortKey = "last_contacted" | "name" | "claim_status";
+
+const QUICK_FILTER_OPTIONS: { key: QuickFilter; label: string }[] = [
+  { key: "not_contacted", label: "Not contacted" },
+  { key: "awaiting_response", label: "Awaiting response" },
+  { key: "claim_pending", label: "Claim pending" },
+  { key: "claimed", label: "Claimed" },
+  { key: "all", label: "All live" },
+  { key: "archived", label: "Archived" },
+];
+
+function OutreachStatusLine({ b }: { b: LiveBusiness }) {
+  const count = b.outreach_count ?? 0;
+  if (count === 0) return <span className="text-amber-600">Never contacted</span>;
+  const dateStr = b.outreach_sent_at
+    ? new Date(b.outreach_sent_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    : "";
+  return <span className="text-slate-500">Contacted {dateStr} ({count}x)</span>;
+}
+
+function ClaimStatusLine({ b, pendingIds }: { b: LiveBusiness; pendingIds: Set<string> }) {
+  if (b.is_claimed) return <span className="text-emerald-600">Claimed ✓</span>;
+  if (pendingIds.has(b.id)) return <span className="text-blue-600">Claim pending review</span>;
+  if ((b.outreach_count ?? 0) > 0) return <span className="text-slate-500">Unclaimed — outreach sent</span>;
+  return <span className="text-amber-600">Unclaimed — no outreach</span>;
+}
+
+function LiveListings({
+  businesses,
+  mapboxToken,
+  adminKey = "",
+  claims = [],
+}: {
+  businesses: LiveBusiness[];
+  mapboxToken?: string;
+  adminKey?: string;
+  claims?: Claim[];
+}) {
   const [items, setItems] = useState<LiveBusiness[]>(businesses ?? []);
   const [filter, setFilter] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [archivingId, setArchivingId] = useState<string | null>(null);
-  const [showArchived, setShowArchived] = useState(false);
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>("not_contacted");
+  const [sortKey, setSortKey] = useState<SortKey>("last_contacted");
+
+  const pendingClaimIds = useMemo(
+    () => new Set(claims.filter((c) => c.status === "pending").map((c) => c.business_id)),
+    [claims]
+  );
 
   const liveItems = items.filter((b) => !b.is_archived);
   const archivedItems = items.filter((b) => b.is_archived);
-  const activeList = showArchived ? archivedItems : liveItems;
 
+  // Summary counts (always computed from liveItems)
+  const claimedCount = liveItems.filter((b) => b.is_claimed).length;
+  const notContactedCount = liveItems.filter((b) => !(b.outreach_count ?? 0) && !b.is_claimed).length;
+  const claimPendingCount = liveItems.filter((b) => pendingClaimIds.has(b.id)).length;
+
+  // Base pool from quick filter
+  const pool = useMemo(() => {
+    if (quickFilter === "archived") return archivedItems;
+    switch (quickFilter) {
+      case "not_contacted":
+        return liveItems.filter((b) => !(b.outreach_count ?? 0) && !b.is_claimed);
+      case "awaiting_response":
+        return liveItems.filter((b) => (b.outreach_count ?? 0) > 0 && !b.is_claimed && !pendingClaimIds.has(b.id));
+      case "claim_pending":
+        return liveItems.filter((b) => pendingClaimIds.has(b.id));
+      case "claimed":
+        return liveItems.filter((b) => b.is_claimed);
+      default:
+        return liveItems;
+    }
+  }, [quickFilter, items, pendingClaimIds]);
+
+  // Text search
   const normalized = filter.trim().toLowerCase();
-  const filtered = normalized
-    ? activeList.filter((b) => [b.name, b.city ?? "", b.category ?? ""].join(" ").toLowerCase().includes(normalized))
-    : activeList;
+  const searched = normalized
+    ? pool.filter((b) => [b.name, b.city ?? "", b.category ?? ""].join(" ").toLowerCase().includes(normalized))
+    : pool;
+
+  // Sort
+  const sorted = useMemo(() => {
+    const arr = [...searched];
+    if (sortKey === "name") return arr.sort((a, b) => a.name.localeCompare(b.name));
+    if (sortKey === "claim_status") {
+      const score = (b: LiveBusiness) => {
+        if (b.is_claimed) return 3;
+        if (pendingClaimIds.has(b.id)) return 2;
+        if ((b.outreach_count ?? 0) > 0) return 1;
+        return 0;
+      };
+      return arr.sort((a, b) => score(b) - score(a));
+    }
+    // last_contacted (default)
+    return arr.sort((a, b) => {
+      const da = a.outreach_sent_at ? new Date(a.outreach_sent_at).getTime() : 0;
+      const db = b.outreach_sent_at ? new Date(b.outreach_sent_at).getTime() : 0;
+      return db - da;
+    });
+  }, [searched, sortKey, pendingClaimIds]);
 
   const handleSaved = (updated: LiveBusiness) => {
     setItems((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
@@ -1268,17 +1384,16 @@ function LiveListings({ businesses, mapboxToken, adminKey = "" }: { businesses: 
     if (!confirmed) return;
     setArchivingId(b.id);
     try {
-      const archiveAction = b.is_archived ? "restore" : "archive";
       const res = await fetch("/api/admin/archive-listing", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
-        body: JSON.stringify({ businessId: b.id, action: archiveAction }),
+        body: JSON.stringify({ businessId: b.id, action: "archive" }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Failed to archive.");
       setItems((prev) => prev.map((x) => x.id === b.id ? { ...x, is_archived: true, archived_at: new Date().toISOString() } : x));
       setEditingId(null);
-      setMessage(`"${b.name}" archived. Restore it from the Archived tab.`);
+      setMessage(`"${b.name}" archived. Find it under the Archived filter.`);
       setTimeout(() => setMessage(null), 5000);
     } catch (err: any) {
       setMessage(`Error: ${err?.message || "Could not archive."}`);
@@ -1311,45 +1426,81 @@ function LiveListings({ businesses, mapboxToken, adminKey = "" }: { businesses: 
 
   return (
     <div className="space-y-5">
-      {/* Control bar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          {/* Live / Archived toggle */}
-          <div className="flex items-center gap-1 rounded-2xl border border-slate-200 bg-white/70 p-1 shadow-sm backdrop-blur">
+      {/* Summary stats bar */}
+      <div className="flex flex-wrap gap-x-3 gap-y-1.5 rounded-2xl border border-slate-200/70 bg-white/60 px-4 py-3 shadow-sm backdrop-blur text-[11px]">
+        <span className="text-slate-600"><span className="font-semibold text-slate-900">{liveItems.length}</span> live</span>
+        <span className="text-slate-300 select-none">·</span>
+        <span className="text-slate-600">
+          <span className="font-semibold text-slate-900">{claimedCount}</span> claimed
+          {liveItems.length > 0 && <span className="text-slate-400"> ({Math.round((claimedCount / liveItems.length) * 100)}%)</span>}
+        </span>
+        <span className="text-slate-300 select-none">·</span>
+        <span className={notContactedCount > 0 ? "font-medium text-amber-700" : "text-slate-600"}>
+          <span className="font-semibold">{notContactedCount}</span> not contacted
+        </span>
+        <span className="text-slate-300 select-none">·</span>
+        <span className="text-slate-600"><span className="font-semibold text-slate-900">{claimPendingCount}</span> claim pending</span>
+        <span className="text-slate-300 select-none">·</span>
+        <span className="text-slate-600"><span className="font-semibold text-slate-900">{archivedItems.length}</span> archived</span>
+      </div>
+
+      {/* Quick filter bar */}
+      <div className="flex flex-wrap gap-2">
+        {QUICK_FILTER_OPTIONS.map(({ key, label }) => {
+          const isActive = quickFilter === key;
+          const badge =
+            key === "not_contacted" && notContactedCount > 0 && !isActive ? notContactedCount :
+            key === "claim_pending" && claimPendingCount > 0 && !isActive ? claimPendingCount :
+            key === "archived" && archivedItems.length > 0 && !isActive ? archivedItems.length :
+            null;
+          return (
             <button
+              key={key}
               type="button"
-              onClick={() => setShowArchived(false)}
-              className={`rounded-xl px-3 py-1.5 text-[12px] font-semibold transition ${!showArchived ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+              onClick={() => setQuickFilter(key)}
+              className={`inline-flex items-center gap-1.5 rounded-2xl border px-3 py-1.5 text-[12px] font-semibold transition ${
+                isActive
+                  ? key === "archived"
+                    ? "border-amber-300 bg-amber-50 text-amber-700"
+                    : "border-slate-900 bg-slate-900 text-white shadow-sm"
+                  : "border-slate-200 bg-white/70 text-slate-600 hover:text-slate-900 hover:bg-white"
+              }`}
             >
-              Live{" "}
-              <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] ${!showArchived ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
-                {liveItems.length}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowArchived(true)}
-              className={`rounded-xl px-3 py-1.5 text-[12px] font-semibold transition ${showArchived ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
-            >
-              Archived{" "}
-              {archivedItems.length > 0 && (
-                <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] ${showArchived ? "bg-white/20 text-white" : "bg-amber-100 text-amber-700"}`}>
-                  {archivedItems.length}
+              {label}
+              {badge !== null && (
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${key === "claim_pending" ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"}`}>
+                  {badge}
                 </span>
               )}
             </button>
-          </div>
-          <span className="text-[11px] text-slate-500">
-            <span className="font-semibold text-slate-900">{filtered.length}</span>{normalized ? ` / ${activeList.length} visible` : " total"}
-          </span>
+          );
+        })}
+      </div>
+
+      {/* Control bar */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <span className="text-[11px] text-slate-500">
+          <span className="font-semibold text-slate-900">{sorted.length}</span>
+          {normalized ? ` / ${pool.length} visible` : " total"}
+        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value as SortKey)}
+            className="rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-[12px] text-slate-700 shadow-sm backdrop-blur focus:outline-none focus:ring-2 focus:ring-purple-200"
+          >
+            <option value="last_contacted">Sort: Last contacted</option>
+            <option value="claim_status">Sort: Claim status</option>
+            <option value="name">Sort: Name A–Z</option>
+          </select>
+          <input
+            type="text"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="Filter by name, city, category…"
+            className="w-full sm:w-[280px] rounded-2xl border border-slate-200 bg-white/70 px-4 py-2 text-[12px] text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+          />
         </div>
-        <input
-          type="text"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          placeholder="Filter by name, city, category…"
-          className="w-full sm:w-[300px] rounded-2xl border border-slate-200 bg-white/70 px-4 py-2.5 text-[12px] text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
-        />
       </div>
 
       {message && (
@@ -1358,22 +1509,21 @@ function LiveListings({ businesses, mapboxToken, adminKey = "" }: { businesses: 
         </div>
       )}
 
-      {showArchived && archivedItems.length === 0 && (
+      {sorted.length === 0 && (
         <div className="rounded-3xl border border-slate-200/70 bg-white/60 px-5 py-5 shadow-sm backdrop-blur">
-          <p className="text-sm font-semibold text-slate-900">No archived listings.</p>
-          <p className="mt-1 text-[11px] text-slate-600">Archived businesses will appear here. They remain in the database and can be restored at any time.</p>
-        </div>
-      )}
-
-      {!showArchived && liveItems.length === 0 && (
-        <div className="rounded-3xl border border-slate-200/70 bg-white/60 px-5 py-5 shadow-sm backdrop-blur">
-          <p className="text-sm font-semibold text-slate-900">No live listings yet.</p>
-          <p className="mt-2 text-[11px] text-slate-600">Approved businesses will appear here for editing.</p>
+          <p className="text-sm font-semibold text-slate-900">
+            {quickFilter === "archived" ? "No archived listings." : "No listings match this filter."}
+          </p>
+          <p className="mt-1 text-[11px] text-slate-600">
+            {quickFilter === "archived"
+              ? "Archived businesses will appear here and can be restored at any time."
+              : "Try a different filter or search term."}
+          </p>
         </div>
       )}
 
       <div className="space-y-4">
-        {filtered.map((b) => {
+        {sorted.map((b) => {
           const isEditing = editingId === b.id;
           const isArchived = !!b.is_archived;
           return (
@@ -1387,9 +1537,9 @@ function LiveListings({ businesses, mapboxToken, adminKey = "" }: { businesses: 
             >
               <div className="px-5 sm:px-7 py-4 sm:py-5">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <h2 className="text-base sm:text-lg font-semibold text-slate-900 truncate">{b.name}</h2>
-                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
                       {b.category && (
                         <span className="rounded-full border border-slate-200 bg-white/60 px-3 py-1 shadow-sm capitalize">{b.category}</span>
                       )}
@@ -1398,9 +1548,28 @@ function LiveListings({ businesses, mapboxToken, adminKey = "" }: { businesses: 
                       {b.featured && <span className="rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-purple-700 shadow-sm">Featured</span>}
                       {isArchived && <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-700 shadow-sm">Archived</span>}
                     </div>
+                    {/* Outreach + claim status row */}
+                    {!isArchived && (
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+                        <OutreachStatusLine b={b} />
+                        <span className="text-slate-300 select-none">·</span>
+                        <ClaimStatusLine b={b} pendingIds={pendingClaimIds} />
+                      </div>
+                    )}
                   </div>
                   <div className="shrink-0 flex flex-wrap items-center gap-2">
-                    {!isArchived && <DraftEmailButton name={b.name} id={b.id} />}
+                    {!isArchived && (
+                      <DraftEmailButton
+                        name={b.name}
+                        id={b.id}
+                        adminKey={adminKey}
+                        onTracked={(count, sentAt) => {
+                          setItems((prev) =>
+                            prev.map((x) => x.id === b.id ? { ...x, outreach_count: count, outreach_sent_at: sentAt } : x)
+                          );
+                        }}
+                      />
+                    )}
                     <a href={`/business/${b.id}`} target="_blank" rel="noreferrer" className="rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-[12px] font-semibold text-slate-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white">
                       View →
                     </a>
@@ -1923,7 +2092,7 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
           </div>
         )}
         {activeTab === "live" && (
-          <LiveListings businesses={businesses ?? []} mapboxToken={mapboxToken} adminKey={adminKey} />
+          <LiveListings businesses={businesses ?? []} mapboxToken={mapboxToken} adminKey={adminKey} claims={claims} />
         )}
         {activeTab === "claims" && (
           <ClaimsTab claims={claims} adminKey={adminKey} />
@@ -1936,7 +2105,7 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
     <div className="space-y-5">
       {tabBar}
       {activeTab === "live" && (
-        <LiveListings businesses={businesses ?? []} mapboxToken={mapboxToken} adminKey={adminKey} />
+        <LiveListings businesses={businesses ?? []} mapboxToken={mapboxToken} adminKey={adminKey} claims={claims} />
       )}
       {activeTab === "claims" && (
         <ClaimsTab claims={claims} adminKey={adminKey} />
@@ -2082,7 +2251,7 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex flex-wrap items-center gap-2">
                         {s.promoted_to_business_id && (
-                          <DraftEmailButton name={s.name} id={s.promoted_to_business_id} />
+                          <DraftEmailButton name={s.name} id={s.promoted_to_business_id} adminKey={adminKey} />
                         )}
                         {hasWebsite && (
                           <>
