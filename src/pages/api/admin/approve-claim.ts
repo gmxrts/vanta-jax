@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { createClient } from "@supabase/supabase-js";
+import { sendClaimApproved } from "../../../lib/email";
 
 export const prerender = false;
 
@@ -28,10 +29,10 @@ export const POST: APIRoute = async ({ request }) => {
     import.meta.env.SUPABASE_SERVICE_ROLE_KEY
   );
 
-  // Fetch the claim
+  // Fetch the claim with owner email and business name
   const { data: claim } = await supabase
     .from("business_claims")
-    .select("id, business_id, user_id")
+    .select("id, business_id, user_id, profiles(email), businesses(name, id)")
     .eq("id", claimId)
     .single();
 
@@ -57,6 +58,13 @@ export const POST: APIRoute = async ({ request }) => {
 
   if (bizErr) {
     return new Response(JSON.stringify({ error: bizErr.message }), { status: 500 });
+  }
+
+  // Send approval email (fire-and-forget)
+  const ownerEmail = (claim as any).profiles?.email;
+  const bizName = (claim as any).businesses?.name;
+  if (ownerEmail && bizName) {
+    sendClaimApproved(ownerEmail, bizName, claim.business_id, notes).catch(() => {});
   }
 
   return new Response(JSON.stringify({ ok: true }), { status: 200 });

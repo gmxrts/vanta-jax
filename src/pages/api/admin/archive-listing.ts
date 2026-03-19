@@ -1,6 +1,5 @@
 import type { APIRoute } from "astro";
 import { createClient } from "@supabase/supabase-js";
-import { sendClaimRejected } from "../../../lib/email";
 
 export const prerender = false;
 
@@ -11,16 +10,16 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: "Unauthorized." }), { status: 401 });
   }
 
-  let body: { claimId?: string; notes?: string };
+  let body: { businessId?: string; action?: "archive" | "restore" };
   try {
     body = await request.json();
   } catch {
     return new Response(JSON.stringify({ error: "Invalid request." }), { status: 400 });
   }
 
-  const { claimId, notes } = body;
-  if (!claimId) {
-    return new Response(JSON.stringify({ error: "claimId required." }), { status: 400 });
+  const { businessId, action } = body;
+  if (!businessId || !action || !["archive", "restore"].includes(action)) {
+    return new Response(JSON.stringify({ error: "businessId and action (archive|restore) required." }), { status: 400 });
   }
 
   const supabase = createClient(
@@ -28,27 +27,18 @@ export const POST: APIRoute = async ({ request }) => {
     import.meta.env.SUPABASE_SERVICE_ROLE_KEY
   );
 
-  // Fetch claim with owner email + business name before updating
-  const { data: claim } = await supabase
-    .from("business_claims")
-    .select("id, profiles(email), businesses(name)")
-    .eq("id", claimId)
-    .single();
+  const patch =
+    action === "archive"
+      ? { is_archived: true, archived_at: new Date().toISOString() }
+      : { is_archived: false, archived_at: null };
 
   const { error } = await supabase
-    .from("business_claims")
-    .update({ status: "rejected", notes: notes || null })
-    .eq("id", claimId);
+    .from("businesses")
+    .update(patch)
+    .eq("id", businessId);
 
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-  }
-
-  // Send rejection email (fire-and-forget)
-  const ownerEmail = (claim as any)?.profiles?.email;
-  const bizName = (claim as any)?.businesses?.name;
-  if (ownerEmail && bizName) {
-    sendClaimRejected(ownerEmail, bizName, notes).catch(() => {});
   }
 
   return new Response(JSON.stringify({ ok: true }), { status: 200 });

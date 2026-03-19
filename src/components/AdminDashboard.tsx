@@ -60,6 +60,8 @@ type LiveBusiness = {
   instagram_url: string | null;
   facebook_url: string | null;
   tiktok_url: string | null;
+  is_archived?: boolean | null;
+  archived_at?: string | null;
 };
 
 type GeoFeature = {
@@ -244,6 +246,88 @@ function PlacesEnrichButton({
         </div>
       )}
     </div>
+  );
+}
+
+// ─── Mailto helpers ───────────────────────────────────────────────────────────
+
+const SITE_URL = "https://vanta-jax.vercel.app";
+
+function buildClaimMailto(name: string, id: string, email?: string | null): string {
+  const listingUrl = `${SITE_URL}/business/${id}`;
+  const subject = `Claim your Vanta listing — ${name}`;
+  const body = [
+    `Hey ${name} team,`,
+    ``,
+    `I wanted to personally reach out — your business is listed on Vanta, a free directory of Black-owned businesses and professionals in Jacksonville, FL.`,
+    ``,
+    `Your listing is live here: ${listingUrl}`,
+    ``,
+    `I'd love for you to claim it so you can keep your info accurate, add your logo, and see how many people are finding you through the platform.`,
+    ``,
+    `Claiming takes under 2 minutes — just visit your listing and click "Is this your business?"`,
+    ``,
+    `No cost, no catch. This stays community-first.`,
+    ``,
+    `— Gavin Marts`,
+    `Founder, Vanta`,
+    `vantajacksonville@gmail.com`,
+    `vanta-jax.vercel.app`,
+  ].join("\n");
+
+  const qs = `subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  return `mailto:${email ?? ""}?${qs}`;
+}
+
+function buildClaimApprovedMailto(ownerEmail: string, bizName: string, bizId: string, notes?: string): string {
+  const listingUrl = `${SITE_URL}/business/${bizId}`;
+  const dashboardUrl = `${SITE_URL}/dashboard`;
+  const subject = `You're approved — ${bizName} is yours to manage`;
+  const body = [
+    `Hey ${bizName} team,`,
+    ``,
+    `Great news — your claim is approved. You now have full control of your Vanta listing.`,
+    ``,
+    `Your listing is live here: ${listingUrl}`,
+    ``,
+    `Log in to your dashboard to update your info, add a logo, and see how many people are finding you:`,
+    `${dashboardUrl}`,
+    ...(notes ? [``, `Note: ${notes}`] : []),
+    ``,
+    `— Gavin Marts`,
+    `Founder, Vanta`,
+    `vantajacksonville@gmail.com`,
+  ].join("\n");
+  return `mailto:${ownerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+function buildClaimRejectedMailto(ownerEmail: string, bizName: string, notes?: string): string {
+  const subject = `Update on your Vanta claim — ${bizName}`;
+  const body = [
+    `Hey ${bizName} team,`,
+    ``,
+    `Thanks for reaching out. We weren't able to approve your claim at this time.`,
+    ...(notes ? [``, `Reason: ${notes}`] : [``, `If you have questions or think this was an error, just reply to this email.`]),
+    ``,
+    `— Gavin Marts`,
+    `Founder, Vanta`,
+    `vantajacksonville@gmail.com`,
+  ].join("\n");
+  return `mailto:${ownerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+function DraftEmailButton({ name, id, email }: { name: string; id: string; email?: string | null }) {
+  return (
+    <a
+      href={buildClaimMailto(name, id, email)}
+      className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-[12px] font-semibold text-slate-700 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white"
+    >
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+        <polyline points="22,6 12,13 2,6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+      Draft claim email
+    </a>
   );
 }
 
@@ -1153,16 +1237,22 @@ function EditListingForm({
 
 // ─── LiveListings ─────────────────────────────────────────────────────────────
 
-function LiveListings({ businesses, mapboxToken }: { businesses: LiveBusiness[]; mapboxToken?: string }) {
+function LiveListings({ businesses, mapboxToken, adminKey = "" }: { businesses: LiveBusiness[]; mapboxToken?: string; adminKey?: string }) {
   const [items, setItems] = useState<LiveBusiness[]>(businesses ?? []);
   const [filter, setFilter] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [archivingId, setArchivingId] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
+
+  const liveItems = items.filter((b) => !b.is_archived);
+  const archivedItems = items.filter((b) => b.is_archived);
+  const activeList = showArchived ? archivedItems : liveItems;
 
   const normalized = filter.trim().toLowerCase();
   const filtered = normalized
-    ? items.filter((b) => [b.name, b.city ?? "", b.category ?? ""].join(" ").toLowerCase().includes(normalized))
-    : items;
+    ? activeList.filter((b) => [b.name, b.city ?? "", b.category ?? ""].join(" ").toLowerCase().includes(normalized))
+    : activeList;
 
   const handleSaved = (updated: LiveBusiness) => {
     setItems((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
@@ -1171,40 +1261,130 @@ function LiveListings({ businesses, mapboxToken }: { businesses: LiveBusiness[];
     setTimeout(() => setMessage(null), 4000);
   };
 
-  if (!items.length) {
-    return (
-      <div className="rounded-3xl border border-slate-200/70 bg-white/60 px-5 py-5 shadow-[0_16px_40px_-34px_rgba(2,6,23,0.7)] backdrop-blur">
-        <p className="text-sm font-semibold text-slate-900">No live listings yet.</p>
-        <p className="mt-2 text-[11px] text-slate-600">Approved businesses will appear here for editing.</p>
-      </div>
+  const handleArchive = async (b: LiveBusiness) => {
+    const confirmed = window.confirm(
+      `Archive "${b.name}"? This will hide them from the public directory. You can restore them at any time.`
     );
-  }
+    if (!confirmed) return;
+    setArchivingId(b.id);
+    try {
+      const archiveAction = b.is_archived ? "restore" : "archive";
+      const res = await fetch("/api/admin/archive-listing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
+        body: JSON.stringify({ businessId: b.id, action: archiveAction }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Failed to archive.");
+      setItems((prev) => prev.map((x) => x.id === b.id ? { ...x, is_archived: true, archived_at: new Date().toISOString() } : x));
+      setEditingId(null);
+      setMessage(`"${b.name}" archived. Restore it from the Archived tab.`);
+      setTimeout(() => setMessage(null), 5000);
+    } catch (err: any) {
+      setMessage(`Error: ${err?.message || "Could not archive."}`);
+      setTimeout(() => setMessage(null), 4000);
+    } finally {
+      setArchivingId(null);
+    }
+  };
+
+  const handleRestore = async (b: LiveBusiness) => {
+    setArchivingId(b.id);
+    try {
+      const res = await fetch("/api/admin/archive-listing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
+        body: JSON.stringify({ businessId: b.id, action: "restore" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Failed to restore.");
+      setItems((prev) => prev.map((x) => x.id === b.id ? { ...x, is_archived: false, archived_at: null } : x));
+      setMessage(`"${b.name}" restored to the public directory.`);
+      setTimeout(() => setMessage(null), 4000);
+    } catch (err: any) {
+      setMessage(`Error: ${err?.message || "Could not restore."}`);
+      setTimeout(() => setMessage(null), 4000);
+    } finally {
+      setArchivingId(null);
+    }
+  };
 
   return (
     <div className="space-y-5">
+      {/* Control bar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-[11px] text-slate-600">
-          <span className="font-semibold text-slate-900">{filtered.length} / {items.length}</span>{" "}listings visible
-          {normalized && <span className="text-slate-500"> (filtered)</span>}
+        <div className="flex items-center gap-3">
+          {/* Live / Archived toggle */}
+          <div className="flex items-center gap-1 rounded-2xl border border-slate-200 bg-white/70 p-1 shadow-sm backdrop-blur">
+            <button
+              type="button"
+              onClick={() => setShowArchived(false)}
+              className={`rounded-xl px-3 py-1.5 text-[12px] font-semibold transition ${!showArchived ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+            >
+              Live{" "}
+              <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] ${!showArchived ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
+                {liveItems.length}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowArchived(true)}
+              className={`rounded-xl px-3 py-1.5 text-[12px] font-semibold transition ${showArchived ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+            >
+              Archived{" "}
+              {archivedItems.length > 0 && (
+                <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] ${showArchived ? "bg-white/20 text-white" : "bg-amber-100 text-amber-700"}`}>
+                  {archivedItems.length}
+                </span>
+              )}
+            </button>
+          </div>
+          <span className="text-[11px] text-slate-500">
+            <span className="font-semibold text-slate-900">{filtered.length}</span>{normalized ? ` / ${activeList.length} visible` : " total"}
+          </span>
         </div>
         <input
           type="text"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder="Filter by name, city, category…"
-          className="w-full sm:w-[320px] rounded-2xl border border-slate-200 bg-white/70 px-4 py-2.5 text-[12px] text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+          className="w-full sm:w-[300px] rounded-2xl border border-slate-200 bg-white/70 px-4 py-2.5 text-[12px] text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
         />
       </div>
 
       {message && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-[12px] text-emerald-700">{message}</div>
+        <div className={`rounded-2xl border px-4 py-3 text-[12px] ${message.startsWith("Error") ? "border-red-200 bg-red-50/80 text-red-700" : "border-emerald-200 bg-emerald-50/80 text-emerald-700"}`}>
+          {message}
+        </div>
+      )}
+
+      {showArchived && archivedItems.length === 0 && (
+        <div className="rounded-3xl border border-slate-200/70 bg-white/60 px-5 py-5 shadow-sm backdrop-blur">
+          <p className="text-sm font-semibold text-slate-900">No archived listings.</p>
+          <p className="mt-1 text-[11px] text-slate-600">Archived businesses will appear here. They remain in the database and can be restored at any time.</p>
+        </div>
+      )}
+
+      {!showArchived && liveItems.length === 0 && (
+        <div className="rounded-3xl border border-slate-200/70 bg-white/60 px-5 py-5 shadow-sm backdrop-blur">
+          <p className="text-sm font-semibold text-slate-900">No live listings yet.</p>
+          <p className="mt-2 text-[11px] text-slate-600">Approved businesses will appear here for editing.</p>
+        </div>
       )}
 
       <div className="space-y-4">
         {filtered.map((b) => {
           const isEditing = editingId === b.id;
+          const isArchived = !!b.is_archived;
           return (
-            <article key={b.id} className="rounded-[28px] border border-slate-200/70 bg-white/70 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur overflow-hidden">
+            <article
+              key={b.id}
+              className={`rounded-[28px] border backdrop-blur overflow-hidden shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] ${
+                isArchived
+                  ? "border-amber-200/60 bg-amber-50/30 opacity-75"
+                  : "border-slate-200/70 bg-white/70"
+              }`}
+            >
               <div className="px-5 sm:px-7 py-4 sm:py-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
@@ -1216,21 +1396,45 @@ function LiveListings({ businesses, mapboxToken }: { businesses: LiveBusiness[];
                       <span className="rounded-full border border-slate-200 bg-white/60 px-3 py-1 shadow-sm">{compactLocation(b.city, b.state)}</span>
                       {b.verified && <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700 shadow-sm">Verified</span>}
                       {b.featured && <span className="rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-purple-700 shadow-sm">Featured</span>}
+                      {isArchived && <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-700 shadow-sm">Archived</span>}
                     </div>
                   </div>
-                  <div className="shrink-0 flex items-center gap-2">
+                  <div className="shrink-0 flex flex-wrap items-center gap-2">
+                    {!isArchived && <DraftEmailButton name={b.name} id={b.id} />}
                     <a href={`/business/${b.id}`} target="_blank" rel="noreferrer" className="rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-[12px] font-semibold text-slate-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white">
                       View →
                     </a>
-                    <button type="button" onClick={() => setEditingId(isEditing ? null : b.id)}
-                      className={"rounded-2xl border px-3 py-2 text-[12px] font-semibold shadow-sm backdrop-blur transition hover:-translate-y-0.5 " + (isEditing ? "border-purple-300 bg-purple-50 text-purple-700" : "border-slate-200 bg-white/70 text-slate-800 hover:bg-white")}
-                    >
-                      {isEditing ? "Cancel" : "Edit"}
-                    </button>
+                    {isArchived ? (
+                      <button
+                        type="button"
+                        disabled={archivingId === b.id}
+                        onClick={() => handleRestore(b)}
+                        className="rounded-2xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-[12px] font-semibold text-emerald-700 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-emerald-100 disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {archivingId === b.id ? "Restoring…" : "Restore"}
+                      </button>
+                    ) : (
+                      <>
+                        <button type="button" onClick={() => setEditingId(isEditing ? null : b.id)}
+                          className={"rounded-2xl border px-3 py-2 text-[12px] font-semibold shadow-sm backdrop-blur transition hover:-translate-y-0.5 " + (isEditing ? "border-purple-300 bg-purple-50 text-purple-700" : "border-slate-200 bg-white/70 text-slate-800 hover:bg-white")}
+                        >
+                          {isEditing ? "Cancel" : "Edit"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={archivingId === b.id}
+                          onClick={() => handleArchive(b)}
+                          className="rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-[12px] font-semibold text-slate-400 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:border-amber-200 hover:bg-amber-50 hover:text-amber-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                          title="Archive this listing"
+                        >
+                          {archivingId === b.id ? "…" : "Archive"}
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
-                {isEditing && (
+                {isEditing && !isArchived && (
                   <div className="mt-5">
                     <div className="h-px w-full bg-slate-200/70 mb-5" />
                     <EditListingForm
@@ -1338,21 +1542,39 @@ function ClaimsTab({ claims, adminKey }: { claims: Claim[]; adminKey: string }) 
         </div>
 
         {msg && (
-          <p className={`mt-3 text-[11px] font-medium ${msg.ok ? "text-emerald-700" : "text-red-700"}`}>
-            {msg.text}
-          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <p className={`text-[11px] font-medium ${msg.ok ? "text-emerald-700" : "text-red-700"}`}>
+              {msg.text}
+            </p>
+            {msg.ok && claim.profiles?.email && claim.businesses?.name && (
+              <a
+                href={
+                  claim.status === "approved" || messages[claim.id]?.text === "Approved!"
+                    ? buildClaimApprovedMailto(claim.profiles.email, claim.businesses.name, claim.business_id, notes[claim.id])
+                    : buildClaimRejectedMailto(claim.profiles.email, claim.businesses.name, notes[claim.id])
+                }
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50"
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+                  <polyline points="22,6 12,13 2,6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Send notification email →
+              </a>
+            )}
+          </div>
         )}
 
         {isPending && !msg?.ok && (
           <div className="mt-4 space-y-3">
             <textarea
-              placeholder="Admin notes (optional)"
+              placeholder="Admin notes (optional) — included in the notification email"
               value={notes[claim.id] ?? ""}
               onChange={(e) => setNotes((prev) => ({ ...prev, [claim.id]: e.target.value }))}
               rows={2}
               className="w-full rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-[11px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-purple-300 resize-none"
             />
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 disabled={loadingId === claim.id}
@@ -1378,6 +1600,26 @@ function ClaimsTab({ claims, adminKey }: { claims: Claim[]; adminKey: string }) 
                 View listing ↗
               </a>
             </div>
+          </div>
+        )}
+
+        {/* Already-reviewed: show a quick email link if owner email is available */}
+        {!isPending && !msg && claim.profiles?.email && claim.businesses?.name && (
+          <div className="mt-3">
+            <a
+              href={
+                claim.status === "approved"
+                  ? buildClaimApprovedMailto(claim.profiles.email, claim.businesses.name, claim.business_id)
+                  : buildClaimRejectedMailto(claim.profiles.email, claim.businesses.name)
+              }
+              className="inline-flex items-center gap-1.5 text-[11px] text-slate-400 underline underline-offset-2 hover:text-slate-700 transition"
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+                <polyline points="22,6 12,13 2,6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Email owner
+            </a>
           </div>
         )}
       </div>
@@ -1681,7 +1923,7 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
           </div>
         )}
         {activeTab === "live" && (
-          <LiveListings businesses={businesses ?? []} mapboxToken={mapboxToken} />
+          <LiveListings businesses={businesses ?? []} mapboxToken={mapboxToken} adminKey={adminKey} />
         )}
         {activeTab === "claims" && (
           <ClaimsTab claims={claims} adminKey={adminKey} />
@@ -1694,7 +1936,7 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
     <div className="space-y-5">
       {tabBar}
       {activeTab === "live" && (
-        <LiveListings businesses={businesses ?? []} mapboxToken={mapboxToken} />
+        <LiveListings businesses={businesses ?? []} mapboxToken={mapboxToken} adminKey={adminKey} />
       )}
       {activeTab === "claims" && (
         <ClaimsTab claims={claims} adminKey={adminKey} />
@@ -1839,6 +2081,9 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
                     {/* Quick actions row */}
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex flex-wrap items-center gap-2">
+                        {s.promoted_to_business_id && (
+                          <DraftEmailButton name={s.name} id={s.promoted_to_business_id} />
+                        )}
                         {hasWebsite && (
                           <>
                             <a
