@@ -97,6 +97,7 @@ export default function BusinessSearch() {
         const { data, error } = await supabase
           .from("businesses")
           .select("*")
+          .not("is_archived", "is", true)
           .order("verified", { ascending: false })
           .order("name", { ascending: true });
 
@@ -127,7 +128,7 @@ export default function BusinessSearch() {
     const cat = opts?.category || "";
     const verified = opts?.verifiedOnly || false;
 
-    let query = supabase.from("businesses").select("*").or("is_archived.is.null,is_archived.eq.false");
+    let query = supabase.from("businesses").select("*").not("is_archived", "is", true);
 
     if (loc) {
       const pattern = `%${loc}%`;
