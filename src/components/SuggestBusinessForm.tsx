@@ -368,6 +368,12 @@ export default function SuggestBusinessForm() {
           <p className="mt-3 text-center text-[11px] text-slate-500">
             By submitting, you're helping build a directory people can trust.
           </p>
+          <p className="mt-1 text-center text-[11px] text-slate-400">
+            By submitting, you agree to our{" "}
+            <a href="/terms" className="underline underline-offset-2 hover:text-slate-600">Terms of Service</a>
+            {" "}and{" "}
+            <a href="/privacy" className="underline underline-offset-2 hover:text-slate-600">Privacy Policy</a>.
+          </p>
         </div>
       </form>
     </section>
