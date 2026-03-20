@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from "../../../lib/supabaseServer";
 export const prerender = false;
 
 // Fields owners are allowed to update
-const ALLOWED_FIELDS = ["name", "description", "phone", "website", "service_area", "instagram_url", "facebook_url", "tiktok_url", "hours"] as const;
+const ALLOWED_FIELDS = ["name", "description", "phone", "website", "service_area", "instagram_url", "facebook_url", "tiktok_url", "hours", "woman_owned_requested"] as const;
 
 export const POST: APIRoute = async (context) => {
   const supabase = createSupabaseServerClient(context as any);

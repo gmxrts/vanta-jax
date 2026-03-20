@@ -7,6 +7,7 @@ type BusinessPin = {
   business_type?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  woman_owned?: boolean | null;
 };
 
 type Props = {
@@ -57,6 +58,9 @@ export default function BrowseMapView({ businesses, token }: Props) {
             `<strong style="font-size:13px;color:#0f172a;display:block;line-height:1.3;">${escapeHtml(b.name)}</strong>` +
             (b.category
               ? `<span style="font-size:11px;color:#7c3aed;text-transform:capitalize;margin-top:2px;display:block;">${escapeHtml(b.category)}</span>`
+              : "") +
+            (b.woman_owned
+              ? `<span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;background:#F472B6;color:#6B0035;border-radius:999px;padding:1px 7px;display:inline-block;margin-top:4px;">Woman-Owned</span>`
               : "") +
             `<span style="font-size:11px;color:#64748b;margin-top:4px;display:block;">View profile →</span>` +
             `</a>`

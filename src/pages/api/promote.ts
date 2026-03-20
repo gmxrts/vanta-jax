@@ -39,6 +39,7 @@ export const POST: APIRoute = async ({ request }) => {
     website,
     description,
     verified,
+    woman_owned,
     latitude,
     longitude,
     business_type,
@@ -70,6 +71,7 @@ export const POST: APIRoute = async ({ request }) => {
     phone: phone || null,
     website: website || null,
     verified: typeof verified === 'boolean' ? verified : true,
+    woman_owned: typeof woman_owned === 'boolean' ? woman_owned : false,
   };
 
   // Phase 3 fields
