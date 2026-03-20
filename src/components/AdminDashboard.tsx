@@ -49,6 +49,8 @@ type LiveBusiness = {
   description: string | null;
   verified: boolean;
   featured: boolean | null;
+  woman_owned: boolean | null;
+  woman_owned_requested: boolean | null;
   business_type: string | null;
   is_address_public: boolean | null;
   public_location_label: string | null;
@@ -615,6 +617,7 @@ function EditForm({
       public_location_label:
         (fd.get("public_location_label") as string)?.trim() || null,
       verified: fd.get("verified") === "on",
+      woman_owned: fd.get("woman_owned") === "on",
       instagram_url: instagramUrl.trim() || null,
       facebook_url: facebookUrl.trim() || null,
       tiktok_url: tiktokUrl.trim() || null,
@@ -930,17 +933,27 @@ function EditForm({
 
       {/* Footer */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-1">
-        <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
-          <input
-            type="checkbox"
-            name="verified"
-            defaultChecked={initialVerified}
-            className="h-4 w-4 accent-purple-600"
-          />
-          <span className="text-[12px] text-slate-700">
-            Mark as verified Black-owned
-          </span>
-        </label>
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
+            <input
+              type="checkbox"
+              name="verified"
+              defaultChecked={initialVerified}
+              className="h-4 w-4 accent-purple-600"
+            />
+            <span className="text-[12px] text-slate-700">
+              Mark as verified Black-owned
+            </span>
+          </label>
+          <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
+            <input
+              type="checkbox"
+              name="woman_owned"
+              className="h-4 w-4 accent-pink-500"
+            />
+            <span className="text-[12px] text-slate-700">Woman-Owned</span>
+          </label>
+        </div>
 
         <button
           type="submit"
@@ -1045,6 +1058,7 @@ function EditListingForm({
       public_location_label: (fd.get("public_location_label") as string)?.trim() || null,
       verified: fd.get("verified") === "on",
       featured: fd.get("featured") === "on",
+      woman_owned: fd.get("woman_owned") === "on",
       instagram_url: instagramUrl.trim() || null,
       facebook_url: facebookUrl.trim() || null,
       tiktok_url: tiktokUrl.trim() || null,
@@ -1249,6 +1263,10 @@ function EditListingForm({
           <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
             <input type="checkbox" name="featured" defaultChecked={business.featured ?? false} className="h-4 w-4 accent-purple-600" />
             <span className="text-[12px] text-slate-700">Featured</span>
+          </label>
+          <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
+            <input type="checkbox" name="woman_owned" defaultChecked={business.woman_owned ?? false} className="h-4 w-4 accent-pink-500" />
+            <span className="text-[12px] text-slate-700">Woman-Owned{business.woman_owned_requested && !business.woman_owned ? " ★ requested" : ""}</span>
           </label>
         </div>
         <div className="flex items-center gap-2">
@@ -1546,6 +1564,8 @@ function LiveListings({
                       <span className="rounded-full border border-slate-200 bg-white/60 px-3 py-1 shadow-sm">{compactLocation(b.city, b.state)}</span>
                       {b.verified && <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700 shadow-sm">Verified</span>}
                       {b.featured && <span className="rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-purple-700 shadow-sm">Featured</span>}
+                      {b.woman_owned && <span className="vj-badge-woman-owned shadow-sm">Woman-Owned</span>}
+                      {b.woman_owned_requested && !b.woman_owned && <span className="rounded-full border border-pink-200 bg-pink-50 px-3 py-1 text-pink-600 shadow-sm">WO Requested</span>}
                       {isArchived && <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-700 shadow-sm">Archived</span>}
                     </div>
                     {/* Outreach + claim status row */}

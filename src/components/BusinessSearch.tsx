@@ -17,6 +17,7 @@ type Business = {
   website: string | null;
   verified: boolean;
   featured?: boolean | null;
+  woman_owned?: boolean | null;
   area?: string | null;
   logo_url?: string | null;
   // Privacy & type fields
@@ -78,6 +79,7 @@ export default function BusinessSearch() {
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState("");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [womanOwned, setWomanOwned] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<Business[]>([]);
@@ -123,10 +125,12 @@ export default function BusinessSearch() {
     location?: string;
     category?: string;
     verifiedOnly?: boolean;
+    womanOwned?: boolean;
   }) => {
     const loc = (opts?.location || "").trim();
     const cat = opts?.category || "";
     const verified = opts?.verifiedOnly || false;
+    const wo = opts?.womanOwned || false;
 
     let query = supabase.from("businesses").select("*").not("is_archived", "is", true);
 
@@ -143,6 +147,10 @@ export default function BusinessSearch() {
 
     if (verified) {
       query = query.eq("verified", true);
+    }
+
+    if (wo) {
+      query = query.eq("woman_owned", true);
     }
 
     const { data, error } = await query
@@ -183,6 +191,7 @@ export default function BusinessSearch() {
         location,
         category,
         verifiedOnly,
+        womanOwned,
       });
       setResults(data);
     } catch {
@@ -196,6 +205,7 @@ export default function BusinessSearch() {
     setLocation("");
     setCategory("");
     setVerifiedOnly(false);
+    setWomanOwned(false);
     setResults([]);
     setHasSearched(false);
     setError(null);
@@ -240,13 +250,14 @@ export default function BusinessSearch() {
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
               <h3 className="text-base font-bold text-slate-900 group-hover:text-purple-700 leading-tight">
                 {b.name}
               </h3>
-              <div className="flex shrink-0 flex-col items-end gap-1">
+              <div className="flex flex-wrap gap-1">
                 {b.verified && <span className="vj-badge-verified">Verified</span>}
                 {b.featured && <span className="vj-badge-featured">Featured</span>}
+                {b.woman_owned && <span className="vj-badge-woman-owned">Woman-Owned</span>}
               </div>
             </div>
 
@@ -331,7 +342,7 @@ export default function BusinessSearch() {
             </button>
           </div>
 
-          {(location || category || verifiedOnly || hasSearched) && (
+          {(location || category || verifiedOnly || womanOwned || hasSearched) && (
             <div className="mt-3 flex justify-center">
               <button
                 type="button"
@@ -370,6 +381,19 @@ export default function BusinessSearch() {
             />
             <span>Verified only</span>
           </label>
+
+          <button
+            type="button"
+            onClick={() => setWomanOwned(!womanOwned)}
+            className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium transition ${
+              womanOwned
+                ? "border-[#f9a8d4] text-[#6B0035]"
+                : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+            }`}
+            style={womanOwned ? { backgroundColor: "var(--color-woman-owned-bg)" } : {}}
+          >
+            Woman-owned
+          </button>
 
           {MAPBOX_TOKEN && (
             <div className="flex items-center rounded-full border border-slate-200 bg-white/80 p-0.5 shadow-sm">

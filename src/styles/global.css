@@ -15,6 +15,8 @@
   --accent: #A78BFA;
   --accent-light: #C4B0FF;
   --border: rgba(0, 0, 0, 0.1);
+  --color-woman-owned-bg: #F472B6;
+  --color-woman-owned-text: #6B0035;
 }
 
 [data-theme="dark"]:not([data-vj-admin]) {
@@ -132,17 +134,24 @@ body {
 
   /* Status badges */
   .vj-badge {
-    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide;
+    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap;
   }
 
   .vj-badge-verified {
-    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide
+    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap
       border-emerald-300 bg-emerald-100 text-emerald-700;
   }
 
   .vj-badge-featured {
-    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide
+    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap
       border-purple-300 bg-purple-100 text-purple-700;
+  }
+
+  .vj-badge-woman-owned {
+    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap;
+    border-color: #f9a8d4;
+    background-color: var(--color-woman-owned-bg);
+    color: var(--color-woman-owned-text);
   }
 
   /* Inputs */
