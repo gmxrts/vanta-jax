@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { supabase } from "../../lib/supabaseClient";
+import { buildBusinessMeta } from "../../lib/seo";
 
 const { id } = Astro.params;
 
@@ -114,9 +115,37 @@ const initials = business?.name
 
 // Ownership
 const isClaimed: boolean = b?.is_claimed === true;
+
+const seoMeta = business && !isArchived
+  ? buildBusinessMeta({
+      name: business.name,
+      category: business.category ?? 'other',
+      city: business.city ?? '',
+      state: business.state ?? '',
+      description: business.description ?? null,
+      logo_url: business.logo_url ?? null,
+      id: business.id,
+    })
+  : null;
 ---
 
-<Layout title={business ? business.name : "Business • VantaJax"}>
+<Layout title={seoMeta ? seoMeta.title : (business ? business.name : "Business • VantaJax")}>
+  {seoMeta && (
+    <Fragment slot="head">
+      <meta name="description" content={seoMeta.description} />
+      <link rel="canonical" href={seoMeta.canonicalUrl} />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content={seoMeta.title} />
+      <meta property="og:description" content={seoMeta.description} />
+      <meta property="og:url" content={seoMeta.canonicalUrl} />
+      <meta property="og:image" content={`https://vantajax.com/api/og/${business.id}`} />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={seoMeta.title} />
+      <meta name="twitter:description" content={seoMeta.description} />
+      <meta name="twitter:image" content={`https://vantajax.com/api/og/${business.id}`} />
+      <script type="application/ld+json" set:html={JSON.stringify(seoMeta.jsonLd)} />
+    </Fragment>
+  )}
   <main class="min-h-[70vh] bg-white">
     {isArchived ? (
       <section class="px-4 py-16">

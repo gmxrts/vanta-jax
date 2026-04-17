@@ -2,10 +2,19 @@ import type { APIRoute } from "astro";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "../../lib/supabaseServer";
 import { sendClaimSubmitted } from "../../lib/email";
+import { limiters, checkRateLimit } from "../../lib/ratelimit";
 
 export const prerender = false;
 
 export const POST: APIRoute = async (context) => {
+  const { allowed } = await checkRateLimit(limiters?.claim, context.request);
+  if (!allowed) {
+    return new Response(JSON.stringify({ error: 'Too many requests. Please try again later.' }), {
+      status: 429,
+      headers: { 'Retry-After': '3600', 'Content-Type': 'application/json' },
+    });
+  }
+
   const supabase = createSupabaseServerClient(context as any);
   const { data: { session } } = await supabase.auth.getSession();
 

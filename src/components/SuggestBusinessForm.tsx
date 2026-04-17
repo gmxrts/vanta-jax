@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { supabase } from "../lib/supabaseClient";
 
 type BusinessType = "brick_and_mortar" | "service_based" | "online_only" | "";
 
@@ -89,19 +88,21 @@ export default function SuggestBusinessForm() {
     const notes = notesParts.join("\n\n");
 
     try {
-      const { error: insertError } = await supabase
-        .from("business_suggestions")
-        .insert({
-          name,
-          city: city || null,
-          state,
-          website,
-          notes,
-        });
+      const res = await fetch("/api/suggest-business", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, city: city || null, state, website, notes }),
+      });
 
-      if (insertError) {
-        console.error(insertError);
-        setError("Something went wrong. Please try again.");
+      if (res.status === 429) {
+        setError("Too many submissions. Please wait a while and try again.");
+        setLoading(false);
+        return;
+      }
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError((data as any).error ?? "Something went wrong. Please try again.");
         setLoading(false);
         return;
       }
