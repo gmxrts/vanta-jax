@@ -227,7 +227,7 @@ export default function BusinessSearch() {
     return (
       <a
         key={b.id}
-        href={`/business/${b.id}`}
+        href={`/businesses/${b.id}`}
         className="vj-card-tight group block"
       >
         <div className="flex items-start gap-4">

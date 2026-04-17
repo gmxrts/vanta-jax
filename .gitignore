@@ -27,3 +27,5 @@ pnpm-debug.log*
 
 # Concept files
 /concept/
+ARCHITECTURE.md
+IMPLEMENTATIONS.md

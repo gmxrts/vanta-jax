@@ -11,4 +11,7 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+  redirects: {
+    '/business/[id]': '/businesses/[id]',
+  },
 });

@@ -65,7 +65,7 @@ const locationLabel = business.is_address_public && business.business_type !== "
         <div class="rounded-[28px] border border-amber-200 bg-amber-50 p-6 shadow-sm text-center">
           <p class="text-[13px] font-semibold text-amber-800">This listing has already been claimed.</p>
           <p class="mt-2 text-[12px] text-amber-700">If you believe this is an error, contact us at vantajacksonville@gmail.com.</p>
-          <a href={`/business/${business.id}`} class="mt-4 inline-flex items-center gap-1 text-[12px] font-semibold text-slate-700 hover:text-purple-700">
+          <a href={`/businesses/${business.id}`} class="mt-4 inline-flex items-center gap-1 text-[12px] font-semibold text-slate-700 hover:text-purple-700">
             ← Back to listing
           </a>
         </div>
@@ -124,7 +124,7 @@ const locationLabel = business.is_address_public && business.business_type !== "
               Claim this listing
             </button>
             <a
-              href={`/business/${business.id}`}
+              href={`/businesses/${business.id}`}
               class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[13px] font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5"
             >
               Cancel
@@ -159,7 +159,7 @@ const locationLabel = business.is_address_public && business.business_type !== "
       )}
 
       <div class="text-center">
-        <a href={`/business/${business.id}`} class="text-[11px] text-slate-400 hover:text-slate-600">
+        <a href={`/businesses/${business.id}`} class="text-[11px] text-slate-400 hover:text-slate-600">
           ← Back to {business.name}
         </a>
       </div>

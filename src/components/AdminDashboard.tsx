@@ -1590,7 +1590,7 @@ function LiveListings({
                         }}
                       />
                     )}
-                    <a href={`/business/${b.id}`} target="_blank" rel="noreferrer" className="rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-[12px] font-semibold text-slate-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white">
+                    <a href={`/businesses/${b.id}`} target="_blank" rel="noreferrer" className="rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-[12px] font-semibold text-slate-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white">
                       View →
                     </a>
                     {isArchived ? (
@@ -1781,7 +1781,7 @@ function ClaimsTab({ claims, adminKey }: { claims: Claim[]; adminKey: string }) 
                 {loadingId === claim.id ? "…" : "Reject"}
               </button>
               <a
-                href={`/business/${claim.business_id}`}
+                href={`/businesses/${claim.business_id}`}
                 target="_blank"
                 rel="noreferrer"
                 className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5"
