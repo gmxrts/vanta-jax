@@ -54,7 +54,7 @@ export default function BrowseMapView({ businesses, token }: Props) {
           closeButton: false,
           maxWidth: "200px",
         }).setHTML(
-          `<a href="/business/${b.id}" style="display:block;padding:10px 12px;text-decoration:none;color:inherit;">` +
+          `<a href="/businesses/${b.id}" style="display:block;padding:10px 12px;text-decoration:none;color:inherit;">` +
             `<strong style="font-size:13px;color:#0f172a;display:block;line-height:1.3;">${escapeHtml(b.name)}</strong>` +
             (b.category
               ? `<span style="font-size:11px;color:#7c3aed;text-transform:capitalize;margin-top:2px;display:block;">${escapeHtml(b.category)}</span>`
