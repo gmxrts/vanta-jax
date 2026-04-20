@@ -79,7 +79,7 @@ const completeness = business ? getCompletenessScore(business as Record<string, 
         <!-- Header -->
         <header class="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-700">Owner Dashboard</p>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#8B6914]">Owner Dashboard</p>
             <h1 class="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
               {userName ? `Welcome, ${userName.split(" ")[0]}` : "Your dashboard"}
             </h1>
@@ -105,7 +105,7 @@ const completeness = business ? getCompletenessScore(business as Record<string, 
             </p>
             <a
               href="/businesses"
-              class="mt-5 inline-flex items-center justify-center rounded-2xl bg-purple-600 px-5 py-3 text-[13px] font-semibold text-white shadow-[0_14px_30px_-20px_rgba(147,51,234,0.55)] transition hover:-translate-y-0.5 hover:bg-purple-700"
+              class="mt-5 inline-flex items-center justify-center rounded-2xl bg-[#C9A84C] px-5 py-3 text-[13px] font-semibold text-[#0E0C0A] shadow-[0_14px_30px_-20px_rgba(201,168,76,0.55)] transition hover:-translate-y-0.5 hover:bg-[#8B6914] hover:text-[#FAF8F5]"
             >
               Browse the directory →
             </a>
@@ -114,8 +114,8 @@ const completeness = business ? getCompletenessScore(business as Record<string, 
 
         {/* ─── Claim pending ─── */}
         {claim?.status === "pending" && (
-          <div class="rounded-[28px] border border-purple-200 bg-purple-50 p-8 shadow-sm">
-            <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-purple-600">Claim pending</p>
+          <div class="rounded-[28px] border border-[rgba(201,168,76,0.35)] bg-[#FDF6E3] p-8 shadow-sm">
+            <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8B6914]">Claim pending</p>
             <p class="mt-2 text-base font-semibold text-slate-900">Your claim is under review.</p>
             <p class="mt-2 text-[13px] text-slate-600">
               We review all claims manually to ensure accuracy. You'll receive an email at <span class="font-medium">{userEmail}</span> once it's approved.
@@ -129,7 +129,7 @@ const completeness = business ? getCompletenessScore(business as Record<string, 
             <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-red-600">Claim not approved</p>
             <p class="mt-2 text-base font-semibold text-slate-900">We couldn't approve your claim.</p>
             <p class="mt-2 text-[13px] text-slate-600">
-              Contact us at <a href="mailto:vantajacksonville@gmail.com" class="font-semibold text-purple-700">vantajacksonville@gmail.com</a> for more information.
+              Contact us at <a href="mailto:vantajacksonville@gmail.com" class="font-semibold text-[#8B6914]">vantajacksonville@gmail.com</a> for more information.
             </p>
           </div>
         )}
@@ -163,7 +163,7 @@ const completeness = business ? getCompletenessScore(business as Record<string, 
 
                 <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden mb-5">
                   <div
-                    class={`h-full rounded-full transition-all ${completeness.score >= 80 ? 'bg-emerald-500' : completeness.score >= 50 ? 'bg-purple-500' : 'bg-amber-400'}`}
+                    class={`h-full rounded-full transition-all ${completeness.score >= 80 ? 'bg-emerald-500' : completeness.score >= 50 ? 'bg-[#C9A84C]' : 'bg-amber-400'}`}
                     style={`width: ${completeness.score}%`}
                   />
                 </div>
@@ -274,7 +274,7 @@ const completeness = business ? getCompletenessScore(business as Record<string, 
                               type="checkbox"
                               data-day-closed={day}
                               checked={dh.closed}
-                              class="h-3.5 w-3.5 accent-purple-600"
+                              class="h-3.5 w-3.5"
                             />
                             Closed
                           </label>
@@ -283,14 +283,14 @@ const completeness = business ? getCompletenessScore(business as Record<string, 
                               type="time"
                               data-day-open={day}
                               value={dh.open ?? ""}
-                              class="rounded-xl border border-slate-200 bg-white/70 px-2 py-1 text-[11px] text-slate-900 focus:outline-none focus:ring-1 focus:ring-purple-300"
+                              class="rounded-xl border border-slate-200 bg-white/70 px-2 py-1 text-[11px] text-slate-900 focus:outline-none focus:ring-1 focus:ring-[rgba(201,168,76,0.3)]"
                             />
                             <span class="mx-1 text-[11px] text-slate-400">–</span>
                             <input
                               type="time"
                               data-day-close={day}
                               value={dh.close ?? ""}
-                              class="rounded-xl border border-slate-200 bg-white/70 px-2 py-1 text-[11px] text-slate-900 focus:outline-none focus:ring-1 focus:ring-purple-300"
+                              class="rounded-xl border border-slate-200 bg-white/70 px-2 py-1 text-[11px] text-slate-900 focus:outline-none focus:ring-1 focus:ring-[rgba(201,168,76,0.3)]"
                             />
                           </span>
                         </div>
@@ -301,7 +301,7 @@ const completeness = business ? getCompletenessScore(business as Record<string, 
 
                 <button
                   type="submit"
-                  class="inline-flex items-center justify-center rounded-2xl bg-purple-600 px-5 py-3 text-[13px] font-semibold text-white shadow-[0_14px_30px_-20px_rgba(147,51,234,0.55)] transition hover:-translate-y-0.5 hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                  class="inline-flex items-center justify-center rounded-2xl bg-[#C9A84C] px-5 py-3 text-[13px] font-semibold text-[#0E0C0A] shadow-[0_14px_30px_-20px_rgba(201,168,76,0.55)] transition hover:-translate-y-0.5 hover:bg-[#8B6914] hover:text-[#FAF8F5] disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   Save changes
                 </button>
@@ -388,7 +388,7 @@ const completeness = business ? getCompletenessScore(business as Record<string, 
             <div class="text-center">
               <a
                 href={`/businesses/${business.id}`}
-                class="text-[12px] font-semibold text-purple-700 hover:text-purple-900"
+                class="text-[12px] font-semibold text-[#8B6914] hover:text-[#5C4100]"
               >
                 View your public listing →
               </a>
@@ -567,7 +567,7 @@ const completeness = business ? getCompletenessScore(business as Record<string, 
   }
   .vj-input:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
+    box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.2);
   }
   .vj-input::placeholder {
     color: rgb(148 163 184);

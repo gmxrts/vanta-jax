@@ -138,7 +138,7 @@ function HoursEditor({ hours, onChange }: { hours: HoursState; onChange: (h: Hou
                 type="checkbox"
                 checked={dh.closed}
                 onChange={(e) => update(day, { closed: e.target.checked, open: e.target.checked ? null : (dh.open ?? "09:00"), close: e.target.checked ? null : (dh.close ?? "17:00") })}
-                className="h-3.5 w-3.5 accent-purple-600"
+                className="h-3.5 w-3.5 accent-[#C9A84C]"
               />
               Closed
             </label>
@@ -148,14 +148,14 @@ function HoursEditor({ hours, onChange }: { hours: HoursState; onChange: (h: Hou
                   type="time"
                   value={dh.open ?? ""}
                   onChange={(e) => update(day, { open: e.target.value || null })}
-                  className="rounded-xl border border-slate-200 bg-white/70 px-2 py-1 text-[11px] text-slate-900 focus:outline-none focus:ring-1 focus:ring-purple-300"
+                  className="rounded-xl border border-slate-200 bg-white/70 px-2 py-1 text-[11px] text-slate-900 focus:outline-none focus:ring-1 focus:ring-[rgba(201,168,76,0.3)]"
                 />
                 <span className="text-[11px] text-slate-400">–</span>
                 <input
                   type="time"
                   value={dh.close ?? ""}
                   onChange={(e) => update(day, { close: e.target.value || null })}
-                  className="rounded-xl border border-slate-200 bg-white/70 px-2 py-1 text-[11px] text-slate-900 focus:outline-none focus:ring-1 focus:ring-purple-300"
+                  className="rounded-xl border border-slate-200 bg-white/70 px-2 py-1 text-[11px] text-slate-900 focus:outline-none focus:ring-1 focus:ring-[rgba(201,168,76,0.3)]"
                 />
               </>
             )}
@@ -228,7 +228,7 @@ function PlacesEnrichButton({
           type="button"
           onClick={search}
           disabled={loading}
-          className="inline-flex items-center gap-1.5 rounded-2xl border border-purple-300 bg-purple-50 px-4 py-2 text-[12px] font-semibold text-purple-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-purple-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 rounded-2xl border border-[rgba(201,168,76,0.5)] bg-[#FDF6E3] px-4 py-2 text-[12px] font-semibold text-[#8B6914] shadow-sm transition hover:-translate-y-0.5 hover:bg-[rgba(253,246,227,0.9)] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? "Searching Places…" : "Auto-fill from Google Places"}
         </button>
@@ -251,7 +251,7 @@ function PlacesEnrichButton({
               key={r.id}
               type="button"
               onClick={() => { onEnrich(r); setResults(null); setMessage("✓ Pre-filled from Google Places. Review and adjust as needed."); }}
-              className="w-full border-t border-slate-100 px-4 py-3 text-left text-[12px] text-slate-700 transition hover:bg-purple-50 first:border-t-0"
+              className="w-full border-t border-slate-100 px-4 py-3 text-left text-[12px] text-slate-700 transition hover:bg-[#FDF6E3] first:border-t-0"
             >
               <span className="font-semibold">{r.name}</span>
               <span className="ml-2 text-slate-400">{r.address}</span>
@@ -720,7 +720,7 @@ function AddressAutofill({
           }}
           onBlur={() => setTimeout(() => setOpen(false), 200)}
           placeholder="Start typing an address to search & auto-fill coordinates…"
-          className="w-full rounded-2xl border border-purple-200 bg-white/80 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-300"
+          className="w-full rounded-2xl border border-[rgba(201,168,76,0.3)] bg-white/80 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
           autoComplete="off"
         />
         {loading && (
@@ -736,7 +736,7 @@ function AddressAutofill({
               key={f.id}
               type="button"
               onMouseDown={() => pick(f)}
-              className="w-full border-b border-slate-100 px-4 py-3 text-left text-[12px] text-slate-700 transition last:border-0 hover:bg-purple-50"
+              className="w-full border-b border-slate-100 px-4 py-3 text-left text-[12px] text-slate-700 transition last:border-0 hover:bg-[#FDF6E3]"
             >
               {f.place_name}
             </button>
@@ -873,14 +873,14 @@ function EditForm({
       <div className="grid gap-4 sm:grid-cols-[2fr,1fr]">
         <div className="space-y-2">
           <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-            Business name <span className="text-purple-600">*</span>
+            Business name <span className="text-[#C9A84C]">*</span>
           </label>
           <input
             name="name"
             value={nameValue}
             onChange={(e) => setNameValue(e.target.value)}
             required
-            className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+            className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
           />
         </div>
         <div className="space-y-2">
@@ -890,7 +890,7 @@ function EditForm({
           <select
             name="category"
             defaultValue={initialCategory}
-            className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+            className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
           >
             {categories.map((c) => (
               <option key={c.value} value={c.value}>
@@ -925,8 +925,8 @@ function EditForm({
               className={
                 "rounded-2xl border px-3 py-2.5 text-[12px] font-semibold transition " +
                 (businessType === t.value
-                  ? "border-purple-300 bg-purple-50 text-purple-700 shadow-sm"
-                  : "border-slate-200 bg-white/70 text-slate-700 hover:border-purple-200 hover:bg-purple-50/40")
+                  ? "border-[rgba(201,168,76,0.5)] bg-[#FDF6E3] text-[#8B6914] shadow-sm"
+                  : "border-slate-200 bg-white/70 text-slate-700 hover:border-[rgba(201,168,76,0.3)] hover:bg-[rgba(253,246,227,0.4)]")
               }
             >
               {t.label}
@@ -964,7 +964,7 @@ function EditForm({
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
             Address
             {mapboxToken && (
-              <span className="ml-1 font-normal normal-case tracking-normal text-purple-500">
+              <span className="ml-1 font-normal normal-case tracking-normal text-[#C9A84C]">
                 — type to search & auto-fill coordinates
               </span>
             )}
@@ -984,7 +984,7 @@ function EditForm({
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="123 Main St"
-                className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-2.5 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+                className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-2.5 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
               />
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -996,7 +996,7 @@ function EditForm({
                   type="text"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+                  className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
                 />
               </div>
               <div className="space-y-1.5">
@@ -1008,7 +1008,7 @@ function EditForm({
                   value={state}
                   onChange={(e) => setState(e.target.value)}
                   maxLength={2}
-                  className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-sm uppercase text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+                  className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-sm uppercase text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
                 />
               </div>
               <div className="space-y-1.5">
@@ -1019,7 +1019,7 @@ function EditForm({
                   type="text"
                   value={zip}
                   onChange={(e) => setZip(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+                  className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
                 />
               </div>
             </div>
@@ -1054,7 +1054,7 @@ function EditForm({
           <input
             name="service_area"
             placeholder="e.g. Jacksonville & surrounding areas"
-            className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+            className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
           />
         </div>
       )}
@@ -1071,7 +1071,7 @@ function EditForm({
           <input
             name="public_location_label"
             placeholder="e.g. Jacksonville, FL"
-            className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+            className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
           />
         </div>
       )}
@@ -1087,7 +1087,7 @@ function EditForm({
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="e.g. 904-555-1234"
-            className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+            className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
           />
         </div>
         <div className="space-y-2">
@@ -1099,7 +1099,7 @@ function EditForm({
             value={website}
             onChange={(e) => setWebsite(e.target.value)}
             placeholder="https://…"
-            className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+            className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
           />
         </div>
       </div>
@@ -1112,7 +1112,7 @@ function EditForm({
         <input
           name="logo_url"
           placeholder="https://… (direct image link)"
-          className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+          className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
         />
       </div>
 
@@ -1126,7 +1126,7 @@ function EditForm({
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
           placeholder="Short description for the directory listing"
-          className="w-full resize-none rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+          className="w-full resize-none rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
         />
       </div>
 
@@ -1136,9 +1136,9 @@ function EditForm({
           Social links <span className="normal-case font-normal tracking-normal text-slate-400">(optional)</span>
         </label>
         <div className="grid gap-2 sm:grid-cols-3">
-          <input type="url" value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} placeholder="Instagram URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
-          <input type="url" value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} placeholder="Facebook URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
-          <input type="url" value={tiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} placeholder="TikTok URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+          <input type="url" value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} placeholder="Instagram URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]" />
+          <input type="url" value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} placeholder="Facebook URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]" />
+          <input type="url" value={tiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} placeholder="TikTok URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]" />
         </div>
       </div>
 
@@ -1149,7 +1149,7 @@ function EditForm({
             Hours of operation <span className="normal-case font-normal tracking-normal text-slate-400">(optional)</span>
           </label>
           {!hours && (
-            <button type="button" onClick={() => setHours(makeDefaultHours())} className="text-[11px] font-semibold text-purple-600 hover:text-purple-800">
+            <button type="button" onClick={() => setHours(makeDefaultHours())} className="text-[11px] font-semibold text-[#8B6914] hover:text-[#5C4100]">
               + Add hours
             </button>
           )}
@@ -1170,7 +1170,7 @@ function EditForm({
               type="checkbox"
               name="verified"
               defaultChecked={initialVerified}
-              className="h-4 w-4 accent-purple-600"
+              className="h-4 w-4 accent-[#C9A84C]"
             />
             <span className="text-[12px] text-slate-700">
               Mark as verified Black-owned
@@ -1189,7 +1189,7 @@ function EditForm({
         <button
           type="submit"
           disabled={isPromoting}
-          className="inline-flex items-center justify-center rounded-2xl bg-purple-600 px-5 py-2.5 text-[13px] font-semibold text-white shadow-[0_16px_34px_-22px_rgba(147,51,234,0.75)] transition hover:-translate-y-0.5 hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-2xl bg-[#C9A84C] px-5 py-2.5 text-[13px] font-semibold text-[#0E0C0A] shadow-[0_16px_34px_-22px_rgba(201,168,76,0.75)] transition hover:-translate-y-0.5 hover:bg-[#8B6914] hover:text-[#FAF8F5] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPromoting ? "Publishing…" : "Approve & Publish"}
         </button>
@@ -1327,12 +1327,12 @@ function EditListingForm({
       {/* Name + Category */}
       <div className="grid gap-4 sm:grid-cols-[2fr,1fr]">
         <div className="space-y-2">
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Business name <span className="text-purple-600">*</span></label>
-          <input value={nameValue} onChange={(e) => setNameValue(e.target.value)} required className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Business name <span className="text-[#C9A84C]">*</span></label>
+          <input value={nameValue} onChange={(e) => setNameValue(e.target.value)} required className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]" />
         </div>
         <div className="space-y-2">
           <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Category</label>
-          <select name="category" defaultValue={business.category ?? "professional"} className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200">
+          <select name="category" defaultValue={business.category ?? "professional"} className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]">
             {categories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
         </div>
@@ -1351,7 +1351,7 @@ function EditListingForm({
         <div className="grid grid-cols-3 gap-2">
           {businessTypes.map((t) => (
             <button key={t.value} type="button" onClick={() => handleTypeChange(t.value)}
-              className={"rounded-2xl border px-3 py-2.5 text-[12px] font-semibold transition " + (businessType === t.value ? "border-purple-300 bg-purple-50 text-purple-700 shadow-sm" : "border-slate-200 bg-white/70 text-slate-700 hover:border-purple-200 hover:bg-purple-50/40")}
+              className={"rounded-2xl border px-3 py-2.5 text-[12px] font-semibold transition " + (businessType === t.value ? "border-[rgba(201,168,76,0.5)] bg-[#FDF6E3] text-[#8B6914] shadow-sm" : "border-slate-200 bg-white/70 text-slate-700 hover:border-[rgba(201,168,76,0.3)] hover:bg-[rgba(253,246,227,0.4)]")}
             >{t.label}</button>
           ))}
         </div>
@@ -1372,26 +1372,26 @@ function EditListingForm({
       {showAddress && (
         <div className="rounded-[18px] border border-slate-200/80 bg-slate-50/60 p-4 space-y-3">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-            Address{mapboxToken && <span className="ml-1 font-normal normal-case tracking-normal text-purple-500">— type to search & auto-fill coordinates</span>}
+            Address{mapboxToken && <span className="ml-1 font-normal normal-case tracking-normal text-[#C9A84C]">— type to search & auto-fill coordinates</span>}
           </p>
           {mapboxToken && <AddressAutofill token={mapboxToken} onSelect={handleGeoSelect} />}
           <div className="grid gap-3 sm:grid-cols-[2fr,1fr]">
             <div className="space-y-1.5">
               <label className="block text-[11px] font-semibold text-slate-500">Street address</label>
-              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 Main St" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-2.5 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 Main St" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-2.5 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]" />
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div className="space-y-1.5">
                 <label className="block text-[11px] font-semibold text-slate-500">City</label>
-                <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+                <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]" />
               </div>
               <div className="space-y-1.5">
                 <label className="block text-[11px] font-semibold text-slate-500">State</label>
-                <input type="text" value={stateVal} onChange={(e) => setStateVal(e.target.value)} maxLength={2} className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-sm uppercase text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+                <input type="text" value={stateVal} onChange={(e) => setStateVal(e.target.value)} maxLength={2} className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-sm uppercase text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]" />
               </div>
               <div className="space-y-1.5">
                 <label className="block text-[11px] font-semibold text-slate-500">ZIP</label>
-                <input type="text" value={zip} onChange={(e) => setZip(e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+                <input type="text" value={zip} onChange={(e) => setZip(e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]" />
               </div>
             </div>
           </div>
@@ -1417,14 +1417,14 @@ function EditListingForm({
       {showServiceArea && (
         <div className="space-y-2">
           <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Service area</label>
-          <input name="service_area" defaultValue={business.service_area ?? ""} placeholder="e.g. Jacksonville & surrounding areas" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+          <input name="service_area" defaultValue={business.service_area ?? ""} placeholder="e.g. Jacksonville & surrounding areas" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]" />
         </div>
       )}
 
       {showLocationLabel && (
         <div className="space-y-2">
           <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Public location label <span className="normal-case font-normal tracking-normal text-slate-400">(shown instead of address)</span></label>
-          <input name="public_location_label" defaultValue={business.public_location_label ?? ""} placeholder="e.g. Jacksonville, FL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+          <input name="public_location_label" defaultValue={business.public_location_label ?? ""} placeholder="e.g. Jacksonville, FL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]" />
         </div>
       )}
 
@@ -1432,24 +1432,24 @@ function EditListingForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Phone</label>
-          <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 904-555-1234" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+          <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 904-555-1234" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]" />
         </div>
         <div className="space-y-2">
           <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Website</label>
-          <input type="text" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://…" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+          <input type="text" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://…" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]" />
         </div>
       </div>
 
       {/* Logo URL */}
       <div className="space-y-2">
         <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Logo URL</label>
-        <input name="logo_url" defaultValue={business.logo_url ?? ""} placeholder="https://… (direct image link)" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+        <input name="logo_url" defaultValue={business.logo_url ?? ""} placeholder="https://… (direct image link)" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]" />
       </div>
 
       {/* Description */}
       <div className="space-y-2">
         <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Description</label>
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Short description for the directory listing" className="w-full resize-none rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+        <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Short description for the directory listing" className="w-full resize-none rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]" />
       </div>
 
       {/* Social media */}
@@ -1458,9 +1458,9 @@ function EditListingForm({
           Social links <span className="normal-case font-normal tracking-normal text-slate-400">(optional)</span>
         </label>
         <div className="grid gap-2 sm:grid-cols-3">
-          <input type="url" value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} placeholder="Instagram URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
-          <input type="url" value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} placeholder="Facebook URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
-          <input type="url" value={tiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} placeholder="TikTok URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200" />
+          <input type="url" value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} placeholder="Instagram URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]" />
+          <input type="url" value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} placeholder="Facebook URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]" />
+          <input type="url" value={tiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} placeholder="TikTok URL" className="w-full rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5 text-[12px] text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]" />
         </div>
       </div>
 
@@ -1471,7 +1471,7 @@ function EditListingForm({
             Hours of operation <span className="normal-case font-normal tracking-normal text-slate-400">(optional)</span>
           </label>
           {!hours && (
-            <button type="button" onClick={() => setHours(makeDefaultHours())} className="text-[11px] font-semibold text-purple-600 hover:text-purple-800">
+            <button type="button" onClick={() => setHours(makeDefaultHours())} className="text-[11px] font-semibold text-[#8B6914] hover:text-[#5C4100]">
               + Add hours
             </button>
           )}
@@ -1488,11 +1488,11 @@ function EditListingForm({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-1">
         <div className="flex flex-wrap items-center gap-3">
           <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
-            <input type="checkbox" name="verified" defaultChecked={business.verified} className="h-4 w-4 accent-purple-600" />
+            <input type="checkbox" name="verified" defaultChecked={business.verified} className="h-4 w-4 accent-[#C9A84C]" />
             <span className="text-[12px] text-slate-700">Verified</span>
           </label>
           <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
-            <input type="checkbox" name="featured" defaultChecked={business.featured ?? false} className="h-4 w-4 accent-purple-600" />
+            <input type="checkbox" name="featured" defaultChecked={business.featured ?? false} className="h-4 w-4 accent-[#C9A84C]" />
             <span className="text-[12px] text-slate-700">Featured</span>
           </label>
           <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
@@ -1504,7 +1504,7 @@ function EditListingForm({
           <button type="button" onClick={onCancel} className="rounded-2xl border border-slate-200 bg-white/70 px-5 py-2.5 text-[13px] font-semibold text-slate-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white">
             Cancel
           </button>
-          <button type="submit" disabled={saving} className="inline-flex items-center justify-center rounded-2xl bg-purple-600 px-5 py-2.5 text-[13px] font-semibold text-white shadow-[0_16px_34px_-22px_rgba(147,51,234,0.75)] transition hover:-translate-y-0.5 hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60">
+          <button type="submit" disabled={saving} className="inline-flex items-center justify-center rounded-2xl bg-[#C9A84C] px-5 py-2.5 text-[13px] font-semibold text-[#0E0C0A] shadow-[0_16px_34px_-22px_rgba(201,168,76,0.75)] transition hover:-translate-y-0.5 hover:bg-[#8B6914] hover:text-[#FAF8F5] disabled:cursor-not-allowed disabled:opacity-60">
             {saving ? "Saving…" : "Save changes"}
           </button>
         </div>
@@ -1736,7 +1736,7 @@ function LiveListings({
           <select
             value={sortKey}
             onChange={(e) => setSortKey(e.target.value as SortKey)}
-            className="rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-[12px] text-slate-700 shadow-sm backdrop-blur focus:outline-none focus:ring-2 focus:ring-purple-200"
+            className="rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-[12px] text-slate-700 shadow-sm backdrop-blur focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
           >
             <option value="last_contacted">Sort: Last contacted</option>
             <option value="claim_status">Sort: Claim status</option>
@@ -1747,7 +1747,7 @@ function LiveListings({
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Filter by name, city, category…"
-            className="w-full sm:w-[280px] rounded-2xl border border-slate-200 bg-white/70 px-4 py-2 text-[12px] text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+            className="w-full sm:w-[280px] rounded-2xl border border-slate-200 bg-white/70 px-4 py-2 text-[12px] text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
           />
         </div>
       </div>
@@ -1794,7 +1794,7 @@ function LiveListings({
                       )}
                       <span className="rounded-full border border-slate-200 bg-white/60 px-3 py-1 shadow-sm">{compactLocation(b.city, b.state)}</span>
                       {b.verified && <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700 shadow-sm">Verified</span>}
-                      {b.featured && <span className="rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-purple-700 shadow-sm">Featured</span>}
+                      {b.featured && <span className="rounded-full border border-[rgba(201,168,76,0.35)] bg-[#FDF6E3] px-3 py-1 text-[#8B6914] shadow-sm">Featured</span>}
                       {b.woman_owned && <span className="vj-badge-woman-owned shadow-sm">Woman-Owned</span>}
                       {b.woman_owned_requested && !b.woman_owned && <span className="rounded-full border border-pink-200 bg-pink-50 px-3 py-1 text-pink-600 shadow-sm">WO Requested</span>}
                       {isArchived && <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-700 shadow-sm">Archived</span>}
@@ -1836,7 +1836,7 @@ function LiveListings({
                     ) : (
                       <>
                         <button type="button" onClick={() => setEditingId(isEditing ? null : b.id)}
-                          className={"rounded-2xl border px-3 py-2 text-[12px] font-semibold shadow-sm backdrop-blur transition hover:-translate-y-0.5 " + (isEditing ? "border-purple-300 bg-purple-50 text-purple-700" : "border-slate-200 bg-white/70 text-slate-800 hover:bg-white")}
+                          className={"rounded-2xl border px-3 py-2 text-[12px] font-semibold shadow-sm backdrop-blur transition hover:-translate-y-0.5 " + (isEditing ? "border-[rgba(201,168,76,0.5)] bg-[#FDF6E3] text-[#8B6914]" : "border-slate-200 bg-white/70 text-slate-800 hover:bg-white")}
                         >
                           {isEditing ? "Cancel" : "Edit"}
                         </button>
@@ -1933,7 +1933,7 @@ function ClaimsTab({ claims, adminKey }: { claims: Claim[]; adminKey: string }) 
         key={claim.id}
         className={`rounded-3xl border px-5 py-5 shadow-sm backdrop-blur ${
           isPending
-            ? "border-purple-200/80 bg-purple-50/40"
+            ? "border-[rgba(201,168,76,0.3)] bg-[rgba(253,246,227,0.35)]"
             : claim.status === "approved"
               ? "border-emerald-200/70 bg-emerald-50/30"
               : "border-red-200/70 bg-red-50/30"
@@ -1953,7 +1953,7 @@ function ClaimsTab({ claims, adminKey }: { claims: Claim[]; adminKey: string }) 
             </p>
           </div>
           <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
-            claim.status === "pending" ? "bg-purple-100 text-purple-700" :
+            claim.status === "pending" ? "bg-[#FDF6E3] text-[#8B6914]" :
             claim.status === "approved" ? "bg-emerald-100 text-emerald-700" :
             "bg-red-100 text-red-700"
           }`}>
@@ -1992,7 +1992,7 @@ function ClaimsTab({ claims, adminKey }: { claims: Claim[]; adminKey: string }) 
               value={notes[claim.id] ?? ""}
               onChange={(e) => setNotes((prev) => ({ ...prev, [claim.id]: e.target.value }))}
               rows={2}
-              className="w-full rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-[11px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-purple-300 resize-none"
+              className="w-full rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-[11px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[rgba(201,168,76,0.3)] resize-none"
             />
             <div className="flex flex-wrap gap-2">
               <button
@@ -2324,7 +2324,7 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
       >
         Claims{" "}
         {pendingClaimsCount > 0 && (
-          <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] ${activeTab === "claims" ? "bg-purple-400/30 text-white" : "bg-purple-100 text-purple-700"}`}>
+          <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] ${activeTab === "claims" ? "bg-[rgba(201,168,76,0.3)] text-[#5C4100]" : "bg-[#FDF6E3] text-[#8B6914]"}`}>
             {pendingClaimsCount}
           </span>
         )}
@@ -2381,7 +2381,7 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Filter by name, city, notes…"
-            className="w-full sm:w-[320px] rounded-2xl border border-slate-200 bg-white/70 px-4 py-2.5 text-[12px] text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+            className="w-full sm:w-[320px] rounded-2xl border border-slate-200 bg-white/70 px-4 py-2.5 text-[12px] text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
           />
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -2403,7 +2403,7 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
                 type="checkbox"
                 checked={onlyOpen}
                 onChange={(e) => setOnlyOpen(e.target.checked)}
-                className="h-4 w-4 accent-purple-600"
+                className="h-4 w-4 accent-[#C9A84C]"
               />
               <span className="text-[12px] text-slate-700">Show open</span>
             </label>
@@ -2441,7 +2441,7 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
                 className={
                   "rounded-[28px] border bg-white/70 shadow-[0_18px_48px_-40px_rgba(2,6,23,0.7)] backdrop-blur overflow-hidden " +
                   (isSelected
-                    ? "border-purple-300 ring-2 ring-purple-200"
+                    ? "border-[rgba(201,168,76,0.5)] ring-2 ring-[rgba(201,168,76,0.3)]"
                     : "border-slate-200/70")
                 }
               >
@@ -2476,7 +2476,7 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
                           {status}
                         </span>
                         {hasWebsite && (
-                          <span className="rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-purple-700 shadow-sm">
+                          <span className="rounded-full border border-[rgba(201,168,76,0.35)] bg-[#FDF6E3] px-3 py-1 text-[#8B6914] shadow-sm">
                             Has link
                           </span>
                         )}
@@ -2571,7 +2571,7 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
                                 [s.id]: { ...qs, category: e.target.value },
                               }))
                             }
-                            className="w-full sm:w-[220px] rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-[12px] text-slate-900 shadow-sm backdrop-blur focus:outline-none focus:ring-2 focus:ring-purple-200"
+                            className="w-full sm:w-[220px] rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-[12px] text-slate-900 shadow-sm backdrop-blur focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
                           >
                             {categories.map((c) => (
                               <option key={c.value} value={c.value}>{c.label}</option>
@@ -2587,7 +2587,7 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
                                   [s.id]: { ...qs, verified: e.target.checked },
                                 }))
                               }
-                              className="h-4 w-4 accent-purple-600"
+                              className="h-4 w-4 accent-[#C9A84C]"
                             />
                             <span className="text-[12px] text-slate-700">Verified</span>
                           </label>
@@ -2602,7 +2602,7 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
                               if (!ok) return;
                               handlePromoteQuick(s, qs.category, qs.verified);
                             }}
-                            className="inline-flex items-center justify-center rounded-2xl bg-purple-600 px-4 py-2 text-[12px] font-semibold text-white shadow-[0_16px_34px_-22px_rgba(147,51,234,0.65)] transition hover:-translate-y-0.5 hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex items-center justify-center rounded-2xl bg-[#C9A84C] px-4 py-2 text-[12px] font-semibold text-[#0E0C0A] shadow-[0_16px_34px_-22px_rgba(201,168,76,0.65)] transition hover:-translate-y-0.5 hover:bg-[#8B6914] hover:text-[#FAF8F5] disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {promotingId === s.id ? "Promoting…" : "Promote (quick)"}
                           </button>
@@ -2614,7 +2614,7 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
                     {isEditing && (
                       <div className="mt-5">
                         <div className="h-px w-full bg-slate-200/70 mb-5" />
-                        <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-purple-600">
+                        <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8B6914]">
                           Full approval form
                         </p>
                         <EditForm

@@ -66,7 +66,7 @@ export default function BrowseMapView({ businesses, token }: Props) {
             `</a>`
         );
 
-        new mapboxgl.Marker({ color: "#9333ea" })
+        new mapboxgl.Marker({ color: "#C9A84C" })
           .setLngLat([b.longitude!, b.latitude!])
           .setPopup(popup)
           .addTo(map);

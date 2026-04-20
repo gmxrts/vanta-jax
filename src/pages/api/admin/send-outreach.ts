@@ -44,19 +44,27 @@ export const POST: APIRoute = async ({ request }) => {
     import.meta.env.SUPABASE_SERVICE_ROLE_KEY
   );
 
-  const { data: current } = await supabase
+  const { data: current, error: fetchError } = await supabase
     .from("businesses")
     .select("outreach_count")
     .eq("id", businessId)
     .single();
 
+  if (fetchError) {
+    return new Response(JSON.stringify({ error: fetchError.message }), { status: 500 });
+  }
+
   const newCount = ((current?.outreach_count as number) ?? 0) + 1;
   const sentAt = new Date().toISOString();
 
-  await supabase
+  const { error: updateError } = await supabase
     .from("businesses")
     .update({ outreach_sent_at: sentAt, outreach_count: newCount })
     .eq("id", businessId);
+
+  if (updateError) {
+    return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
+  }
 
   return new Response(JSON.stringify({ ok: true, outreach_count: newCount, outreach_sent_at: sentAt }), { status: 200 });
 };

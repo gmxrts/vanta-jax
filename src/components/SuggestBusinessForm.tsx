@@ -187,7 +187,7 @@ export default function SuggestBusinessForm() {
         {/* Business type selector */}
         <div className="space-y-2">
           <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Business type <span className="text-purple-600">*</span>
+            Business type <span className="text-[#C9A84C]">*</span>
           </label>
           <div className="grid gap-2">
             {TYPE_OPTIONS.map((opt) => {
@@ -199,7 +199,7 @@ export default function SuggestBusinessForm() {
                   onClick={() => setBusinessType(opt.value)}
                   className={`flex items-start gap-3 rounded-2xl border px-4 py-3 text-left transition ${
                     active
-                      ? "border-purple-300 bg-purple-50 shadow-sm"
+                      ? "border-[rgba(201,168,76,0.5)] bg-[#FDF6E3] shadow-sm"
                       : "border-slate-200 bg-white/70 hover:border-slate-300 hover:bg-white"
                   }`}
                 >
@@ -208,7 +208,7 @@ export default function SuggestBusinessForm() {
                   </span>
                   <div>
                     <p
-                      className={`text-[13px] font-semibold ${active ? "text-purple-900" : "text-slate-900"}`}
+                      className={`text-[13px] font-semibold ${active ? "text-[#5C4100]" : "text-slate-900"}`}
                     >
                       {opt.label}
                     </p>
@@ -217,7 +217,7 @@ export default function SuggestBusinessForm() {
                     </p>
                   </div>
                   {active && (
-                    <span className="ml-auto mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-purple-600">
+                    <span className="ml-auto mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#C9A84C]">
                       <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
                         <path
                           d="M1.5 4l2 2 3-3"
@@ -238,13 +238,13 @@ export default function SuggestBusinessForm() {
         {/* Business name — always shown */}
         <div className="space-y-2">
           <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Business name <span className="text-purple-600">*</span>
+            Business name <span className="text-[#C9A84C]">*</span>
           </label>
           <input
             name="name"
             maxLength={120}
             required
-            className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+            className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
             placeholder="e.g. Soul Food Bistro"
           />
         </div>
@@ -255,13 +255,13 @@ export default function SuggestBusinessForm() {
           <div className="grid gap-4 sm:grid-cols-[2fr,1fr]">
             <div className="space-y-2">
               <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                City <span className="text-purple-600">*</span>
+                City <span className="text-[#C9A84C]">*</span>
               </label>
               <input
                 name="city"
                 maxLength={80}
                 required
-                className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+                className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
                 placeholder="e.g. Jacksonville"
               />
             </div>
@@ -273,7 +273,7 @@ export default function SuggestBusinessForm() {
                 name="state"
                 defaultValue="FL"
                 maxLength={2}
-                className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+                className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
               />
             </div>
           </div>
@@ -288,7 +288,7 @@ export default function SuggestBusinessForm() {
             <input
               name="service_area"
               maxLength={200}
-              className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+              className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
               placeholder="e.g. Jacksonville & surrounding areas"
             />
             {/* Privacy acknowledgment */}
@@ -321,14 +321,14 @@ export default function SuggestBusinessForm() {
           <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
             Website or social media handle
             {businessType === "online_only" && (
-              <span className="ml-1 text-purple-600">*</span>
+              <span className="ml-1 text-[#C9A84C]">*</span>
             )}
           </label>
           <input
             name="website"
             maxLength={200}
             required={businessType === "online_only"}
-            className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+            className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
             placeholder="https://…, Instagram, etc."
           />
         </div>
@@ -342,7 +342,7 @@ export default function SuggestBusinessForm() {
             name="notes"
             rows={4}
             maxLength={500}
-            className="w-full resize-none rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+            className="w-full resize-none rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.3)]"
             placeholder="Why this spot belongs on the radar, best days to go, what they're known for…"
           />
           <p className="text-[11px] text-slate-500">
@@ -361,7 +361,7 @@ export default function SuggestBusinessForm() {
           <button
             type="submit"
             disabled={loading || !businessType}
-            className="inline-flex w-full items-center justify-center rounded-2xl bg-purple-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_34px_-22px_rgba(147,51,234,0.65)] transition hover:-translate-y-0.5 hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex w-full items-center justify-center rounded-2xl bg-[#C9A84C] px-5 py-3 text-sm font-semibold text-[#0E0C0A] shadow-[0_16px_34px_-22px_rgba(201,168,76,0.65)] transition hover:-translate-y-0.5 hover:bg-[#8B6914] hover:text-[#FAF8F5] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Submitting…" : "Submit suggestion"}
           </button>
