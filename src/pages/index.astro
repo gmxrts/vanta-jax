@@ -1,456 +1,773 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import Analytics from "@vercel/analytics/astro";
-import { createClient } from "@supabase/supabase-js";
-
-export const prerender = false;
-
-// Supabase (safe for read-only public data using ANON key)
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Missing PUBLIC_SUPABASE_URL or PUBLIC_SUPABASE_ANON_KEY");
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Count verified businesses (social proof)
-const { count: verifiedCount } = await supabase
-  .from("businesses")
-  .select("*", { count: "exact", head: true })
-  .eq("verified", true)
-  .not("is_archived", "is", true);
-
-// Pull featured businesses
-const { data: featuredBusinesses, error: featuredError } = await supabase
-  .from("businesses")
-  .select("id, name, category, description, city, state, website, phone, verified, logo_url")
-  .eq("featured", true)
-  .not("is_archived", "is", true)
-  // .eq("verified", true)
-  .order("promoted_at", { ascending: false, nullsFirst: false })
-  .order("created_at", { ascending: false })
-  .limit(4);
-
-if (featuredError) {
-  console.error("Featured fetch error:", featuredError);
-}
+export const prerender = true;
 ---
 
-<Layout
-  title="VantaJax • Find Black-owned businesses in Jacksonville, FL"
-  description="VantaJax helps you find and support Black-owned businesses across Jacksonville, Florida."
-  fullWidth={true}
->
-  <div class="bg-white">
-    <!-- HERO (Luxury) -->
-    <section class="relative overflow-hidden px-4 pt-16 pb-10">
-      <div class="pointer-events-none absolute inset-0">
-        <!-- parallax glows -->
-        <div
-          class="vj-glow vj-glow-a absolute -top-28 left-1/2 h-72 'w-184' -translate-x-1/2 rounded-full bg-purple-600/12 blur-3xl"
-          aria-hidden="true"
-        ></div>
-        <div
-          class="vj-glow vj-glow-b absolute top-16 left-1/4 h-56 w-96 -translate-x-1/2 rounded-full bg-fuchsia-500/10 blur-3xl"
-          aria-hidden="true"
-        ></div>
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vanta Collective — Jacksonville, FL</title>
+<meta name="description" content="Vanta Collective is a community-powered movement to discover, support, and grow Black-owned businesses — starting right here in Jacksonville, FL.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
 
-        <!-- soft paper gradient + vignette -->
-        <div class="absolute inset-0 bg-linear-to-b from-slate-50 via-white to-white"></div>
-        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(88,28,135,0.06),transparent_55%)]"></div>
-      </div>
+<style>
+/* ─── TOKENS ─── */
+:root, [data-theme="light"] {
+  --bg:           #FAFAF7;
+  --bg-warm:      #F5F0E4;
+  --bg-card:      #FFFFFF;
+  --text:         #0E0C0A;
+  --text-sub:     #6B6355;
+  --text-muted:   #9A9080;
+  --gold:         #C9A84C;
+  --gold-pale:    #FDF6E3;
+  --gold-dim:     #8B6914;
+  --gold-border:  rgba(201,168,76,0.28);
+  --accent:       #7C3CA1;
+  --accent-pale:  #F3EBF9;
+  --accent-light: #C4A0E8;
+  --border:       rgba(14,12,10,0.09);
+  --border-mid:   rgba(14,12,10,0.15);
+  --chip-bg:      #FFFFFF;
+  --chip-text:    #6B6355;
+  --badge-v-bg:   #D1FAE5;
+  --badge-v-text: #047857;
+  --badge-v-brd:  #6EE7B7;
+  --badge-c-bg:   #F3EBF9;
+  --badge-c-text: #7C3CA1;
+  --badge-c-brd:  #C4A0E8;
+  --hero-overlay: rgba(245,240,228,0.55);
+  --img-filter:   brightness(0.97) saturate(0.92);
+}
 
-      <div class="relative mx-auto w-full max-w-[1100px]">
-        <div
-          class="vj-panel vj-panel-hero rounded-[28px] border border-slate-200/70 bg-white/70 p-8 sm:p-10 shadow-[0_12px_30px_-18px_rgba(2,6,23,0.35)] backdrop-blur text-center"
-          data-reveal
-          data-delay="0"
-        >
-          <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-700">
-            VantaJax • Jacksonville, FL
-          </p>
+[data-theme="dark"] {
+  --bg:           #0C0B13;
+  --bg-warm:      #130F1E;
+  --bg-card:      #1A0F2E;
+  --text:         #FAF8F5;
+  --text-sub:     rgba(250,248,245,0.55);
+  --text-muted:   rgba(250,248,245,0.32);
+  --gold:         #C9A84C;
+  --gold-pale:    rgba(201,168,76,0.1);
+  --gold-dim:     #EAD88A;
+  --gold-border:  rgba(201,168,76,0.3);
+  --accent:       #C4A0E8;
+  --accent-pale:  rgba(196,160,232,0.1);
+  --accent-light: rgba(196,160,232,0.55);
+  --border:       rgba(255,255,255,0.08);
+  --border-mid:   rgba(255,255,255,0.14);
+  --chip-bg:      rgba(255,255,255,0.07);
+  --chip-text:    rgba(250,248,245,0.55);
+  --badge-v-bg:   rgba(201,168,76,0.14);
+  --badge-v-text: #C9A84C;
+  --badge-v-brd:  rgba(201,168,76,0.28);
+  --badge-c-bg:   rgba(196,160,232,0.1);
+  --badge-c-text: #C4A0E8;
+  --badge-c-brd:  rgba(196,160,232,0.25);
+  --hero-overlay: rgba(12,11,19,0.62);
+  --img-filter:   brightness(0.75) saturate(0.8);
+}
 
-          <h1 class="mt-3 text-4xl sm:text-6xl font-bold tracking-tight text-slate-900 leading-[1.1]">
-            Find Black-owned businesses in Jacksonville.
-          </h1>
+/* ─── BASE ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; line-height: 1.65; transition: background 0.4s ease, color 0.4s ease; }
 
-          <p class="mt-4 text-sm sm:text-base text-slate-600 mx-auto max-w-2xl leading-relaxed" style="text-align:center">
-            VantaJax is a curated local directory to help you discover Black-owned spots and professionals.
-            Browse the directory, then suggest missing businesses to help the city stay up to date.
-          </p>
+/* ─── NAV ─── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.9rem 2rem;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.4s, border-color 0.4s;
+}
+.nav-logo { display: flex; flex-direction: column; text-decoration: none; line-height: 1; }
+.nav-logo-wordmark { font-size: 1.05rem; font-weight: 700; color: var(--text); letter-spacing: -0.01em; transition: color 0.4s; }
+.nav-logo-wordmark span { color: var(--gold); }
+.nav-logo-sub { font-size: 0.68rem; color: var(--text-sub); margin-top: 2px; transition: color 0.4s; }
+.nav-links { display: flex; align-items: center; gap: 0.15rem; list-style: none; }
+.nav-links a { font-size: 0.875rem; font-weight: 400; color: var(--text-sub); text-decoration: none; padding: 0.4rem 0.7rem; border-radius: 8px; transition: background 0.15s, color 0.15s; }
+.nav-links a:hover { background: var(--gold-pale); color: var(--gold-dim); }
+.nav-cta { background: var(--text) !important; color: var(--bg) !important; padding: 0.45rem 1.1rem !important; border-radius: 100px !important; font-weight: 500 !important; transition: opacity 0.2s, transform 0.15s, background 0.4s, color 0.4s !important; }
+[data-theme="dark"] .nav-cta { background: var(--gold) !important; color: #0C0B13 !important; }
+.nav-cta:hover { opacity: 0.85 !important; transform: translateY(-1px); }
+.theme-toggle { background: none; border: 1.5px solid var(--border-mid); border-radius: 100px; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; color: var(--text-sub); transition: border-color 0.2s, background 0.2s; flex-shrink: 0; }
+.theme-toggle:hover { background: var(--gold-pale); border-color: var(--gold-border); }
 
-          <div class="mt-7 flex flex-wrap items-center justify-center gap-3">
-            <a href="/businesses" class="vj-btn vj-btn-primary">
-              Browse directory
-            </a>
-          </div>
+/* ─── HERO ─── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 0 0 5rem;
+  overflow: hidden;
+}
+.hero-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center 60%;
+  filter: var(--img-filter);
+  transition: filter 0.4s;
+  z-index: 0;
+}
+.hero-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.12) 35%, rgba(0,0,0,0.62) 68%, rgba(0,0,0,0.88) 100%);
+  transition: opacity 0.4s;
+}
+[data-theme="light"] .hero-overlay {
+  background: linear-gradient(to bottom, rgba(245,240,228,0.15) 0%, rgba(20,15,10,0.1) 35%, rgba(10,8,5,0.7) 70%, rgba(14,12,10,0.93) 100%);
+}
+.hero-inner { position: relative; z-index: 2; max-width: 960px; padding: 0 2rem; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 1.5rem;
+  opacity: 0; animation: fadeUp 0.6s 0.2s ease forwards;
+}
+.hero-eyebrow::before { content: ''; width: 6px; height: 6px; background: var(--gold); border-radius: 50%; display: inline-block; }
+.hero-headline {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(3rem, 6.5vw, 6rem);
+  font-weight: 900; line-height: 1.03;
+  color: #fff; margin-bottom: 1.5rem;
+  opacity: 0; animation: fadeUp 0.75s 0.32s ease forwards;
+  text-shadow: 0 2px 24px rgba(0,0,0,0.35);
+}
+.hero-headline em { font-style: italic; color: var(--gold); }
+.hero-sub {
+  font-size: clamp(1rem, 1.8vw, 1.15rem); font-weight: 300;
+  color: rgba(255,255,255,0.8); max-width: 520px; line-height: 1.8; margin-bottom: 2.25rem;
+  opacity: 0; animation: fadeUp 0.75s 0.46s ease forwards;
+}
+.hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.875rem; opacity: 0; animation: fadeUp 0.75s 0.58s ease forwards; }
+.btn-primary {
+  background: var(--gold); color: #0C0B13;
+  font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
+  padding: 0.825rem 2rem; border-radius: 100px; border: none;
+  cursor: pointer; text-decoration: none;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s; display: inline-block;
+}
+.btn-primary:hover { opacity: 0.88; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(201,168,76,0.35); }
+.btn-outline-white {
+  background: rgba(255,255,255,0.1); color: #fff;
+  font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 400;
+  padding: 0.825rem 1.625rem; border-radius: 100px; border: 1.5px solid rgba(255,255,255,0.3);
+  cursor: pointer; text-decoration: none;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s; display: inline-block;
+  backdrop-filter: blur(8px);
+}
+.btn-outline-white:hover { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.5); transform: translateY(-1px); }
+.hero-pillars { display: flex; flex-wrap: wrap; gap: 0.625rem; margin-top: 3rem; opacity: 0; animation: fadeUp 0.75s 0.7s ease forwards; }
+.pillar-chip {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 100px; padding: 0.4rem 0.9rem;
+  font-size: 0.75rem; font-weight: 500; color: rgba(255,255,255,0.8);
+  display: flex; align-items: center; gap: 0.4rem;
+  backdrop-filter: blur(8px);
+}
+.pillar-chip .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+.hero-credit { position: absolute; bottom: 1rem; right: 1.25rem; z-index: 3; font-size: 0.65rem; color: rgba(255,255,255,0.35); font-weight: 400; }
+.hero-credit a { color: rgba(255,255,255,0.35); text-decoration: none; }
+.hero-credit a:hover { color: rgba(255,255,255,0.6); }
 
-          {verifiedCount != null && verifiedCount > 0 && (
-            <p class="mt-3 text-[12px] text-slate-500">
-              {verifiedCount} verified {verifiedCount === 1 ? "business" : "businesses"} in Jacksonville
-            </p>
-          )}
+/* ─── MARQUEE ─── */
+.marquee-wrap { background: #0C0B13; overflow: hidden; padding: 0.875rem 0; }
+.marquee-track { display: flex; animation: marquee 30s linear infinite; white-space: nowrap; }
+.marquee-item { display: inline-flex; align-items: center; gap: 1rem; padding: 0 1.75rem; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: rgba(201,168,76,0.55); }
+.marquee-sep { display: inline-block; width: 3px; height: 3px; background: var(--gold); border-radius: 50%; opacity: 0.35; }
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-          <div class="mt-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="vj-pill rounded-2xl border border-slate-200/70 bg-white/60 p-5 text-center">
-              <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-purple-600">Local-first</p>
-              <p class="mt-1.5 text-base font-semibold text-slate-900">Jacksonville-focused</p>
-              <p class="mt-1 text-sm text-slate-600">Built for this city — not a national aggregator.</p>
-            </div>
-            <div class="vj-pill rounded-2xl border border-slate-200/70 bg-white/60 p-5 text-center">
-              <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-purple-600">Community-sourced</p>
-              <p class="mt-1.5 text-base font-semibold text-slate-900">People keep it accurate</p>
-              <p class="mt-1 text-sm text-slate-600">Submissions are reviewed — trust comes first.</p>
-            </div>
-            <div class="vj-pill rounded-2xl border border-slate-200/70 bg-white/60 p-5 text-center">
-              <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-purple-600">Quick discovery</p>
-              <p class="mt-1.5 text-base font-semibold text-slate-900">Clarity, not clutter</p>
-              <p class="mt-1 text-sm text-slate-600">Find what you need fast — no ads, no noise.</p>
-            </div>
-          </div>
+/* ─── SHARED ─── */
+.section-wrap { max-width: 1120px; margin: 0 auto; padding: 6rem 2rem; }
+.eyebrow { display: inline-flex; align-items: center; gap: 0.6rem; font-size: 0.71rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 1.125rem; transition: color 0.4s; }
+[data-theme="dark"] .eyebrow { color: var(--gold); }
+.eyebrow::before { content: ''; width: 18px; height: 1.5px; background: var(--gold); display: inline-block; }
+.section-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 3.8vw, 3.2rem); font-weight: 700; line-height: 1.1; color: var(--text); margin-bottom: 1.125rem; transition: color 0.4s; }
+.section-title em { font-style: italic; color: var(--gold); }
+.section-body { font-size: 1rem; font-weight: 300; color: var(--text-sub); line-height: 1.8; max-width: 580px; transition: color 0.4s; }
 
-          <div class="mt-6 text-center text-[12px] text-slate-500">
-            Not sure what this is?{" "}
-            <a href="/about" class="font-semibold text-purple-700 hover:text-purple-800">
-              Learn how VantaJax works →
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
+/* ─── MISSION ─── */
+.mission-split { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-radius: 22px; overflow: hidden; border: 1px solid var(--border); transition: border-color 0.4s; }
+.mission-img-col { position: relative; min-height: 480px; overflow: hidden; }
+.mission-img-col img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; filter: var(--img-filter); transition: transform 0.6s ease, filter 0.4s; }
+.mission-img-col:hover img { transform: scale(1.03); }
+.mission-img-overlay { position: absolute; inset: 0; z-index: 1; background: linear-gradient(135deg, rgba(12,11,19,0.55) 0%, rgba(46,31,74,0.4) 100%); }
+.mission-quote-over { position: absolute; bottom: 2rem; left: 2rem; right: 2rem; z-index: 2; }
+.mission-quote-over blockquote { font-family: 'Playfair Display', serif; font-size: clamp(1.1rem, 1.8vw, 1.4rem); font-weight: 700; font-style: italic; color: #fff; line-height: 1.45; margin-bottom: 0.875rem; text-shadow: 0 1px 12px rgba(0,0,0,0.4); }
+.mission-quote-over cite { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); font-style: normal; }
+.mission-text-col { background: var(--bg-card); padding: 3.5rem; display: flex; flex-direction: column; justify-content: center; transition: background 0.4s; }
 
-    <!-- FEATURED -->
-    <section class="px-4 pb-16">
-      <div class="mx-auto w-full max-w-[1100px]">
-        <div class="text-center" data-reveal data-delay="70">
-          <h2 class="text-2xl sm:text-4xl font-bold text-slate-900">
-            Featured highlights
-          </h2>
-          <p class="mt-3 text-sm text-slate-600 mx-auto max-w-xl" style="text-align:center">
-            A few spots worth checking out right now — hand-picked from the directory.
-          </p>
-        </div>
+/* ─── STATS ─── */
+.stats-band { background: #0C0B13; padding: 3rem 2rem; }
+.stats-inner { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: rgba(255,255,255,0.08); border-radius: 16px; overflow: hidden; }
+.stat-cell { background: #0C0B13; padding: 2rem 1.75rem; text-align: center; }
+.stat-num { font-family: 'Playfair Display', serif; font-size: 2.6rem; font-weight: 900; color: var(--gold); line-height: 1; margin-bottom: 0.4rem; }
+.stat-label { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(250,248,245,0.4); }
 
-        {featuredError ? (
-          <div class="mt-6 vj-panel text-center" data-reveal data-delay="120">
-            <p class="text-sm font-semibold text-slate-900">Featured businesses are temporarily unavailable.</p>
-            <p class="mt-2 text-sm text-slate-600">Try refreshing, or browse the full directory instead.</p>
-            <div class="mt-4">
-              <a href="/businesses" class="vj-btn vj-btn-primary">Browse directory</a>
-            </div>
-          </div>
-        ) : (featuredBusinesses && featuredBusinesses.length > 0) ? (
-          <div class="mt-8 grid gap-5 sm:grid-cols-2">
-            {featuredBusinesses.map((b, idx) => (
-              <a
-                href={`/businesses/${b.id}`}
-                class="group block vj-card vj-card-link"
-                data-reveal
-                data-delay={`${120 + idx * 70}`}
-              >
-                <div class="flex items-start gap-4">
-                  <div class="h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    {b.logo_url ? (
-                      <img
-                        src={b.logo_url}
-                        alt={`${b.name} logo`}
-                        class="h-full w-full object-contain p-1.5"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    ) : (
-                      <div class="h-full w-full grid place-items-center text-[13px] font-bold text-slate-500 bg-slate-50">
-                        {b.name?.split(" ").filter(Boolean).slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join("") || "?"}
-                      </div>
-                    )}
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <div class="flex items-start justify-between gap-2">
-                      <h3 class="text-base font-bold text-slate-900 group-hover:text-purple-700 leading-tight">
-                        {b.name}
-                      </h3>
-                      <div class="flex shrink-0 flex-wrap justify-end gap-1">
-                        {b.verified && <span class="vj-badge-verified">Verified</span>}
-                        {b.woman_owned && <span class="vj-badge-woman-owned">Woman-Owned</span>}
-                      </div>
-                    </div>
+/* ─── HOW IT WORKS ─── */
+.dark-section { background: #0C0B13; padding: 6rem 2rem; }
+.dark-section .eyebrow { color: var(--gold); }
+.dark-section .eyebrow::before { background: rgba(201,168,76,0.35); }
+.dark-section .section-title { color: #FAF8F5; }
+.steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.125rem; margin-top: 2.75rem; max-width: 1120px; margin-left: auto; margin-right: auto; }
+.step-card { background: #1A0F2E; border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 2.25rem 1.875rem; transition: background 0.25s, border-color 0.25s, transform 0.2s; }
+.step-card:hover { background: #2E1F4A; border-color: rgba(201,168,76,0.2); transform: translateY(-3px); }
+.step-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); opacity: 0.65; margin-bottom: 0.875rem; }
+.step-num { font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 900; color: rgba(201,168,76,0.09); line-height: 1; margin-bottom: 1.125rem; }
+.step-title { font-size: 1rem; font-weight: 600; color: #FAF8F5; margin-bottom: 0.625rem; line-height: 1.35; }
+.step-body { font-size: 0.875rem; font-weight: 300; color: rgba(250,248,245,0.5); line-height: 1.75; }
 
-                    {b.category && (
-                      <span class="mt-1.5 inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                        {b.category}
-                      </span>
-                    )}
+/* ─── JAX ─── */
+.jax-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 4.5rem; align-items: center; }
+.listing-mosaic { display: grid; grid-template-columns: 1fr 1fr; gap: 0.875rem; }
+.mosaic-card { border-radius: 14px; overflow: hidden; position: relative; border: 1px solid var(--border); transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s; cursor: default; }
+.mosaic-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.12); border-color: var(--gold-border); }
+.mosaic-card.tall { grid-row: span 2; }
+.mosaic-card-img { width: 100%; height: 100%; min-height: 160px; display: block; object-fit: cover; filter: var(--img-filter); transition: transform 0.5s ease, filter 0.4s; }
+.mosaic-card.tall .mosaic-card-img { min-height: 340px; }
+.mosaic-card:hover .mosaic-card-img { transform: scale(1.04); }
+.mosaic-card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(12,11,19,0.88) 0%, rgba(12,11,19,0.1) 55%, transparent 100%); z-index: 1; }
+.mosaic-card-info { position: absolute; bottom: 0; left: 0; right: 0; z-index: 2; padding: 1rem 1.125rem; }
+.mosaic-card-name { font-size: 0.875rem; font-weight: 600; color: #fff; margin-bottom: 0.2rem; line-height: 1.25; }
+.mosaic-card-meta { font-size: 0.7rem; color: rgba(255,255,255,0.55); }
+.mosaic-badge { display: inline-block; margin-top: 0.4rem; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; padding: 0.2rem 0.55rem; border-radius: 100px; background: rgba(201,168,76,0.22); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+.mosaic-badge.community { background: rgba(196,160,232,0.15); color: #C4A0E8; border-color: rgba(196,160,232,0.25); }
 
-                    {b.city && (
-                      <p class="mt-1 text-[11px] text-slate-400">
-                        {b.city}{b.state ? `, ${b.state}` : ""}
-                      </p>
-                    )}
-                  </div>
-                </div>
+/* ─── PLATFORM CALLOUT ─── */
+.platform-band { padding: 0 2rem 6rem; max-width: 1120px; margin: 0 auto; }
+.platform-card { border-radius: 22px; overflow: hidden; display: grid; grid-template-columns: 1fr 1.1fr; min-height: 380px; border: 1px solid rgba(255,255,255,0.07); position: relative; }
+.platform-img-col { position: relative; overflow: hidden; }
+.platform-img-col img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; filter: brightness(0.55) saturate(0.75); transition: transform 0.5s ease; }
+.platform-card:hover .platform-img-col img { transform: scale(1.03); }
+.platform-img-col::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to right, rgba(26,15,46,0) 0%, #1A0F2E 100%); z-index: 1; }
+.platform-text-col { background: #1A0F2E; padding: 3.5rem; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 1; }
+.platform-card::after { content: 'VantaJax'; font-family: 'Playfair Display', serif; font-size: 8rem; font-weight: 900; color: rgba(201,168,76,0.04); position: absolute; right: 2rem; bottom: -1rem; line-height: 1; pointer-events: none; letter-spacing: -0.02em; z-index: 0; }
+.platform-eyebrow { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); opacity: 0.75; margin-bottom: 0.875rem; display: flex; align-items: center; gap: 0.6rem; }
+.platform-eyebrow::before { content: ''; width: 18px; height: 1.5px; background: rgba(201,168,76,0.35); display: inline-block; }
+.platform-title { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 2.5vw, 2.3rem); font-weight: 700; color: #fff; line-height: 1.15; margin-bottom: 1rem; position: relative; z-index: 1; }
+.platform-body { font-size: 0.9rem; font-weight: 300; color: rgba(250,248,245,0.58); line-height: 1.8; max-width: 420px; position: relative; z-index: 1; }
+.platform-link { display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 1.75rem; background: var(--gold); color: #0C0B13; font-size: 0.85rem; font-weight: 600; padding: 0.7rem 1.625rem; border-radius: 100px; text-decoration: none; transition: opacity 0.2s, transform 0.15s; position: relative; z-index: 1; }
+.platform-link:hover { opacity: 0.88; transform: translateY(-2px); }
+.platform-link svg { width: 13px; height: 13px; }
 
-                {b.description && (
-                  <p class="mt-4 line-clamp-2 text-sm text-slate-600 leading-relaxed">
-                    {b.description}
-                  </p>
-                )}
+/* ─── VALUES ─── */
+.values-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.125rem; margin-top: 2.75rem; }
+.value-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s, background 0.4s; }
+.value-card:hover { transform: translateY(-3px); border-color: var(--gold-border); box-shadow: 0 8px 24px rgba(0,0,0,0.07); }
+.value-card-body { padding: 1.75rem; }
+.value-tag { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.11em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 0.5rem; transition: color 0.4s; }
+[data-theme="dark"] .value-tag { color: var(--gold); }
+.value-title { font-size: 0.975rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem; line-height: 1.3; transition: color 0.4s; }
+.value-body { font-size: 0.85rem; font-weight: 300; color: var(--text-sub); line-height: 1.75; transition: color 0.4s; }
 
-                <div class="mt-4">
-                  <span class="text-[12px] font-semibold text-purple-700 group-hover:text-purple-800">
-                    View details →
-                  </span>
-                </div>
-              </a>
-            ))}
-          </div>
-        ) : (
-          <div class="mt-6 vj-panel text-center" data-reveal data-delay="120">
-            <p class="text-sm font-semibold text-slate-900">No featured businesses yet.</p>
-            <p class="mt-2 text-sm text-slate-600">
-              Mark a few businesses as <span class="font-semibold">featured</span> in Supabase to have them appear here.
-            </p>
-            <div class="mt-4 flex flex-wrap justify-center gap-3">
-              <a href="/businesses" class="vj-btn vj-btn-primary">Browse directory</a>
-              <a href="/suggest-business" class="vj-btn vj-btn-secondary">Suggest a business</a>
-            </div>
-          </div>
-        )}
+/* ─── WAITLIST ─── */
+.waitlist-section { position: relative; padding: 7rem 2rem; overflow: hidden; }
+.waitlist-bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; filter: brightness(0.18) saturate(0.6); z-index: 0; }
+[data-theme="light"] .waitlist-bg-img { filter: brightness(0.08) saturate(0.5); }
+.waitlist-bg-overlay { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(46,31,74,0.5) 0%, rgba(12,11,19,0.85) 100%); z-index: 1; }
+.waitlist-inner { position: relative; z-index: 2; max-width: 620px; margin: 0 auto; text-align: center; }
+.waitlist-inner .eyebrow { justify-content: center; color: var(--gold) !important; }
+.waitlist-inner .eyebrow::before { display: none; }
+.waitlist-inner .section-title { font-size: clamp(1.9rem, 3.5vw, 2.9rem); color: #fff !important; }
+.waitlist-inner .section-body { margin: 0 auto 2.25rem; color: rgba(255,255,255,0.6) !important; max-width: 480px; }
+.waitlist-form { display: flex; gap: 0.625rem; max-width: 460px; margin: 0 auto; }
+.waitlist-input { flex: 1; padding: 0.8rem 1.25rem; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; border: 1.5px solid rgba(255,255,255,0.2); border-radius: 100px; background: rgba(255,255,255,0.08); color: #fff; outline: none; transition: border-color 0.2s, box-shadow 0.2s; backdrop-filter: blur(8px); }
+.waitlist-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,0.15); }
+.waitlist-input::placeholder { color: rgba(255,255,255,0.35); }
+.waitlist-note { font-size: 0.75rem; color: rgba(255,255,255,0.35); margin-top: 0.875rem; }
+.waitlist-error { display: none; font-size: 0.8rem; color: #FCA5A5; margin-top: 0.625rem; }
+.success-msg { display: none; background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); border-radius: 12px; padding: 0.875rem 1.375rem; font-size: 0.875rem; font-weight: 500; margin-top: 1rem; }
 
-        <div class="mt-8 text-center" data-reveal data-delay="420">
-          <a href="/businesses" class="vj-btn vj-btn-secondary">
-            View all businesses →
-          </a>
-        </div>
-      </div>
-    </section>
+/* ─── FOOTER ─── */
+footer { background: #0C0B13; color: #FAF8F5; }
+.footer-main { max-width: 1120px; margin: 0 auto; padding: 4rem 2rem 3rem; display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 3rem; }
+.footer-logo { display: flex; flex-direction: column; text-decoration: none; line-height: 1; margin-bottom: 1rem; }
+.footer-logo-wordmark { font-size: 1.05rem; font-weight: 700; color: #FAF8F5; letter-spacing: -0.01em; }
+.footer-logo-wordmark span { color: var(--gold); }
+.footer-logo-sub { font-size: 0.68rem; color: rgba(250,248,245,0.4); margin-top: 2px; }
+.footer-desc { font-size: 0.83rem; font-weight: 300; color: rgba(250,248,245,0.45); line-height: 1.75; max-width: 240px; margin-bottom: 1.5rem; }
+.footer-platform-link { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; font-weight: 500; color: var(--gold); text-decoration: none; opacity: 0.75; transition: opacity 0.2s; }
+.footer-platform-link:hover { opacity: 1; }
+.footer-col-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(250,248,245,0.35); margin-bottom: 1.125rem; }
+.footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 0.625rem; }
+.footer-col a { font-size: 0.85rem; font-weight: 400; color: rgba(250,248,245,0.55); text-decoration: none; transition: color 0.15s; }
+.footer-col a:hover { color: #FAF8F5; }
+.footer-bottom { border-top: 1px solid rgba(255,255,255,0.07); padding: 1.25rem 2rem; max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.footer-copy { font-size: 0.75rem; color: rgba(250,248,245,0.28); }
+.footer-badges { display: flex; gap: 0.625rem; }
+.footer-badge { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.25rem 0.75rem; border-radius: 100px; border: 1px solid rgba(255,255,255,0.08); color: rgba(250,248,245,0.35); }
 
-    <!-- HOW IT WORKS -->
-    <section class="px-4 py-16 bg-slate-50 border-y border-slate-100">
-      <div class="mx-auto w-full max-w-[1100px]">
-        <div class="mx-auto max-w-[1100px] text-center" data-reveal data-delay="70">
-          <h2 class="text-2xl sm:text-3xl font-bold text-slate-900">
-            How it works
-          </h2>
-          <p class="mt-2 text-sm text-slate-600 mx-auto max-w-xl" style="text-align:center">
-            VantaJax is meant to be simple: discover businesses, get the info you need, and keep the directory growing.
-          </p>
-        </div>
+/* ─── ANIMATIONS ─── */
+.reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.65s ease, transform 0.65s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
-          <div class="vj-panel vj-panel-soft vj-panel-compact" data-reveal data-delay="140">
-            <p class="text-[12px] font-semibold text-purple-700">Step 1</p>
-            <h3 class="mt-1 font-semibold text-slate-900">Browse</h3>
-            <p class="mt-2 text-sm text-slate-600">
-              Explore businesses and professionals on the directory page using filters.
-            </p>
-          </div>
+/* ─── RESPONSIVE ─── */
+@media (max-width: 960px) {
+  .mission-split, .jax-grid, .platform-card { grid-template-columns: 1fr; }
+  .mission-img-col { min-height: 300px; }
+  .platform-img-col { min-height: 240px; }
+  .platform-img-col::after { background: linear-gradient(to bottom, rgba(26,15,46,0) 0%, #1A0F2E 100%); }
+  .listing-mosaic { grid-template-columns: 1fr 1fr; }
+  .mosaic-card.tall { grid-row: span 1; }
+  .mosaic-card.tall .mosaic-card-img { min-height: 160px; }
+  .steps-grid { grid-template-columns: 1fr; }
+  .values-grid { grid-template-columns: 1fr; }
+  .stats-inner { grid-template-columns: repeat(2, 1fr); }
+  .footer-main { grid-template-columns: 1fr 1fr; }
+  nav { padding: 0.875rem 1.25rem; }
+  .nav-links li:not(:last-child):not(:nth-last-child(2)) { display: none; }
+  .hero-inner { padding: 0 1.25rem; }
+  .hero { padding-bottom: 4rem; }
+  .section-wrap { padding: 4.5rem 1.25rem; }
+  .dark-section { padding: 4.5rem 1.25rem; }
+  .platform-band { padding: 0 1.25rem 4.5rem; }
+  .waitlist-section { padding: 5rem 1.25rem; }
+  .waitlist-form { flex-direction: column; }
+  .waitlist-input, .btn-primary { border-radius: 12px; }
+  .mission-text-col { padding: 2.5rem; }
+  .platform-text-col { padding: 2.5rem; }
+}
+@media (max-width: 600px) {
+  .footer-main { grid-template-columns: 1fr; gap: 2rem; }
+  .hero-headline { font-size: 2.7rem; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; }
+  .stats-inner { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
 
-          <div class="vj-panel vj-panel-soft vj-panel-compact" data-reveal data-delay="210">
-            <p class="text-[12px] font-semibold text-purple-700">Step 2</p>
-            <h3 class="mt-1 font-semibold text-slate-900">Choose</h3>
-            <p class="mt-2 text-sm text-slate-600">
-              Listings focus on clarity: what's offered, where they’re located, and how you can reach them.
-            </p>
-          </div>
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <span class="nav-logo-wordmark">Vanta <span>Collective</span></span>
+    <span class="nav-logo-sub">Black-owned • Jacksonville</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#mission">Mission</a></li>
+    <li><a href="#how-it-works">How it works</a></li>
+    <li><a href="#platform">Platform</a></li>
+    <li><a href="#waitlist" class="nav-cta">Join the waitlist</a></li>
+    <li>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <span id="themeIcon">☾</span>
+      </button>
+    </li>
+  </ul>
+</nav>
 
-          <div class="vj-panel vj-panel-soft vj-panel-compact" data-reveal data-delay="280">
-            <p class="text-[12px] font-semibold text-purple-700">Step 3</p>
-            <h3 class="mt-1 font-semibold text-slate-900">Suggest</h3>
-            <p class="mt-2 text-sm text-slate-600">
-              If something’s missing, submit it — that’s how VantaJax stays accurate and community-driven.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- CTA -->
-    <section class="px-4 py-16">
-      <div class="mx-auto w-full max-w-[1100px]">
-        <div class="vj-cta text-center" data-reveal data-delay="70">
-          <h2 class="text-lg sm:text-xl font-semibold text-slate-900">
-            Know a business that should be here?
-          </h2>
-          <p class="mt-2 text-sm text-slate-600 mx-auto max-w-3xl" style="text-align:center">
-            Suggesting a business takes under a minute and helps keep the directory useful for everyone.
-          </p>
-
-          <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <a href="/suggest-business" class="vj-btn vj-btn-primary">
-              Suggest a business
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
+<!-- HERO -->
+<section class="hero">
+  <img
+    class="hero-img"
+    src="https://images.unsplash.com/photo-1556767395-24448f02fe64?q=80&w=1934&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+    alt="Jacksonville, Florida — Main Street Bridge"
+    loading="eager"
+  >
+  <div class="hero-overlay"></div>
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Born in Jacksonville, FL</div>
+    <h1 class="hero-headline">
+      Built by the<br>
+      community.<br>
+      <em>For the community.</em>
+    </h1>
+    <p class="hero-sub">
+      Vanta Collective is a movement to discover, amplify, and strengthen Black-owned businesses — starting right here in Jacksonville, one neighborhood at a time.
+    </p>
+    <div class="hero-actions">
+      <a href="#waitlist" class="btn-primary">Join the waitlist</a>
+      <a href="#mission" class="btn-outline-white">Learn the vision ↓</a>
+    </div>
+    <div class="hero-pillars">
+      <span class="pillar-chip"><span class="dot"></span>No ads. No algorithms.</span>
+      <span class="pillar-chip"><span class="dot"></span>Community-sourced</span>
+      <span class="pillar-chip"><span class="dot"></span>Verification-first</span>
+      <span class="pillar-chip"><span class="dot"></span>Always free to discover</span>
+      <span class="pillar-chip"><span class="dot"></span>Jacksonville-focused</span>
+    </div>
   </div>
+  <div class="hero-credit">Photo: <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a></div>
+</section>
 
-  <!-- Scroll reveal + luxury parallax (same feel as about) -->
-  <script is:inline>
-    (() => {
-      const reduceMotion =
-        window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+<!-- MARQUEE -->
+<div class="marquee-wrap" aria-hidden="true">
+  <div class="marquee-track">
+    <span class="marquee-item">Community-First <span class="marquee-sep"></span></span>
+    <span class="marquee-item">Jacksonville, FL <span class="marquee-sep"></span></span>
+    <span class="marquee-item">Black-Owned <span class="marquee-sep"></span></span>
+    <span class="marquee-item">Trust Over Traffic <span class="marquee-sep"></span></span>
+    <span class="marquee-item">Visibility Is Infrastructure <span class="marquee-sep"></span></span>
+    <span class="marquee-item">People Keep It Accurate <span class="marquee-sep"></span></span>
+    <span class="marquee-item">The Collective Grows <span class="marquee-sep"></span></span>
+    <span class="marquee-item">Vanta Collective <span class="marquee-sep"></span></span>
+    <span class="marquee-item">Community-First <span class="marquee-sep"></span></span>
+    <span class="marquee-item">Jacksonville, FL <span class="marquee-sep"></span></span>
+    <span class="marquee-item">Black-Owned <span class="marquee-sep"></span></span>
+    <span class="marquee-item">Trust Over Traffic <span class="marquee-sep"></span></span>
+    <span class="marquee-item">Visibility Is Infrastructure <span class="marquee-sep"></span></span>
+    <span class="marquee-item">People Keep It Accurate <span class="marquee-sep"></span></span>
+    <span class="marquee-item">The Collective Grows <span class="marquee-sep"></span></span>
+    <span class="marquee-item">Vanta Collective <span class="marquee-sep"></span></span>
+  </div>
+</div>
 
-      // Scroll reveal
-      const els = Array.from(document.querySelectorAll("[data-reveal]"));
-      if (els.length) {
-        if (reduceMotion) {
-          els.forEach((el) => el.classList.add("vj-reveal-in"));
-        } else {
-          els.forEach((el) => {
-            el.classList.add("vj-reveal");
-            const d = el.getAttribute("data-delay");
-            if (d) el.style.transitionDelay = `${d}ms`;
-          });
+<!-- MISSION -->
+<div id="mission">
+  <div class="section-wrap">
+    <div class="mission-split reveal">
+      <div class="mission-img-col">
+        <img
+          src="https://images.unsplash.com/photo-1518601794912-1af91724e528?q=80&w=1064&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          alt="Community"
+          loading="lazy"
+          onerror="this.src='https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=900&q=80&auto=format&fit=crop'"
+        >
+        <div class="mission-img-overlay"></div>
+        <div class="mission-quote-over">
+          <blockquote>"When the collective grows, everything within it grows."</blockquote>
+          <cite>— The Vanta Collective Ethos</cite>
+        </div>
+      </div>
+      <div class="mission-text-col">
+        <div class="eyebrow">Our Mission</div>
+        <h2 class="section-title">Real visibility for real businesses.<br><em>No shortcuts.</em></h2>
+        <p class="section-body">
+          Too many great businesses go undiscovered — not because they lack quality, but because they lack access. Vanta Collective exists to close that gap. We're building a directory rooted in trust, powered by community input, and designed to put Black-owned businesses exactly where they deserve to be.
+        </p>
+        <p class="section-body" style="margin-top:1rem;">
+          This isn't a rankings algorithm. There's no pay-to-boost. The community decides what matters.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
 
-          const io = new IntersectionObserver(
-            (entries, observer) => {
-              entries.forEach((entry) => {
-                if (!entry.isIntersecting) return;
-                entry.target.classList.add("vj-reveal-in");
-                observer.unobserve(entry.target);
-              });
-            },
-            { threshold: 0.12, rootMargin: "0px 0px -10% 0px" }
-          );
+<!-- STATS -->
+<div class="stats-band">
+  <div class="stats-inner reveal">
+    <div class="stat-cell">
+      <div class="stat-num">25+</div>
+      <div class="stat-label">Verified businesses</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">$0</div>
+      <div class="stat-label">Cost to discover</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">0</div>
+      <div class="stat-label">Ads. Ever.</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">904</div>
+      <div class="stat-label">Where it starts</div>
+    </div>
+  </div>
+</div>
 
-          els.forEach((el) => io.observe(el));
-        }
+<!-- HOW IT WORKS -->
+<div class="dark-section" id="how-it-works">
+  <div style="max-width:1120px; margin:0 auto;">
+    <div class="eyebrow reveal">How It Works</div>
+    <h2 class="section-title reveal" style="max-width:540px; transition-delay:0.1s;">The collective is shaped by the people inside it.</h2>
+    <div class="steps-grid">
+      <div class="step-card reveal" style="transition-delay:0.05s;">
+        <div class="step-label">Step 1</div>
+        <div class="step-num">01</div>
+        <div class="step-title">Discover Black-owned businesses in Jacksonville</div>
+        <div class="step-body">Browse a curated, verified directory of local businesses — searchable by category and how close they are to you.</div>
+      </div>
+      <div class="step-card reveal" style="transition-delay:0.15s;">
+        <div class="step-label">Step 2</div>
+        <div class="step-num">02</div>
+        <div class="step-title">The community adds what's missing</div>
+        <div class="step-body">Know a business that belongs here? Submit it. Submissions are reviewed to protect quality — trust comes first.</div>
+      </div>
+      <div class="step-card reveal" style="transition-delay:0.25s;">
+        <div class="step-label">Step 3</div>
+        <div class="step-num">03</div>
+        <div class="step-title">Owners take control of their listings</div>
+        <div class="step-body">Business owners can claim, update, and manage their own presence — no middlemen, no fees, no gatekeepers.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BUILT IN JAX -->
+<div class="section-wrap">
+  <div class="jax-grid">
+    <div class="reveal">
+      <div class="eyebrow">Built Here First</div>
+      <h2 class="section-title">Jacksonville isn't a beta test.<br><em>It's the pilot.</em></h2>
+      <p class="section-body">
+        This starts in Jacksonville with intention. A community-first model has to be proven locally before it can scale anywhere else. Every verified listing, every community suggestion, every claimed business — it shapes what comes next.
+      </p>
+      <p class="section-body" style="margin-top:1rem;">When Jacksonville thrives, the model expands.</p>
+      <div style="margin-top:2rem;">
+        <a href="/businesses" style="display:inline-flex; align-items:center; gap:0.5rem; font-size:0.875rem; font-weight:500; color:var(--gold-dim); text-decoration:none; transition:color 0.2s;">
+          Browse the directory →
+        </a>
+      </div>
+    </div>
+    <div class="listing-mosaic reveal" style="transition-delay:0.15s;">
+      <div class="mosaic-card tall">
+        <img class="mosaic-card-img"
+          src="https://plus.unsplash.com/premium_photo-1700072294825-f8d75b6fddbc?q=80&w=988&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          alt="Mixed Fillings Pie Shop"
+          loading="lazy"
+          onerror="this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&q=80&auto=format&fit=crop'"
+        >
+        <div class="mosaic-card-overlay"></div>
+        <div class="mosaic-card-info">
+          <div class="mosaic-card-name">Mixed Fillings Pie Shop</div>
+          <div class="mosaic-card-meta">Food & Drink · Downtown Jax</div>
+          <span class="mosaic-badge">Verified</span>
+        </div>
+      </div>
+      <div class="mosaic-card">
+        <img class="mosaic-card-img"
+          src="https://images.unsplash.com/photo-1659301254614-8d6a9d46f26a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          alt="Level the Playing Field"
+          loading="lazy"
+          onerror="this.src='https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&q=80&auto=format&fit=crop'"
+        >
+        <div class="mosaic-card-overlay"></div>
+        <div class="mosaic-card-info">
+          <div class="mosaic-card-name">Level the Playing Field</div>
+          <div class="mosaic-card-meta">Nonprofit · Jacksonville</div>
+          <span class="mosaic-badge">Verified</span>
+        </div>
+      </div>
+      <div class="mosaic-card">
+        <img class="mosaic-card-img"
+          src="https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=1469&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          alt="Suggest a business"
+          loading="lazy"
+          onerror="this.src='https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=600&q=80&auto=format&fit=crop'"
+        >
+        <div class="mosaic-card-overlay"></div>
+        <div class="mosaic-card-info">
+          <div class="mosaic-card-name">Know one? Suggest it →</div>
+          <div class="mosaic-card-meta">Any category · Any neighborhood</div>
+          <span class="mosaic-badge community">Add yours</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLATFORM CALLOUT -->
+<div class="platform-band reveal" id="platform">
+  <div class="platform-card">
+    <div class="platform-img-col">
+      <img
+        src="https://images.unsplash.com/photo-1613231365618-5ebf85a8209e?q=80&w=1800&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        alt="Jacksonville, FL"
+        loading="lazy"
+        onerror="this.src='https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=900&q=80&auto=format&fit=crop'"
+      >
+    </div>
+    <div class="platform-text-col">
+      <div class="platform-eyebrow">The Platform Behind the Collective</div>
+      <h3 class="platform-title">Introducing VantaJax —<br>now live in Jacksonville</h3>
+      <p class="platform-body">
+        VantaJax is the platform powering the Vanta Collective's Jacksonville directory. Browse verified businesses, explore by category and neighborhood, and discover what this city is building. No ads. No paid rankings. Just real community trust.
+      </p>
+      <a href="/businesses" class="platform-link">
+        Explore VantaJax
+        <svg viewBox="0 0 14 14" fill="none"><path d="M2.5 11.5L11.5 2.5M11.5 2.5H6M11.5 2.5V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- VALUES -->
+<div style="max-width:1120px; margin:0 auto; padding:0 2rem 6rem;">
+  <div class="eyebrow reveal">What We Stand For</div>
+  <h2 class="section-title reveal" style="transition-delay:0.1s;">Principles, not promises.</h2>
+  <div class="values-grid">
+    <div class="value-card reveal" style="transition-delay:0.05s;">
+      <div class="value-card-body">
+        <div class="value-tag">Trust</div>
+        <div class="value-title">Trust over traffic</div>
+        <div class="value-body">We prioritize accuracy, verification, and community confidence — not virality, ads, or engagement games.</div>
+      </div>
+    </div>
+    <div class="value-card reveal" style="transition-delay:0.12s;">
+      <div class="value-card-body">
+        <div class="value-tag">Community</div>
+        <div class="value-title">Community over extraction</div>
+        <div class="value-body">No paid placement. No influencer rankings. No selling access to attention. This exists to reduce friction — not profit from it.</div>
+      </div>
+    </div>
+    <div class="value-card reveal" style="transition-delay:0.19s;">
+      <div class="value-card-body">
+        <div class="value-tag">Local</div>
+        <div class="value-title">Built for Jax, expanding intentionally</div>
+        <div class="value-body">We're building for Jacksonville — deeply, carefully. The model expands only after earning the community's trust here first.</div>
+      </div>
+    </div>
+    <div class="value-card reveal" style="transition-delay:0.26s;">
+      <div class="value-card-body">
+        <div class="value-tag">Access</div>
+        <div class="value-title">Access is non-negotiable</div>
+        <div class="value-body">Discovery is always free and always open. No paywalls, no premium tiers. This platform belongs to the community that builds it.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WAITLIST -->
+<div class="waitlist-section" id="waitlist">
+  <img
+    class="waitlist-bg-img"
+    src="https://images.unsplash.com/photo-1573164574511-73c773193279?q=80&w=1469&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+    alt=""
+    aria-hidden="true"
+    loading="lazy"
+    onerror="this.style.display='none'"
+  >
+  <div class="waitlist-bg-overlay"></div>
+  <div class="waitlist-inner reveal">
+    <div class="eyebrow">Stay in the Loop</div>
+    <h2 class="section-title">Be part of what's<br><em>being built.</em></h2>
+    <p class="section-body">
+      VantaJax is live in Jacksonville right now. Join the waitlist to get updates as the Collective grows — new features, new businesses, and community milestones worth celebrating.
+    </p>
+    <form class="waitlist-form" id="waitlistForm">
+      <input type="email" class="waitlist-input" placeholder="your@email.com" id="emailInput" required autocomplete="email" />
+      <button type="submit" class="btn-primary" id="submitBtn">Join now</button>
+    </form>
+    <div class="waitlist-error" id="formError"></div>
+    <div class="success-msg" id="successMsg">✓ &nbsp;You're in. We'll be in touch as the Collective grows.</div>
+    <p class="waitlist-note">No spam, ever. Unsubscribe anytime.</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-main">
+    <div>
+      <a href="#" class="footer-logo">
+        <span class="footer-logo-wordmark">Vanta <span>Collective</span></span>
+        <span class="footer-logo-sub">Black-owned • Jacksonville, FL</span>
+      </a>
+      <p class="footer-desc">A community-powered movement to discover and support Black-owned businesses — starting in Jacksonville and expanding intentionally.</p>
+      <a href="/businesses" class="footer-platform-link">Platform: VantaJax ↗</a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-label">Explore</div>
+      <ul>
+        <li><a href="/businesses">Browse directory</a></li>
+        <li><a href="/suggest-business">Suggest a business</a></li>
+        <li><a href="/about">About VantaJax</a></li>
+        <li><a href="/login">Owner login</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-label">Collective</div>
+      <ul>
+        <li><a href="#mission">Our mission</a></li>
+        <li><a href="#how-it-works">How it works</a></li>
+        <li><a href="#platform">The platform</a></li>
+        <li><a href="#waitlist">Join the waitlist</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-label">Legal</div>
+      <ul>
+        <li><a href="/terms">Terms</a></li>
+        <li><a href="/privacy">Privacy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2026 Vanta Collective. Built for Jacksonville, FL.</span>
+    <div class="footer-badges">
+      <span class="footer-badge">No ads</span>
+      <span class="footer-badge">Community-powered</span>
+      <span class="footer-badge">Always free</span>
+    </div>
+  </div>
+</footer>
+
+<script is:inline>
+  /* ── Theme ── */
+  const html = document.documentElement;
+  const icon = document.getElementById('themeIcon');
+  function applyTheme(t) {
+    html.setAttribute('data-theme', t);
+    icon.textContent = t === 'dark' ? '☀' : '☾';
+    try { localStorage.setItem('vc-theme', t); } catch(e) {}
+  }
+  (function() {
+    let saved; try { saved = localStorage.getItem('vc-theme'); } catch(e) {}
+    applyTheme(saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  })();
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    let saved; try { saved = localStorage.getItem('vc-theme'); } catch(e2) {}
+    if (!saved) applyTheme(e.matches ? 'dark' : 'light');
+  });
+
+  /* ── Scroll reveal ── */
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, { threshold: 0.08, rootMargin: '0px 0px -6% 0px' });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+  /* ── Waitlist form ── */
+  document.getElementById('waitlistForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const emailInput = document.getElementById('emailInput');
+    const errorEl = document.getElementById('formError');
+    const successEl = document.getElementById('successMsg');
+
+    btn.textContent = 'Joining...';
+    btn.disabled = true;
+    errorEl.style.display = 'none';
+
+    try {
+      const res = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput.value }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('waitlistForm').style.display = 'none';
+        successEl.style.display = 'block';
+      } else {
+        errorEl.textContent = data.error || 'Something went wrong. Please try again.';
+        errorEl.style.display = 'block';
+        btn.textContent = 'Join now';
+        btn.disabled = false;
       }
+    } catch {
+      errorEl.textContent = 'Something went wrong. Please try again.';
+      errorEl.style.display = 'block';
+      btn.textContent = 'Join now';
+      btn.disabled = false;
+    }
+  });
 
-      // Luxury parallax glows (subtle)
-      if (reduceMotion) return;
-
-      const glowA = document.querySelector(".vj-glow-a");
-      const glowB = document.querySelector(".vj-glow-b");
-      if (!glowA && !glowB) return;
-
-      let raf = 0;
-      const onScroll = () => {
-        if (raf) return;
-        raf = requestAnimationFrame(() => {
-          raf = 0;
-          const y = window.scrollY || 0;
-
-          if (glowA) glowA.style.transform = `translate3d(-50%, ${Math.min(18, y * 0.02)}px, 0)`;
-          if (glowB) glowB.style.transform = `translate3d(-50%, ${Math.min(14, y * 0.015)}px, 0)`;
-        });
-      };
-
-      window.addEventListener("scroll", onScroll, { passive: true });
-      onScroll();
-    })();
-  </script>
-
-  <style>
-    /* Scroll reveal */
-    [data-reveal].vj-reveal {
-      opacity: 0;
-      transform: translate3d(0, 10px, 0);
-      filter: blur(6px);
-      transition:
-        opacity 700ms ease,
-        transform 700ms ease,
-        filter 700ms ease;
-      will-change: opacity, transform, filter;
-    }
-    [data-reveal].vj-reveal.vj-reveal-in,
-    [data-reveal].vj-reveal-in {
-      opacity: 1;
-      transform: translate3d(0, 0, 0);
-      filter: blur(0);
-    }
-
-    /* Base luxury system (mirrors about.astro) */
-    .vj-panel {
-      border-radius: 28px;
-      border: 1px solid rgba(226, 232, 240, 0.75);
-      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.86));
-      padding: 28px;
-      box-shadow: 0 12px 30px -22px rgba(2, 6, 23, 0.45);
-      transition: transform 200ms ease, box-shadow 200ms ease;
-    }
-    .vj-panel:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 16px 38px -24px rgba(2, 6, 23, 0.55);
-    }
-    .vj-panel-soft {
-      background: linear-gradient(180deg, rgba(248,250,252,0.95), rgba(255,255,255,0.85));
-    }
-    .vj-panel-compact {
-      padding: 22px;
-    }
-
-    .vj-card {
-      border-radius: 24px;
-      border: 1px solid rgba(226, 232, 240, 0.75);
-      background: rgba(255,255,255,0.9);
-      padding: 24px;
-      box-shadow: 0 10px 24px -20px rgba(2, 6, 23, 0.45);
-      transition: transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
-    }
-    .vj-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 14px 30px -22px rgba(2, 6, 23, 0.55);
-      background: rgba(248, 250, 252, 1);
-    }
-    .vj-card-link {
-      text-decoration: none;
-    }
-
-    .vj-cta {
-      border-radius: 28px;
-      border: 1px solid rgba(233, 213, 255, 0.9);
-      background: linear-gradient(180deg, rgba(250,245,255,0.95), rgba(255,255,255,0.9));
-      padding: 28px;
-      box-shadow: 0 14px 34px -24px rgba(2, 6, 23, 0.5);
-    }
-
-    .vj-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 18px;
-      padding: 12px 20px;
-      font-size: 0.875rem;
-      font-weight: 700;
-      text-decoration: none;
-      transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
-      outline: none;
-    }
-    .vj-btn:focus {
-      box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.25);
-    }
-    .vj-btn-primary {
-      background: rgba(147, 51, 234, 1);
-      color: white;
-      box-shadow: 0 14px 30px -20px rgba(147, 51, 234, 0.55);
-    }
-    .vj-btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 18px 34px -22px rgba(147, 51, 234, 0.62);
-      background: rgba(126, 34, 206, 1);
-    }
-    .vj-btn-secondary {
-      background: rgba(255,255,255,0.92);
-      color: rgba(15, 23, 42, 1);
-      border: 1px solid rgba(203, 213, 225, 0.9);
-      box-shadow: 0 14px 30px -24px rgba(2, 6, 23, 0.45);
-    }
-    .vj-btn-secondary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 18px 34px -26px rgba(2, 6, 23, 0.55);
-      background: rgba(248,250,252,1);
-    }
-
-    /* Nicer text rendering */
-    .vj-panel, .vj-card, .vj-cta {
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
-    }
-  </style>
-
-  <Analytics />
-</Layout>
+  /* ── Smooth scroll ── */
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const t = document.querySelector(a.getAttribute('href'));
+      if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    });
+  });
+</script>
+</body>
+</html>

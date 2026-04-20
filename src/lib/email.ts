@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(import.meta.env.RESEND_API_KEY);
+export const resend = new Resend(import.meta.env.RESEND_API_KEY);
 
 const BASE_URL = 'https://vantacollective.org';
 
@@ -303,6 +303,15 @@ export function suggestionReceivedEmail({
   return wrap(content, 'You received this because you submitted a business suggestion. &nbsp;&middot;&nbsp; ');
 }
 
+// ─── Unsubscribe headers (RFC 8058) ──────────────────────────────────────────
+
+function unsubscribeHeaders(email: string) {
+  return {
+    'List-Unsubscribe': `<${BASE_URL}/unsubscribe?email=${encodeURIComponent(email)}>`,
+    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+  };
+}
+
 // ─── Send helpers (existing API routes) ──────────────────────────────────────
 
 export async function sendClaimSubmitted(ownerEmail: string, businessName: string) {
@@ -311,6 +320,7 @@ export async function sendClaimSubmitted(ownerEmail: string, businessName: strin
     to: ownerEmail,
     subject: `We got your claim — ${businessName}`,
     html: claimSubmittedEmail(businessName),
+    headers: unsubscribeHeaders(ownerEmail),
   });
 }
 
@@ -325,6 +335,7 @@ export async function sendClaimApproved(
     to: ownerEmail,
     subject: `You're approved — ${businessName} is yours to manage`,
     html: claimApprovedEmail(businessName, businessId, notes),
+    headers: unsubscribeHeaders(ownerEmail),
   });
 }
 
@@ -338,6 +349,7 @@ export async function sendClaimRejected(
     to: ownerEmail,
     subject: `Update on your claim — ${businessName}`,
     html: claimRejectedEmail(businessName, notes),
+    headers: unsubscribeHeaders(ownerEmail),
   });
 }
 
@@ -358,9 +370,11 @@ export async function sendVerificationOutreach({
 }) {
   return resend.emails.send({
     from: 'Gavin Marts <outreach@vantacollective.org>',
+    reply_to: 'vantacollectivellc@gmail.com',
     to,
     subject: `${businessName} is listed on Vanta — claim your listing`,
     html: verificationOutreachEmail({ firstName, businessName, businessId, customNote }),
+    headers: unsubscribeHeaders(to),
   });
 }
 
@@ -379,9 +393,11 @@ export async function sendOwnerOutreach({
 }) {
   return resend.emails.send({
     from: 'Gavin Marts <outreach@vantacollective.org>',
+    reply_to: 'vantacollectivellc@gmail.com',
     to,
     subject: `We'd love to feature ${businessName} on VantaJax`,
     html: ownerOutreachEmail({ firstName, businessName, businessId, howFound }),
+    headers: unsubscribeHeaders(to),
   });
 }
 
@@ -399,6 +415,7 @@ export async function sendClaimConfirmed({
     to,
     subject: `Your claim for ${businessName} is confirmed`,
     html: claimConfirmedEmail({ firstName, businessName }),
+    headers: unsubscribeHeaders(to),
   });
 }
 
@@ -416,5 +433,6 @@ export async function sendSuggestionReceived({
     to,
     subject: `We got your suggestion — thanks for looking out`,
     html: suggestionReceivedEmail({ firstName, businessName }),
+    headers: unsubscribeHeaders(to),
   });
 }
