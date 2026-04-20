@@ -154,7 +154,7 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
         <!-- Header -->
         <header class="flex flex-wrap items-end justify-between gap-4" data-reveal data-delay="0">
           <div class="space-y-2">
-            <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-purple-600">Admin</p>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#8B6914]">Admin</p>
             <h1 class="text-2xl sm:text-4xl font-semibold tracking-tight text-slate-900">Metrics</h1>
             <p class="text-[12px] text-slate-600 max-w-2xl leading-relaxed">
               Real-time directory insights — category gaps, search demand, and activity trends.
@@ -180,7 +180,7 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
         <section class="grid gap-4 sm:grid-cols-3" data-reveal data-delay="60">
           <div class="rounded-3xl border-2 border-slate-200 bg-white p-6 shadow-sm">
             <div class="flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-purple-500 shrink-0"></span>
+              <span class="h-2 w-2 rounded-full bg-[#C9A84C] shrink-0"></span>
               <h2 class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-700">Businesses</h2>
             </div>
             <p class="mt-3 text-4xl font-bold text-slate-900">{totalBusinesses ?? 0}</p>
@@ -188,7 +188,7 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
           </div>
           <div class="rounded-3xl border-2 border-slate-200 bg-white p-6 shadow-sm">
             <div class="flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-purple-500 shrink-0"></span>
+              <span class="h-2 w-2 rounded-full bg-[#C9A84C] shrink-0"></span>
               <h2 class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-700">Suggestions</h2>
             </div>
             <p class="mt-3 text-4xl font-bold text-slate-900">{totalSuggestions ?? 0}</p>
@@ -196,7 +196,7 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
           </div>
           <div class="rounded-3xl border-2 border-slate-200 bg-white p-6 shadow-sm">
             <div class="flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-purple-500 shrink-0"></span>
+              <span class="h-2 w-2 rounded-full bg-[#C9A84C] shrink-0"></span>
               <h2 class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-700">Searches</h2>
             </div>
             <p class="mt-3 text-4xl font-bold text-slate-900">{totalSearches ?? 0}</p>
@@ -226,7 +226,7 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
                     </div>
                     <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100">
                       <div
-                        class="h-full rounded-full bg-purple-500"
+                        class="h-full rounded-full bg-[#C9A84C]"
                         style={`width: ${pct}%`}
                       />
                     </div>
@@ -277,13 +277,13 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
                         <td class="px-5 py-3">
                           <a
                             href={`/businesses/${b.id}`}
-                            class="font-medium text-slate-900 hover:text-purple-700 underline underline-offset-2"
+                            class="font-medium text-slate-900 hover:text-[#8B6914] underline underline-offset-2"
                           >
                             {b.name}
                           </a>
                         </td>
                         <td class="px-5 py-3 capitalize text-slate-600">{b.category ?? "—"}</td>
-                        <td class="px-5 py-3 text-right font-semibold text-purple-700 tabular-nums">
+                        <td class="px-5 py-3 text-right font-semibold text-[#8B6914] tabular-nums">
                           {b.view_count ?? 0}
                         </td>
                       </tr>
@@ -323,7 +323,7 @@ const adminKeyParam = key ? `?key=${encodeURIComponent(key)}` : "";
                         </div>
                         <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
                           <div
-                            class="h-full rounded-full bg-purple-400"
+                            class="h-full rounded-full bg-[#C9A84C]"
                             style={`width: ${pct}%`}
                           />
                         </div>

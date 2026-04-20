@@ -26,6 +26,9 @@ const year = new Date().getFullYear();
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" />
     <link rel="icon" href="/favicon.ico" />
     <slot name="head" />
   </head>
@@ -54,7 +57,7 @@ const year = new Date().getFullYear();
               font-size="22"
               letter-spacing="2"
               fill="currentColor"
-            >VANTA<tspan fill="#9333ea">JAX</tspan></text>
+            >VANTA<tspan fill="#C9A84C">JAX</tspan></text>
           </svg>
           <span class="text-[11px] text-slate-500 leading-none">
             Black-owned • Jacksonville
@@ -65,19 +68,19 @@ const year = new Date().getFullYear();
         <nav class="flex items-center gap-3 text-xs sm:text-sm">
           <a
             href="/about"
-            class="text-slate-700 hover:text-purple-700"
+            class="rounded-lg px-2.5 py-1.5 text-slate-700 transition hover:bg-[#FDF6E3] hover:text-[#8B6914]"
           >
             About
           </a>
           <a
             href="/businesses"
-            class="text-slate-700 hover:text-purple-700"
+            class="rounded-lg px-2.5 py-1.5 text-slate-700 transition hover:bg-[#FDF6E3] hover:text-[#8B6914]"
           >
             Browse
           </a>
           <a
             href="/suggest-business"
-            class="text-slate-700 hover:text-purple-700"
+            class="rounded-lg px-2.5 py-1.5 text-slate-700 transition hover:bg-[#FDF6E3] hover:text-[#8B6914]"
           >
             Suggest
           </a>
@@ -85,7 +88,7 @@ const year = new Date().getFullYear();
           <a
             id="nav-auth-link"
             href="/login"
-            class="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:border-purple-300 hover:text-purple-700"
+            class="rounded-full border border-[#C9A84C] bg-[#C9A84C] px-3 py-1.5 text-[11px] font-semibold text-[#0E0C0A] shadow-sm transition hover:bg-[#8B6914] hover:border-[#8B6914] hover:text-[#FAF8F5]"
             style="display:none"
           >
             Dashboard
@@ -93,7 +96,7 @@ const year = new Date().getFullYear();
           <a
             id="nav-login-link"
             href="/login"
-            class="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:border-purple-300 hover:text-purple-700"
+            class="rounded-full border border-[#C9A84C] bg-[#C9A84C] px-3 py-1.5 text-[11px] font-semibold text-[#0E0C0A] shadow-sm transition hover:bg-[#8B6914] hover:border-[#8B6914] hover:text-[#FAF8F5]"
           >
             Owner login
           </a>
@@ -101,9 +104,9 @@ const year = new Date().getFullYear();
             <button
               id="theme-toggle"
               aria-label="Switch to dark mode"
-              style="background:none;border:none;cursor:pointer;padding:4px;display:inline-flex;align-items:center;justify-content:center;color:inherit;opacity:0.65;transition:opacity 150ms ease;"
-              onmouseover="this.style.opacity='1'"
-              onmouseout="this.style.opacity='0.65'"
+              style="background:none;border:1px solid var(--border-mid);border-radius:100px;width:34px;height:34px;cursor:pointer;padding:6px;display:inline-flex;align-items:center;justify-content:center;color:inherit;transition:background 150ms ease,border-color 150ms ease;"
+              onmouseover="this.style.background='var(--accent-pale)';this.style.borderColor='var(--accent-border)'"
+              onmouseout="this.style.background='none';this.style.borderColor='var(--border-mid)'"
             >
               <svg class="theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>

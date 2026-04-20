@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+/* Google Fonts loaded via <link> in Layout.astro */
 
 @import "tailwindcss";
 
@@ -8,25 +8,40 @@
 
 :root,
 [data-theme="light"] {
-  --bg-primary: #F0EEFF;
-  --bg-secondary: #FFFFFF;
-  --text-primary: #1C1C1C;
-  --text-secondary: #444441;
-  --accent: #A78BFA;
-  --accent-light: #C4B0FF;
-  --border: rgba(0, 0, 0, 0.1);
+  --bg-primary:     #FAFAF7;
+  --bg-secondary:   #FFFFFF;
+  --text-primary:   #0E0C0A;
+  --text-secondary: #6B6355;
+  --text-muted:     #9A9080;
+  --accent:         #C9A84C;
+  --accent-light:   #EAD88A;
+  --accent-hover:   #8B6914;
+  --accent-pale:    #FDF6E3;
+  --accent-border:  rgba(201,168,76,0.28);
+  --purple:         #7C3CA1;
+  --purple-pale:    #F3EBF9;
+  --purple-light:   #C4A0E8;
+  --border:         rgba(14,12,10,0.09);
+  --border-mid:     rgba(14,12,10,0.15);
   --color-woman-owned-bg: #F472B6;
   --color-woman-owned-text: #6B0035;
 }
 
 [data-theme="dark"]:not([data-vj-admin]) {
-  --bg-primary: #1C1C1C;
-  --bg-secondary: #2C2438;
-  --text-primary: #F0EEFF;
-  --text-secondary: #C4B0FF;
-  --accent: #A78BFA;
-  --accent-light: #C4B0FF;
-  --border: rgba(255, 255, 255, 0.1);
+  --bg-primary:     #0C0B13;
+  --bg-secondary:   #1A0F2E;
+  --text-primary:   #FAF8F5;
+  --text-secondary: rgba(250,248,245,0.55);
+  --text-muted:     rgba(250,248,245,0.32);
+  --accent:         #C9A84C;
+  --accent-light:   rgba(201,168,76,0.55);
+  --accent-hover:   #EAD88A;
+  --accent-pale:    rgba(201,168,76,0.1);
+  --accent-border:  rgba(201,168,76,0.3);
+  --purple:         #C4A0E8;
+  --purple-pale:    rgba(196,160,232,0.1);
+  --border:         rgba(255,255,255,0.08);
+  --border-mid:     rgba(255,255,255,0.14);
 }
 
 html {
@@ -37,7 +52,7 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+  font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   line-height: 1.6;
   letter-spacing: 0.01em;
@@ -81,9 +96,9 @@ body {
     transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
   }
   .vj-card-tight:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 14px 30px -22px rgba(2, 6, 23, 0.5);
-    border-color: rgba(147, 51, 234, 0.35);
+    transform: translateY(-3px);
+    box-shadow: 0 14px 30px -22px rgba(2, 6, 23, 0.5), -3px 0 0 #C9A84C;
+    border-color: var(--accent-border);
   }
 
   .vj-card-comfortable {
@@ -96,9 +111,17 @@ body {
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-full text-sm font-semibold transition
-      bg-purple-600 text-white px-6 py-3 shadow-sm hover:bg-purple-700
-      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-600;
+    @apply inline-flex items-center justify-center text-sm font-semibold transition
+      px-6 py-3 shadow-sm
+      focus:outline-none focus:ring-2 focus:ring-offset-2;
+    border-radius: 100px;
+    background-color: #C9A84C;
+    color: #0E0C0A;
+    --tw-ring-color: rgba(201,168,76,0.45);
+  }
+  .btn-primary:hover {
+    background-color: #8B6914;
+    color: #FAF8F5;
   }
 
   .btn-secondary {
@@ -128,8 +151,10 @@ body {
   }
 
   .vj-chip-active {
-    @apply inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium
-      border-purple-600 bg-purple-100 text-purple-700;
+    @apply inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium;
+    border-color: #C9A84C;
+    background-color: #FDF6E3;
+    color: #8B6914;
   }
 
   /* Status badges */
@@ -143,8 +168,10 @@ body {
   }
 
   .vj-badge-featured {
-    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap
-      border-purple-300 bg-purple-100 text-purple-700;
+    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap;
+    border-color: rgba(201,168,76,0.45);
+    background-color: #FDF6E3;
+    color: #8B6914;
   }
 
   .vj-badge-woman-owned {
@@ -157,21 +184,28 @@ body {
   /* Inputs */
   .vj-input {
     @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400
-      focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500;
+      focus:outline-none focus:ring-1;
+    --tw-ring-color: rgba(201,168,76,0.4);
   }
+  .vj-input:focus { border-color: #C9A84C; }
 
   .vj-input-pill {
     @apply w-full rounded-full border border-slate-300 bg-white px-5 py-3 text-base text-slate-900 placeholder:text-slate-400 shadow-sm
-      focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500;
+      focus:outline-none focus:ring-2;
+    --tw-ring-color: rgba(201,168,76,0.3);
   }
+  .vj-input-pill:focus { border-color: #C9A84C; }
 
   .vj-select {
     @apply rounded-full border border-slate-300 bg-white px-3 py-1.5 text-[11px] text-slate-900
-      focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500;
+      focus:outline-none focus:ring-1;
+    --tw-ring-color: rgba(201,168,76,0.4);
   }
+  .vj-select:focus { border-color: #C9A84C; }
 
   .vj-checkbox {
-    @apply h-4 w-4 rounded border-slate-400 text-purple-600 focus:ring-purple-500;
+    @apply h-4 w-4 rounded border-slate-400;
+    accent-color: #C9A84C;
   }
 
   /* ================================
@@ -186,7 +220,8 @@ body {
     text-slate-900 placeholder:text-slate-400
     transition-all duration-200
     hover:border-slate-600
-    focus:outline-none focus:border-slate-800 focus:ring-4 focus:ring-purple-500/20;
+    focus:outline-none focus:border-slate-800 focus:ring-4;
+  --tw-ring-color: rgba(201,168,76,0.15);
 
   /* critical alignment fixes */
   line-height: 1.45;
@@ -259,7 +294,7 @@ body {
 
   /* animate icon when input is focused (input must be immediately before button) */
   .vj-searchbar:focus + .vj-searchbar-icon-btn {
-    color: rgba(124, 58, 237, 0.95);
+    color: rgba(201,168,76,0.95);
     transform: translateY(-50%) scale(1.06);
   }
 }
@@ -271,21 +306,22 @@ body {
     justify-content: center;
     gap: 6px;
     width: 100%;
-    border-radius: 16px;
-    border: 2px solid #9333ea;
-    background: #9333ea;
+    border-radius: 100px;
+    border: 2px solid #C9A84C;
+    background: #C9A84C;
     padding: 10px 16px;
     font-size: 12px;
     font-weight: 700;
-    color: #ffffff !important;
+    color: #0E0C0A !important;
     text-decoration: none !important;
     transition: transform 180ms ease, background-color 180ms ease;
     margin-top: 12px;
   }
   .claim-cta:hover {
-    background: #7e22ce;
+    background: #8B6914;
+    border-color: #8B6914;
     transform: translateY(-1px);
-    color: #ffffff !important;
+    color: #FAF8F5 !important;
   }
   .claim-cta svg {
     flex-shrink: 0;
@@ -333,7 +369,7 @@ body {
   background-color: var(--bg-secondary);
 }
 [data-theme="dark"]:not([data-vj-admin]) .bg-slate-100 {
-  background-color: #352d45;
+  background-color: #160C28;
 }
 /* Hero gradient overlays — make them transparent in dark mode */
 [data-theme="dark"]:not([data-vj-admin]) .from-slate-50 {
@@ -360,10 +396,10 @@ body {
   color: var(--text-secondary);
 }
 [data-theme="dark"]:not([data-vj-admin]) .text-slate-500 {
-  color: rgba(196, 176, 255, 0.55);
+  color: rgba(250,248,245,0.45);
 }
 [data-theme="dark"]:not([data-vj-admin]) .text-slate-400 {
-  color: rgba(196, 176, 255, 0.4);
+  color: rgba(250,248,245,0.30);
 }
 
 /* Tailwind border utilities */
@@ -387,38 +423,52 @@ body {
 [data-theme="dark"]:not([data-vj-admin]) .vj-card:hover,
 [data-theme="dark"]:not([data-vj-admin]) .vj-card-tight:hover,
 [data-theme="dark"]:not([data-vj-admin]) .vj-card-comfortable:hover {
-  background: #342b42;
-  border-color: rgba(167, 139, 250, 0.25);
-  box-shadow: 0 14px 30px -22px rgba(167, 139, 250, 0.2);
+  background: #241430;
+  border-color: rgba(201,168,76,0.28);
+  box-shadow: 0 14px 30px -22px rgba(201,168,76,0.15), -3px 0 0 rgba(201,168,76,0.6);
+}
+
+/* Verified badge: gold tint in dark mode */
+[data-theme="dark"]:not([data-vj-admin]) .vj-badge-verified {
+  border-color: rgba(201,168,76,0.3);
+  background-color: rgba(201,168,76,0.12);
+  color: #C9A84C;
+}
+
+/* Featured badge: keep gold in dark mode */
+[data-theme="dark"]:not([data-vj-admin]) .vj-badge-featured {
+  border-color: rgba(201,168,76,0.35);
+  background-color: rgba(201,168,76,0.1);
+  color: #EAD88A;
 }
 
 [data-theme="dark"]:not([data-vj-admin]) .vj-panel {
-  background: linear-gradient(180deg, #2C2438, #241d33);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, #1A0F2E, #130A22);
+  border-color: var(--border);
   color: var(--text-primary);
 }
 [data-theme="dark"]:not([data-vj-admin]) .vj-panel-soft {
-  background: linear-gradient(180deg, #241d33, #2C2438);
+  background: linear-gradient(180deg, #130A22, #1A0F2E);
 }
 
 [data-theme="dark"]:not([data-vj-admin]) .vj-cta {
-  background: linear-gradient(180deg, #2C2438, #1C1C1C);
-  border-color: rgba(167, 139, 250, 0.2);
+  background: linear-gradient(180deg, #1A0F2E, #0C0B13);
+  border-color: rgba(201,168,76,0.2);
 }
 
 [data-theme="dark"]:not([data-vj-admin]) .vj-step {
-  background: rgba(44, 36, 56, 0.92);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: rgba(196, 176, 255, 0.9);
+  background: rgba(26,15,46,0.92);
+  border-color: var(--border);
+  color: rgba(201,168,76,0.9);
 }
 
 [data-theme="dark"]:not([data-vj-admin]) .vj-h2 {
-  color: rgba(196, 176, 255, 0.55);
+  color: rgba(201,168,76,0.45);
 }
 
 [data-theme="dark"]:not([data-vj-admin]) .vj-icon {
-  background: rgba(167, 139, 250, 0.15);
-  box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.18);
+  background: rgba(201,168,76,0.12);
+  box-shadow: inset 0 0 0 1px rgba(201,168,76,0.16);
 }
 
 [data-theme="dark"]:not([data-vj-admin]) .btn-secondary,
@@ -428,13 +478,13 @@ body {
   border-color: var(--border);
 }
 [data-theme="dark"]:not([data-vj-admin]) .vj-btn-secondary:hover {
-  background: #352d45;
+  background: #241430;
 }
 [data-theme="dark"]:not([data-vj-admin]) .btn-ghost {
   color: var(--text-secondary);
 }
 [data-theme="dark"]:not([data-vj-admin]) .btn-ghost:hover {
-  background-color: rgba(167, 139, 250, 0.1);
+  background-color: rgba(201,168,76,0.1);
 }
 
 [data-theme="dark"]:not([data-vj-admin]) .vj-chip-default {
@@ -443,8 +493,8 @@ body {
   border-color: var(--border);
 }
 [data-theme="dark"]:not([data-vj-admin]) .vj-chip-active {
-  background-color: rgba(167, 139, 250, 0.2);
-  border-color: rgba(167, 139, 250, 0.6);
+  background-color: rgba(201,168,76,0.15);
+  border-color: rgba(201,168,76,0.5);
   color: var(--accent-light);
 }
 
@@ -457,7 +507,7 @@ body {
 }
 [data-theme="dark"]:not([data-vj-admin]) .vj-input::placeholder,
 [data-theme="dark"]:not([data-vj-admin]) .vj-input-pill::placeholder {
-  color: rgba(196, 176, 255, 0.4);
+  color: var(--text-muted);
 }
 
 [data-theme="dark"]:not([data-vj-admin]) .vj-searchbar {
@@ -466,34 +516,35 @@ body {
   border-color: rgba(255, 255, 255, 0.25);
 }
 [data-theme="dark"]:not([data-vj-admin]) .vj-searchbar::placeholder {
-  color: rgba(196, 176, 255, 0.45);
+  color: var(--text-muted);
 }
 [data-theme="dark"]:not([data-vj-admin]) .vj-searchbar-sheen {
   background: linear-gradient(
     to bottom,
-    rgba(167, 139, 250, 0.07),
-    rgba(167, 139, 250, 0)
+    rgba(201,168,76,0.06),
+    rgba(201,168,76,0)
   );
 }
 [data-theme="dark"]:not([data-vj-admin]) .vj-searchbar-icon-btn {
-  color: rgba(196, 176, 255, 0.6);
+  color: rgba(201,168,76,0.6);
 }
 [data-theme="dark"]:not([data-vj-admin]) .vj-searchbar-icon-btn:hover {
-  background: rgba(167, 139, 250, 0.12);
-  color: var(--accent-light);
+  background: rgba(201,168,76,0.1);
+  color: var(--accent-hover);
 }
 
-/* Nav auth pill button */
+/* Nav auth pill button — gold in both modes */
 [data-theme="dark"]:not([data-vj-admin]) #nav-auth-link,
 [data-theme="dark"]:not([data-vj-admin]) #nav-login-link {
-  background-color: var(--bg-secondary);
-  border-color: var(--border);
-  color: var(--text-secondary);
+  background-color: #C9A84C;
+  border-color: #C9A84C;
+  color: #0C0B13;
 }
 [data-theme="dark"]:not([data-vj-admin]) #nav-auth-link:hover,
 [data-theme="dark"]:not([data-vj-admin]) #nav-login-link:hover {
-  border-color: rgba(167, 139, 250, 0.5);
-  color: var(--accent-light);
+  background-color: #EAD88A;
+  border-color: #EAD88A;
+  color: #0C0B13;
 }
 
 /* Theme toggle icon visibility */

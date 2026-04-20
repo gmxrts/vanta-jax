@@ -117,7 +117,7 @@ nav {
 }
 .hero-overlay {
   position: absolute; inset: 0; z-index: 1;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.12) 35%, rgba(0,0,0,0.62) 68%, rgba(0,0,0,0.88) 100%);
+  background: linear-gradient(to bottom, rgba(14,12,10,0.08) 0%, rgba(14,12,10,0.12) 35%, rgba(14,12,10,0.62) 68%, rgba(14,12,10,0.88) 100%);
   transition: opacity 0.4s;
 }
 [data-theme="light"] .hero-overlay {
@@ -139,7 +139,7 @@ nav {
   opacity: 0; animation: fadeUp 0.75s 0.32s ease forwards;
   text-shadow: 0 2px 24px rgba(0,0,0,0.35);
 }
-.hero-headline em { font-style: italic; color: var(--gold); }
+.hero-headline em { font-style: italic; font-weight: 900; color: var(--gold); }
 .hero-sub {
   font-size: clamp(1rem, 1.8vw, 1.15rem); font-weight: 300;
   color: rgba(255,255,255,0.8); max-width: 520px; line-height: 1.8; margin-bottom: 2.25rem;
@@ -170,8 +170,17 @@ nav {
   font-size: 0.75rem; font-weight: 500; color: rgba(255,255,255,0.8);
   display: flex; align-items: center; gap: 0.4rem;
   backdrop-filter: blur(8px);
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  cursor: default;
 }
-.pillar-chip .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+.pillar-chip:hover {
+  background: rgba(255,255,255,0.92);
+  color: #0E0C0A;
+  border-color: rgba(201,168,76,0.4);
+  box-shadow: inset 3px 0 0 #C9A84C;
+}
+.pillar-chip:hover .dot { background: #8B6914; }
+.pillar-chip .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); flex-shrink: 0; transition: background 0.2s ease; }
 .hero-credit { position: absolute; bottom: 1rem; right: 1.25rem; z-index: 3; font-size: 0.65rem; color: rgba(255,255,255,0.35); font-weight: 400; }
 .hero-credit a { color: rgba(255,255,255,0.35); text-decoration: none; }
 .hero-credit a:hover { color: rgba(255,255,255,0.6); }

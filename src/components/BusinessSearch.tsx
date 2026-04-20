@@ -253,7 +253,7 @@ export default function BusinessSearch() {
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
-              <h3 className="text-base font-bold text-slate-900 group-hover:text-purple-700 leading-tight">
+              <h3 className="text-base font-bold text-slate-900 group-hover:text-[#8B6914] leading-tight">
                 {b.name}
               </h3>
               <div className="flex flex-wrap gap-1">
@@ -264,7 +264,10 @@ export default function BusinessSearch() {
             </div>
 
             {b.category && (
-              <span className="mt-1.5 inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+              <span
+                className="mt-1.5 inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                style={{ backgroundColor: 'var(--purple-pale)', color: 'var(--purple)', borderColor: 'var(--purple-light)' }}
+              >
                 {b.category === "nonprofit" ? "Community" : b.category}
               </span>
             )}
@@ -289,7 +292,7 @@ export default function BusinessSearch() {
         )}
 
         <div className="mt-4">
-          <span className="text-[12px] font-semibold text-purple-700 group-hover:text-purple-800">
+          <span className="text-[12px] font-semibold text-slate-400 transition group-hover:text-[#C9A84C]">
             View details →
           </span>
         </div>
@@ -503,7 +506,7 @@ export default function BusinessSearch() {
                 <button
                   type="button"
                   onClick={handleClearSearch}
-                  className="text-[11px] text-purple-700 hover:text-purple-900 underline underline-offset-2"
+                  className="text-[11px] text-[#C9A84C] hover:text-[#8B6914] underline underline-offset-2"
                 >
                   Reset
                 </button>
@@ -568,7 +571,7 @@ export default function BusinessSearch() {
                     onClick={() => { setCurrentPage(p as number); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                     className={`w-7 h-7 text-[11px] font-semibold rounded-full transition ${
                       p === currentPage
-                        ? "bg-purple-600 text-white"
+                        ? "bg-[#C9A84C] text-[#0E0C0A]"
                         : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                     }`}
                   >
@@ -596,7 +599,7 @@ export default function BusinessSearch() {
                 : "No businesses in the directory yet. "}
               <a
                 href="/suggest-business"
-                className="text-purple-700 underline underline-offset-2 hover:text-purple-900"
+                className="text-[#C9A84C] underline underline-offset-2 hover:text-[#8B6914]"
               >
                 Suggest a business.
               </a>

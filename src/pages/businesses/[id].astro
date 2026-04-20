@@ -161,7 +161,7 @@ const seoMeta = business && !isArchived
           </p>
           <a
             href="/businesses"
-            class="mt-6 inline-flex items-center justify-center rounded-2xl bg-purple-600 px-5 py-3 text-[13px] font-semibold text-white shadow-[0_16px_34px_-22px_rgba(147,51,234,0.35)] transition hover:-translate-y-0.5 hover:bg-purple-700"
+            class="mt-6 inline-flex items-center justify-center rounded-2xl bg-[#C9A84C] px-5 py-3 text-[13px] font-semibold text-[#0E0C0A] shadow-[0_16px_34px_-22px_rgba(201,168,76,0.35)] transition hover:-translate-y-0.5 hover:bg-[#8B6914] hover:text-[#FAF8F5]"
           >
             Browse the directory
           </a>
@@ -186,7 +186,7 @@ const seoMeta = business && !isArchived
                 </span>
               )}
               {business.featured && (
-                <span class="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-[11px] font-semibold text-purple-700 shadow-sm">
+                <span class="inline-flex items-center rounded-full border border-[rgba(201,168,76,0.35)] bg-[#FDF6E3] px-3 py-1 text-[11px] font-semibold text-[#8B6914] shadow-sm">
                   Featured
                 </span>
               )}
@@ -221,7 +221,7 @@ const seoMeta = business && !isArchived
                   </div>
 
                   <div class="min-w-0">
-                    <h1 class="min-w-0 text-2xl sm:text-4xl font-semibold tracking-tight text-slate-900">
+                    <h1 class="min-w-0 text-2xl sm:text-4xl font-bold tracking-tight text-slate-900" style="font-family: 'Playfair Display', serif;">
                       {business.name}
                     </h1>
                     {isClaimed && (
@@ -296,7 +296,7 @@ const seoMeta = business && !isArchived
                     {business.phone ? (
                       <a
                         href={`tel:${business.phone}`}
-                        class="text-[12px] font-semibold text-purple-700 underline underline-offset-2 hover:text-purple-900"
+                        class="text-[12px] font-semibold text-[#8B6914] underline underline-offset-2 hover:text-[#5C4100]"
                       >
                         {business.phone}
                       </a>
@@ -318,7 +318,7 @@ const seoMeta = business && !isArchived
                         href={safeUrl(business.website)}
                         target="_blank"
                         rel="noreferrer"
-                        class="text-[12px] font-semibold text-purple-700 underline underline-offset-2 hover:text-purple-900"
+                        class="text-[12px] font-semibold text-[#8B6914] underline underline-offset-2 hover:text-[#5C4100]"
                       >
                         Visit
                       </a>
@@ -376,7 +376,7 @@ const seoMeta = business && !isArchived
                   {(() => {
                     const todayHours = hoursData[todayKey];
                     return todayHours ? (
-                      <div class="mt-3 mb-5 rounded-2xl border border-purple-100 bg-purple-50/60 px-4 py-3">
+                      <div class="mt-3 mb-5 rounded-2xl border border-[rgba(201,168,76,0.25)] bg-[rgba(253,246,227,0.7)] px-4 py-3">
                         {todayHours.closed ? (
                           <p class="text-[13px] font-semibold text-slate-700">Closed today</p>
                         ) : (
@@ -395,7 +395,7 @@ const seoMeta = business && !isArchived
                       const isToday = day === todayKey;
                       return (
                         <div class={`flex items-center justify-between py-2 ${isToday ? "font-semibold" : ""}`}>
-                          <span class={`text-[12px] w-10 ${isToday ? "text-purple-700" : "text-slate-500"}`}>
+                          <span class={`text-[12px] w-10 ${isToday ? "text-[#8B6914]" : "text-slate-500"}`}>
                             {dayLabels[day]}
                           </span>
                           {dh.closed ? (
@@ -434,7 +434,7 @@ const seoMeta = business && !isArchived
                         href={mapsUrl}
                         target="_blank"
                         rel="noreferrer"
-                        class="mt-4 inline-flex items-center gap-1.5 text-[12px] font-semibold text-purple-700 underline underline-offset-2 hover:text-purple-900"
+                        class="mt-4 inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#8B6914] underline underline-offset-2 hover:text-[#5C4100]"
                       >
                         View on Google Maps →
                       </a>
@@ -486,7 +486,7 @@ const seoMeta = business && !isArchived
                         data-address={fullAddress}
                         target="_blank"
                         rel="noreferrer"
-                        class="inline-flex items-center justify-center rounded-2xl bg-purple-600 px-4 py-3 text-[13px] font-semibold text-white shadow-[0_16px_34px_-22px_rgba(147,51,234,0.35)] transition hover:-translate-y-0.5 hover:bg-purple-700"
+                        class="inline-flex items-center justify-center rounded-2xl bg-[#C9A84C] px-4 py-3 text-[13px] font-semibold text-[#0E0C0A] shadow-[0_16px_34px_-22px_rgba(201,168,76,0.35)] transition hover:-translate-y-0.5 hover:bg-[#8B6914] hover:text-[#FAF8F5]"
                       >
                         Directions
                       </a>
@@ -538,10 +538,10 @@ const seoMeta = business && !isArchived
 
           <!-- Claim banner (unclaimed only) -->
           {!isClaimed && (
-            <div class="rounded-[20px] border border-purple-200 bg-purple-50 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="rounded-[20px] border border-[rgba(201,168,76,0.35)] bg-[#FDF6E3] px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
-                <p class="text-[13px] font-semibold text-purple-900">Is this your business?</p>
-                <p class="text-[12px] text-purple-700 mt-0.5">Claim this listing to manage your info, add a logo, and more.</p>
+                <p class="text-[13px] font-semibold text-[#5C4100]">Is this your business?</p>
+                <p class="text-[12px] text-[#8B6914] mt-0.5">Claim this listing to manage your info, add a logo, and more.</p>
               </div>
               <a href={`/claim/${business.id}`} class="claim-cta" style="width:auto; white-space:nowrap; margin-top:0;">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -581,7 +581,7 @@ const seoMeta = business && !isArchived
                 zoom: 15,
                 interactive: true,
               });
-              new mapboxgl.Marker({ color: '#9333ea' })
+              new mapboxgl.Marker({ color: '#C9A84C' })
                 .setLngLat([lng, lat])
                 .setPopup(new mapboxgl.Popup({ offset: 25 }).setText(name))
                 .addTo(map);
@@ -674,7 +674,7 @@ const seoMeta = business && !isArchived
           </p>
           <a
             href="/businesses"
-            class="mt-6 inline-flex items-center justify-center rounded-2xl bg-purple-600 px-5 py-3 text-[13px] font-semibold text-white shadow-[0_16px_34px_-22px_rgba(147,51,234,0.35)] transition hover:-translate-y-0.5 hover:bg-purple-700"
+            class="mt-6 inline-flex items-center justify-center rounded-2xl bg-[#C9A84C] px-5 py-3 text-[13px] font-semibold text-[#0E0C0A] shadow-[0_16px_34px_-22px_rgba(201,168,76,0.35)] transition hover:-translate-y-0.5 hover:bg-[#8B6914] hover:text-[#FAF8F5]"
           >
             Back to search
           </a>
