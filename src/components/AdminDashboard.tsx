@@ -314,28 +314,38 @@ function DraftEmailButton({
   onTracked?: (count: number, sentAt: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<"compose" | "preview">("compose");
+  const [template, setTemplate] = useState<"verification" | "owner">("verification");
   const [to, setTo] = useState("");
   const [firstName, setFirstName] = useState("");
   const [customNote, setCustomNote] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [howFound, setHowFound] = useState("");
+  const [previewHtml, setPreviewHtml] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading-preview" | "sending" | "sent" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [panelPos, setPanelPos] = useState({ top: 0, left: 0 });
   const btnRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
+  const panelWidth = step === "preview" ? 560 : 320;
+
   const updatePos = () => {
     if (!btnRef.current) return;
     const r = btnRef.current.getBoundingClientRect();
-    setPanelPos({ top: r.bottom + window.scrollY + 6, left: r.left + window.scrollX });
+    const left = Math.min(r.left + window.scrollX, window.innerWidth - panelWidth - 16);
+    setPanelPos({ top: r.bottom + window.scrollY + 6, left: Math.max(left, 8) });
   };
 
   useEffect(() => {
     if (!open) return;
     updatePos();
-    const onScroll = () => updatePos();
-    window.addEventListener("scroll", onScroll, true);
-    return () => window.removeEventListener("scroll", onScroll, true);
-  }, [open]);
+    window.addEventListener("scroll", updatePos, true);
+    window.addEventListener("resize", updatePos);
+    return () => {
+      window.removeEventListener("scroll", updatePos, true);
+      window.removeEventListener("resize", updatePos);
+    };
+  }, [open, step]);
 
   useEffect(() => {
     if (!open) return;
@@ -343,23 +353,59 @@ function DraftEmailButton({
       if (
         panelRef.current && !panelRef.current.contains(e.target as Node) &&
         btnRef.current && !btnRef.current.contains(e.target as Node)
-      ) {
-        handleClose();
-      }
+      ) handleClose();
     };
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
   }, [open]);
 
+  const handlePreview = async () => {
+    setStatus("loading-preview");
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/admin/preview-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
+        body: JSON.stringify({
+          template,
+          firstName: firstName.trim(),
+          businessName: name,
+          businessId: id,
+          customNote: customNote.trim() || undefined,
+          howFound: howFound.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.html) {
+        setPreviewHtml(data.html);
+        setStep("preview");
+        setStatus("idle");
+      } else {
+        setStatus("error");
+        setErrorMsg(data.error ?? "Failed to load preview.");
+      }
+    } catch {
+      setStatus("error");
+      setErrorMsg("Network error.");
+    }
+  };
+
   const handleSend = async () => {
-    if (!to.trim() || !firstName.trim()) return;
     setStatus("sending");
     setErrorMsg("");
     try {
       const res = await fetch("/api/admin/send-outreach", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
-        body: JSON.stringify({ businessId: id, to: to.trim(), firstName: firstName.trim(), businessName: name, customNote: customNote.trim() || undefined }),
+        body: JSON.stringify({
+          businessId: id,
+          to: to.trim(),
+          firstName: firstName.trim(),
+          businessName: name,
+          template,
+          customNote: customNote.trim() || undefined,
+          howFound: howFound.trim() || undefined,
+        }),
       });
       const data = await res.json();
       if (data.ok) {
@@ -377,27 +423,69 @@ function DraftEmailButton({
 
   const handleClose = () => {
     setOpen(false);
+    setStep("compose");
     setStatus("idle");
     setErrorMsg("");
+    setPreviewHtml("");
   };
+
+  const canPreview = to.trim() && firstName.trim();
 
   const panel = (
     <div
       ref={panelRef}
-      style={{ position: "absolute", top: panelPos.top, left: panelPos.left, zIndex: 9999 }}
-      className="w-80 rounded-xl border border-slate-200 bg-white p-4 shadow-xl"
+      style={{ position: "absolute", top: panelPos.top, left: panelPos.left, zIndex: 9999, width: panelWidth }}
+      className="rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden"
     >
-      <div className="mb-3 flex items-center justify-between">
-        <span className="text-[12px] font-semibold text-slate-800">Outreach email — {name}</span>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          {step === "preview" && (
+            <button
+              type="button"
+              onClick={() => { setStep("compose"); setStatus("idle"); }}
+              className="text-slate-400 hover:text-slate-600 text-[11px] font-semibold"
+            >
+              ← Edit
+            </button>
+          )}
+          <span className="text-[12px] font-semibold text-slate-800">
+            {step === "compose" ? `Outreach — ${name}` : `Preview — ${template === "verification" ? "Verification" : "Owner"}`}
+          </span>
+        </div>
         <button type="button" onClick={handleClose} className="text-slate-400 hover:text-slate-600 text-lg leading-none">&times;</button>
       </div>
 
       {status === "sent" ? (
-        <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-3 text-[12px] text-emerald-700 font-medium">
-          Sent to {to} ✓
+        <div className="px-4 py-4">
+          <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-3 text-[12px] text-emerald-700 font-medium">
+            Sent to {to} ✓
+          </div>
         </div>
-      ) : (
-        <div className="flex flex-col gap-2.5">
+      ) : step === "compose" ? (
+        <div className="p-4 flex flex-col gap-3">
+          {/* Template selector */}
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-500 mb-1.5">Template</label>
+            <div className="flex rounded-lg border border-slate-200 overflow-hidden text-[11px] font-semibold">
+              <button
+                type="button"
+                onClick={() => setTemplate("verification")}
+                className={`flex-1 py-1.5 transition ${template === "verification" ? "bg-violet-600 text-white" : "bg-white text-slate-600 hover:bg-slate-50"}`}
+              >
+                Verification Outreach
+              </button>
+              <button
+                type="button"
+                onClick={() => setTemplate("owner")}
+                className={`flex-1 py-1.5 border-l border-slate-200 transition ${template === "owner" ? "bg-violet-600 text-white" : "bg-white text-slate-600 hover:bg-slate-50"}`}
+              >
+                Owner Outreach
+              </button>
+            </div>
+          </div>
+
+          {/* To */}
           <div>
             <label className="block text-[11px] font-semibold text-slate-500 mb-1">To (email)</label>
             <input
@@ -408,6 +496,8 @@ function DraftEmailButton({
               className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12px] text-slate-800 placeholder-slate-400 outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-200"
             />
           </div>
+
+          {/* First name */}
           <div>
             <label className="block text-[11px] font-semibold text-slate-500 mb-1">First name</label>
             <input
@@ -418,27 +508,67 @@ function DraftEmailButton({
               className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12px] text-slate-800 placeholder-slate-400 outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-200"
             />
           </div>
-          <div>
-            <label className="block text-[11px] font-semibold text-slate-500 mb-1">Custom note <span className="font-normal text-slate-400">(optional)</span></label>
-            <textarea
-              value={customNote}
-              onChange={(e) => setCustomNote(e.target.value)}
-              placeholder="e.g. I found you through Google Maps and love what you're doing."
-              rows={3}
-              className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12px] text-slate-800 placeholder-slate-400 outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-200 resize-none"
-            />
-          </div>
-          {status === "error" && (
-            <p className="text-[11px] text-red-600">{errorMsg}</p>
+
+          {/* Template-specific field */}
+          {template === "verification" ? (
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-500 mb-1">Custom note <span className="font-normal text-slate-400">(optional)</span></label>
+              <textarea
+                value={customNote}
+                onChange={(e) => setCustomNote(e.target.value)}
+                placeholder="e.g. I found you through Google Maps and love what you're doing."
+                rows={2}
+                className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12px] text-slate-800 placeholder-slate-400 outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-200 resize-none"
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-500 mb-1">How found <span className="font-normal text-slate-400">(optional)</span></label>
+              <textarea
+                value={howFound}
+                onChange={(e) => setHowFound(e.target.value)}
+                placeholder="e.g. while browsing Google Maps for Black-owned barbershops"
+                rows={2}
+                className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12px] text-slate-800 placeholder-slate-400 outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-200 resize-none"
+              />
+            </div>
           )}
+
+          {status === "error" && <p className="text-[11px] text-red-600">{errorMsg}</p>}
+
           <button
             type="button"
-            disabled={!to.trim() || !firstName.trim() || status === "sending"}
-            onClick={handleSend}
-            className="mt-0.5 w-full rounded-lg bg-violet-600 px-3 py-2 text-[12px] font-semibold text-white shadow-sm transition hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!canPreview || status === "loading-preview"}
+            onClick={handlePreview}
+            className="w-full rounded-lg bg-violet-600 px-3 py-2 text-[12px] font-semibold text-white shadow-sm transition hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {status === "sending" ? "Sending…" : "Send via Resend"}
+            {status === "loading-preview" ? "Loading preview…" : "Preview email →"}
           </button>
+        </div>
+      ) : (
+        /* Preview step */
+        <div className="flex flex-col">
+          <div className="px-3 py-2 bg-slate-50 border-b border-slate-100 text-[11px] text-slate-500">
+            <span className="font-semibold text-slate-700">To:</span> {to}
+          </div>
+          <iframe
+            srcDoc={previewHtml}
+            title="Email preview"
+            className="w-full border-0"
+            style={{ height: 480 }}
+            sandbox="allow-same-origin"
+          />
+          <div className="p-3 border-t border-slate-100 flex flex-col gap-2">
+            {status === "error" && <p className="text-[11px] text-red-600">{errorMsg}</p>}
+            <button
+              type="button"
+              disabled={status === "sending"}
+              onClick={handleSend}
+              className="w-full rounded-lg bg-violet-600 px-3 py-2 text-[12px] font-semibold text-white shadow-sm transition hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {status === "sending" ? "Sending…" : "Send via Resend"}
+            </button>
+          </div>
         </div>
       )}
     </div>

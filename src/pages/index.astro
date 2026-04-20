@@ -354,7 +354,7 @@ footer { background: #0C0B13; color: #FAF8F5; }
     <li><a href="#mission">Mission</a></li>
     <li><a href="#how-it-works">How it works</a></li>
     <li><a href="#platform">Platform</a></li>
-    <li><a href="#waitlist" class="nav-cta">Join the waitlist</a></li>
+    <li><a href="#waitlist" class="nav-cta">Newsletter</a></li>
     <li>
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
         <span id="themeIcon">☾</span>
@@ -383,7 +383,7 @@ footer { background: #0C0B13; color: #FAF8F5; }
       Vanta Collective is a movement to discover, amplify, and strengthen Black-owned businesses — starting right here in Jacksonville, one neighborhood at a time.
     </p>
     <div class="hero-actions">
-      <a href="#waitlist" class="btn-primary">Join the waitlist</a>
+      <a href="#waitlist" class="btn-primary">Join the newsletter</a>
       <a href="#mission" class="btn-outline-white">Learn the vision ↓</a>
     </div>
     <div class="hero-pillars">
@@ -636,14 +636,14 @@ footer { background: #0C0B13; color: #FAF8F5; }
   >
   <div class="waitlist-bg-overlay"></div>
   <div class="waitlist-inner reveal">
-    <div class="eyebrow">Stay in the Loop</div>
+    <div class="eyebrow">Newsletter</div>
     <h2 class="section-title">Be part of what's<br><em>being built.</em></h2>
     <p class="section-body">
-      VantaJax is live in Jacksonville right now. Join the waitlist to get updates as the Collective grows — new features, new businesses, and community milestones worth celebrating.
+      VantaJax is live in Jacksonville right now. Subscribe to get updates as the Collective grows — new features, new businesses, and community milestones worth celebrating.
     </p>
     <form class="waitlist-form" id="waitlistForm">
       <input type="email" class="waitlist-input" placeholder="your@email.com" id="emailInput" required autocomplete="email" />
-      <button type="submit" class="btn-primary" id="submitBtn">Join now</button>
+      <button type="submit" class="btn-primary" id="submitBtn">Subscribe</button>
     </form>
     <div class="waitlist-error" id="formError"></div>
     <div class="success-msg" id="successMsg">✓ &nbsp;You're in. We'll be in touch as the Collective grows.</div>
@@ -677,7 +677,7 @@ footer { background: #0C0B13; color: #FAF8F5; }
         <li><a href="#mission">Our mission</a></li>
         <li><a href="#how-it-works">How it works</a></li>
         <li><a href="#platform">The platform</a></li>
-        <li><a href="#waitlist">Join the waitlist</a></li>
+        <li><a href="#waitlist">Newsletter</a></li>
       </ul>
     </div>
     <div class="footer-col">
@@ -750,13 +750,13 @@ footer { background: #0C0B13; color: #FAF8F5; }
       } else {
         errorEl.textContent = data.error || 'Something went wrong. Please try again.';
         errorEl.style.display = 'block';
-        btn.textContent = 'Join now';
+        btn.textContent = 'Subscribe';
         btn.disabled = false;
       }
     } catch {
       errorEl.textContent = 'Something went wrong. Please try again.';
       errorEl.style.display = 'block';
-      btn.textContent = 'Join now';
+      btn.textContent = 'Subscribe';
       btn.disabled = false;
     }
   });

@@ -13,7 +13,7 @@ const sharedStyles = `
   .header { padding: 28px 36px 24px; border-bottom: 1px solid rgba(0,0,0,0.07); }
   .wordmark { font-family: Georgia, serif; font-size: 20px; font-weight: normal; letter-spacing: -0.01em; color: #7C3AED; }
   .wordmark span { color: #1C1C1C; }
-  .beta-badge { display: inline-block; font-family: -apple-system, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; background: #EDE9FE; color: #6D28D9; padding: 3px 10px; border-radius: 999px; margin-top: 10px; }
+  .pilot-badge { display: inline-block; font-family: -apple-system, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; background: #EDE9FE; color: #6D28D9; padding: 3px 10px; border-radius: 999px; margin-top: 10px; }
   .body { padding: 32px 36px; font-size: 16px; line-height: 1.7; color: #1C1C1C; }
   .body p { margin: 0 0 16px; }
   .body p:last-child { margin-bottom: 0; }
@@ -40,7 +40,7 @@ function wrap(content: string, footerNote?: string): string {
     <div class="container">
       <div class="header">
         <div class="wordmark">Vanta<span>Jax</span></div>
-        <div class="beta-badge">Beta</div>
+        <div class="pilot-badge">Pilot</div>
       </div>
       <div class="body">
         ${content}
@@ -150,7 +150,7 @@ export function verificationOutreachEmail({
   const content = `
     <p>Hi ${firstName},</p>
     <p>
-      I'm Gavin — I'm building <strong>Vanta</strong>, a free directory for Black-owned
+      My name is Gavin — I'm building <strong>Vanta Collective</strong>, a free directory for Black-owned
       businesses, entrepreneurs, and professionals in Jacksonville, FL. No ads, no fees,
       no gatekeeping. Just a clean, trusted place for the community to discover and support
       businesses like yours.
@@ -206,14 +206,14 @@ export function ownerOutreachEmail({
       businesses like yours.
     </p>
     <p>
-      We're currently in <strong>beta</strong>, which means you'd be one of the first businesses
+      We're currently in our <strong>pilot</strong>, which means you'd be one of the first businesses
       featured on the platform. I'd love to include ${businessName}. Claiming your listing is
       completely free and takes just a few minutes — add your hours, logo, description, and links.
       Once you claim it, it's yours to manage.
     </p>
     <a class="cta" href="${claimUrl}">Claim your listing &rarr;</a>
     <p>
-      If you have any questions or just want to talk, feel free to reply here.
+      If you have any questions or just want to talk, feel free to send your replies to.
       I read every message.
     </p>
     <div class="sig">
@@ -370,7 +370,7 @@ export async function sendVerificationOutreach({
 }) {
   return resend.emails.send({
     from: 'Gavin Marts <outreach@vantacollective.org>',
-    reply_to: 'vantacollectivellc@gmail.com',
+    replyTo: 'vantacollectivellc@gmail.com',
     to,
     subject: `${businessName} is listed on Vanta — claim your listing`,
     html: verificationOutreachEmail({ firstName, businessName, businessId, customNote }),
@@ -393,7 +393,7 @@ export async function sendOwnerOutreach({
 }) {
   return resend.emails.send({
     from: 'Gavin Marts <outreach@vantacollective.org>',
-    reply_to: 'vantacollectivellc@gmail.com',
+    replyTo: 'vantacollectivellc@gmail.com',
     to,
     subject: `We'd love to feature ${businessName} on VantaJax`,
     html: ownerOutreachEmail({ firstName, businessName, businessId, howFound }),

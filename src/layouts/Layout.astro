@@ -137,30 +137,47 @@ const year = new Date().getFullYear();
     </main>
 
     <!-- Global footer -->
-    <footer class="border-t border-slate-200">
-      <div
-        class="mx-auto flex max-w-[1100px] flex-col items-center justify-between gap-2 px-4 py-4 text-[11px] text-slate-500 sm:flex-row"
-      >
-        <span>
-          © {year} VantaJax. Built for Jacksonville, FL.
-        </span>
-
-        <div class="flex gap-3">
-          <a href="/about" class="hover:text-purple-700">
-            About
+    <footer style="background:#0C0B13;color:#FAF8F5;">
+      <div style="max-width:1120px;margin:0 auto;padding:3rem 2rem 2rem;display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:2.5rem;">
+        <div>
+          <a href="/" style="display:flex;flex-direction:column;text-decoration:none;line-height:1;margin-bottom:0.875rem;">
+            <span style="font-size:1rem;font-weight:700;color:#FAF8F5;letter-spacing:-0.01em;">Vanta <span style="color:#C9A84C;">Collective</span></span>
+            <span style="font-size:0.65rem;color:rgba(250,248,245,0.4);margin-top:2px;">Black-owned • Jacksonville, FL</span>
           </a>
-          <a href="/businesses" class="hover:text-purple-700">
-            Browse
-          </a>
-          <a href="/suggest-business" class="hover:text-purple-700">
-            Suggest
-          </a>
-          <a href="/terms" class="hover:text-purple-700">
-            Terms
-          </a>
-          <a href="/privacy" class="hover:text-purple-700">
-            Privacy
-          </a>
+          <p style="font-size:0.8rem;font-weight:300;color:rgba(250,248,245,0.45);line-height:1.75;max-width:220px;margin-bottom:1.25rem;">A community-powered directory to discover and support Black-owned businesses — starting in Jacksonville.</p>
+          <a href="/" style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.75rem;font-weight:500;color:#C9A84C;text-decoration:none;opacity:0.75;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'">Platform: VantaJax ↗</a>
+        </div>
+        <div>
+          <div style="font-size:0.65rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(250,248,245,0.35);margin-bottom:1rem;">Explore</div>
+          <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.5rem;">
+            <li><a href="/businesses" style="font-size:0.82rem;color:rgba(250,248,245,0.55);text-decoration:none;" onmouseover="this.style.color='#FAF8F5'" onmouseout="this.style.color='rgba(250,248,245,0.55)'">Browse directory</a></li>
+            <li><a href="/suggest-business" style="font-size:0.82rem;color:rgba(250,248,245,0.55);text-decoration:none;" onmouseover="this.style.color='#FAF8F5'" onmouseout="this.style.color='rgba(250,248,245,0.55)'">Suggest a business</a></li>
+            <li><a href="/about" style="font-size:0.82rem;color:rgba(250,248,245,0.55);text-decoration:none;" onmouseover="this.style.color='#FAF8F5'" onmouseout="this.style.color='rgba(250,248,245,0.55)'">About VantaJax</a></li>
+            <li><a href="/login" style="font-size:0.82rem;color:rgba(250,248,245,0.55);text-decoration:none;" onmouseover="this.style.color='#FAF8F5'" onmouseout="this.style.color='rgba(250,248,245,0.55)'">Owner login</a></li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-size:0.65rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(250,248,245,0.35);margin-bottom:1rem;">Collective</div>
+          <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.5rem;">
+            <li><a href="/#mission" style="font-size:0.82rem;color:rgba(250,248,245,0.55);text-decoration:none;" onmouseover="this.style.color='#FAF8F5'" onmouseout="this.style.color='rgba(250,248,245,0.55)'">Our mission</a></li>
+            <li><a href="/#how-it-works" style="font-size:0.82rem;color:rgba(250,248,245,0.55);text-decoration:none;" onmouseover="this.style.color='#FAF8F5'" onmouseout="this.style.color='rgba(250,248,245,0.55)'">How it works</a></li>
+            <li><a href="/#waitlist" style="font-size:0.82rem;color:rgba(250,248,245,0.55);text-decoration:none;" onmouseover="this.style.color='#FAF8F5'" onmouseout="this.style.color='rgba(250,248,245,0.55)'">Newsletter</a></li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-size:0.65rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(250,248,245,0.35);margin-bottom:1rem;">Legal</div>
+          <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.5rem;">
+            <li><a href="/terms" style="font-size:0.82rem;color:rgba(250,248,245,0.55);text-decoration:none;" onmouseover="this.style.color='#FAF8F5'" onmouseout="this.style.color='rgba(250,248,245,0.55)'">Terms</a></li>
+            <li><a href="/privacy" style="font-size:0.82rem;color:rgba(250,248,245,0.55);text-decoration:none;" onmouseover="this.style.color='#FAF8F5'" onmouseout="this.style.color='rgba(250,248,245,0.55)'">Privacy</a></li>
+          </ul>
+        </div>
+      </div>
+      <div style="border-top:1px solid rgba(255,255,255,0.07);padding:1rem 2rem;max-width:1120px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+        <span style="font-size:0.72rem;color:rgba(250,248,245,0.28);">© {year} Vanta Collective. Built for Jacksonville, FL.</span>
+        <div style="display:flex;gap:0.5rem;">
+          <span style="font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:0.2rem 0.625rem;border-radius:100px;border:1px solid rgba(255,255,255,0.08);color:rgba(250,248,245,0.35);">No ads</span>
+          <span style="font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:0.2rem 0.625rem;border-radius:100px;border:1px solid rgba(255,255,255,0.08);color:rgba(250,248,245,0.35);">Community-powered</span>
+          <span style="font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:0.2rem 0.625rem;border-radius:100px;border:1px solid rgba(255,255,255,0.08);color:rgba(250,248,245,0.35);">Always free</span>
         </div>
       </div>
     </footer>
