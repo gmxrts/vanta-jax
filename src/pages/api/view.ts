@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createClient } from '@supabase/supabase-js';
+import { limiters, checkRateLimit } from '../../lib/ratelimit';
 
 export const prerender = false;
 
@@ -10,6 +11,14 @@ const supabase =
   supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey) : null;
 
 export const POST: APIRoute = async ({ request }) => {
+  const { allowed } = await checkRateLimit(limiters?.view, request);
+  if (!allowed) {
+    return new Response(JSON.stringify({ error: 'Too many requests. Please try again later.' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   if (!supabase) {
     return new Response(JSON.stringify({ error: 'Not configured.' }), { status: 500 });
   }

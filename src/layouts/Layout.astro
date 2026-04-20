@@ -27,6 +27,7 @@ const year = new Date().getFullYear();
     {description && <meta name="description" content={description} />}
 
     <link rel="icon" href="/favicon.ico" />
+    <slot name="head" />
   </head>
 
   <body class="min-h-screen antialiased">

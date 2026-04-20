@@ -1,3 +1,4 @@
+// Single source of truth for all internal links. Import this instead of hardcoding route strings.
 export const routes = {
   home:            '/',
   businesses:      '/businesses',
