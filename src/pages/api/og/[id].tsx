@@ -5,12 +5,19 @@ import { createSupabaseServerClient } from "../../../lib/supabaseServer";
 export const prerender = false;
 
 const CATEGORY_LABELS: Record<string, string> = {
-  food: "Food & Drink",
-  retail: "Retail",
-  services: "Services",
-  health: "Health & Wellness",
-  nonprofit: "Nonprofit",
-  other: "Business",
+  food:         "Food & Drink",
+  beauty:       "Beauty & Personal Care",
+  health:       "Health & Wellness",
+  retail:       "Retail & Shopping",
+  professional: "Professional Services",
+  creative:     "Creative Arts",
+  home:         "Home Services",
+  education:    "Education & Coaching",
+  events:       "Events & Entertainment",
+  finance:      "Finance & Insurance",
+  technology:   "Technology",
+  nonprofit:    "Nonprofit & Community",
+  other:        "Business",
 };
 
 export const GET: APIRoute = async (context) => {

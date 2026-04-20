@@ -62,7 +62,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   const business: Record<string, any> = {
     name: String(name).trim(),
-    category: category || 'services',
+    category: category || 'professional',
     address: address || null,
     city: city || null,
     state: state || null,

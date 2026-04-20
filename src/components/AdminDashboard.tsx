@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { FormEvent } from "react";
 
 type Suggestion = {
@@ -78,12 +79,19 @@ type GeoFeature = {
 };
 
 const categories = [
-  { value: "food", label: "Food & Dining" },
-  { value: "retail", label: "Retail" },
-  { value: "services", label: "Services" },
-  { value: "health", label: "Health & Wellness" },
-  { value: "nonprofit", label: "Nonprofit & Community" },
-  { value: "other", label: "Other" },
+  { value: "food",         label: "Food & Drink" },
+  { value: "beauty",       label: "Beauty & Personal Care" },
+  { value: "health",       label: "Health & Wellness" },
+  { value: "retail",       label: "Retail & Shopping" },
+  { value: "professional", label: "Professional Services" },
+  { value: "creative",     label: "Creative Arts" },
+  { value: "home",         label: "Home Services" },
+  { value: "education",    label: "Education & Coaching" },
+  { value: "events",       label: "Events & Entertainment" },
+  { value: "finance",      label: "Finance & Insurance" },
+  { value: "technology",   label: "Technology" },
+  { value: "nonprofit",    label: "Nonprofit & Community" },
+  { value: "other",        label: "Other" },
 ];
 
 const businessTypes = [
@@ -259,32 +267,6 @@ function PlacesEnrichButton({
 
 const SITE_URL = "https://vanta-jax.vercel.app";
 
-function buildClaimMailto(name: string, id: string, email?: string | null): string {
-  const listingUrl = `${SITE_URL}/business/${id}`;
-  const subject = `Claim your Vanta listing — ${name}`;
-  const body = [
-    `Hey ${name} team,`,
-    ``,
-    `I wanted to personally reach out — your business is listed on Vanta, a free directory of Black-owned businesses and professionals in Jacksonville, FL.`,
-    ``,
-    `Your listing is live here: ${listingUrl}`,
-    ``,
-    `I'd love for you to claim it so you can keep your info accurate, add your logo, and see how many people are finding you through the platform.`,
-    ``,
-    `Claiming takes under 2 minutes — just visit your listing and click "Is this your business?"`,
-    ``,
-    `No cost, no catch. This stays community-first.`,
-    ``,
-    `— Gavin Marts`,
-    `Founder, Vanta`,
-    `vantajacksonville@gmail.com`,
-    `vanta-jax.vercel.app`,
-  ].join("\n");
-
-  const qs = `subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  return `mailto:${email ?? ""}?${qs}`;
-}
-
 function buildClaimApprovedMailto(ownerEmail: string, bizName: string, bizId: string, notes?: string): string {
   const listingUrl = `${SITE_URL}/business/${bizId}`;
   const dashboardUrl = `${SITE_URL}/dashboard`;
@@ -323,42 +305,161 @@ function buildClaimRejectedMailto(ownerEmail: string, bizName: string, notes?: s
 }
 
 function DraftEmailButton({
-  name, id, email, adminKey = "",
+  name, id, adminKey = "",
   onTracked,
 }: {
   name: string;
   id: string;
-  email?: string | null;
   adminKey?: string;
   onTracked?: (count: number, sentAt: string) => void;
 }) {
-  const handleClick = () => {
-    // Fire-and-forget tracking — open mailto regardless
-    fetch("/api/admin/track-outreach", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
-      body: JSON.stringify({ businessId: id }),
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data?.ok && onTracked) onTracked(data.outreach_count, data.outreach_sent_at);
-      })
-      .catch(() => {});
-    window.location.href = buildClaimMailto(name, id, email);
+  const [open, setOpen] = useState(false);
+  const [to, setTo] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [customNote, setCustomNote] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [panelPos, setPanelPos] = useState({ top: 0, left: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const updatePos = () => {
+    if (!btnRef.current) return;
+    const r = btnRef.current.getBoundingClientRect();
+    setPanelPos({ top: r.bottom + window.scrollY + 6, left: r.left + window.scrollX });
   };
 
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-[12px] font-semibold text-slate-700 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white"
+  useEffect(() => {
+    if (!open) return;
+    updatePos();
+    const onScroll = () => updatePos();
+    window.addEventListener("scroll", onScroll, true);
+    return () => window.removeEventListener("scroll", onScroll, true);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (
+        panelRef.current && !panelRef.current.contains(e.target as Node) &&
+        btnRef.current && !btnRef.current.contains(e.target as Node)
+      ) {
+        handleClose();
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  const handleSend = async () => {
+    if (!to.trim() || !firstName.trim()) return;
+    setStatus("sending");
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/admin/send-outreach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
+        body: JSON.stringify({ businessId: id, to: to.trim(), firstName: firstName.trim(), businessName: name, customNote: customNote.trim() || undefined }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setStatus("sent");
+        if (onTracked) onTracked(data.outreach_count, data.outreach_sent_at);
+      } else {
+        setStatus("error");
+        setErrorMsg(data.error ?? "Failed to send.");
+      }
+    } catch {
+      setStatus("error");
+      setErrorMsg("Network error.");
+    }
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setStatus("idle");
+    setErrorMsg("");
+  };
+
+  const panel = (
+    <div
+      ref={panelRef}
+      style={{ position: "absolute", top: panelPos.top, left: panelPos.left, zIndex: 9999 }}
+      className="w-80 rounded-xl border border-slate-200 bg-white p-4 shadow-xl"
     >
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-        <polyline points="22,6 12,13 2,6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-      Draft claim email
-    </button>
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-[12px] font-semibold text-slate-800">Outreach email — {name}</span>
+        <button type="button" onClick={handleClose} className="text-slate-400 hover:text-slate-600 text-lg leading-none">&times;</button>
+      </div>
+
+      {status === "sent" ? (
+        <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-3 text-[12px] text-emerald-700 font-medium">
+          Sent to {to} ✓
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-500 mb-1">To (email)</label>
+            <input
+              type="email"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              placeholder="owner@example.com"
+              className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12px] text-slate-800 placeholder-slate-400 outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-200"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-500 mb-1">First name</label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="Jordan"
+              className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12px] text-slate-800 placeholder-slate-400 outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-200"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-500 mb-1">Custom note <span className="font-normal text-slate-400">(optional)</span></label>
+            <textarea
+              value={customNote}
+              onChange={(e) => setCustomNote(e.target.value)}
+              placeholder="e.g. I found you through Google Maps and love what you're doing."
+              rows={3}
+              className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12px] text-slate-800 placeholder-slate-400 outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-200 resize-none"
+            />
+          </div>
+          {status === "error" && (
+            <p className="text-[11px] text-red-600">{errorMsg}</p>
+          )}
+          <button
+            type="button"
+            disabled={!to.trim() || !firstName.trim() || status === "sending"}
+            onClick={handleSend}
+            className="mt-0.5 w-full rounded-lg bg-violet-600 px-3 py-2 text-[12px] font-semibold text-white shadow-sm transition hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {status === "sending" ? "Sending…" : "Send via Resend"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-[12px] font-semibold text-slate-700 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white"
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+          <polyline points="22,6 12,13 2,6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        Send outreach email
+      </button>
+      {open && typeof document !== "undefined" && createPortal(panel, document.body)}
+    </>
   );
 }
 
@@ -602,7 +703,7 @@ function EditForm({
     const payload: Record<string, any> = {
       suggestionId: suggestion.id,
       name: (fd.get("name") as string)?.trim(),
-      category: (fd.get("category") as string) || "services",
+      category: (fd.get("category") as string) || "professional",
       business_type: businessType || null,
       is_address_public: isAddressPublic,
       address: address.trim() || null,
@@ -1043,7 +1144,7 @@ function EditListingForm({
     const payload: Record<string, any> = {
       businessId: business.id,
       name: nameValue.trim(),
-      category: (fd.get("category") as string) || "services",
+      category: (fd.get("category") as string) || "professional",
       business_type: businessType || null,
       is_address_public: isAddressPublic,
       address: address.trim() || null,
@@ -1101,7 +1202,7 @@ function EditListingForm({
         </div>
         <div className="space-y-2">
           <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Category</label>
-          <select name="category" defaultValue={business.category ?? "services"} className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200">
+          <select name="category" defaultValue={business.category ?? "professional"} className="w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-purple-200">
             {categories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
         </div>
@@ -1943,7 +2044,7 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
       const payload = {
         suggestionId: suggestion.id,
         name: suggestion.name?.trim(),
-        category: category || "services",
+        category: category || "professional",
         address: null,
         city: suggestion.city ?? null,
         state: suggestion.state ?? null,
@@ -2050,7 +2151,7 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
         if (!selectedId) return;
         const s = filteredItems.find((x) => x.id === selectedId);
         if (!s) return;
-        const qs = quickSettings[selectedId] ?? { category: "services", verified: true };
+        const qs = quickSettings[selectedId] ?? { category: "professional", verified: true };
         const ok = window.confirm(`Quick promote "${s.name}" as "${qs.category}"?`);
         if (!ok) return;
         handlePromoteQuick(s, qs.category, qs.verified);
@@ -2199,7 +2300,7 @@ export default function AdminDashboard({ suggestions, businesses, mapboxToken, c
           const hasWebsite = Boolean(s.website && s.website.trim().length > 0);
           const hasNotes = Boolean(s.notes && s.notes.trim().length > 0);
           const status = inferStatus(s);
-          const qs = quickSettings[s.id] ?? { category: "services", verified: true };
+          const qs = quickSettings[s.id] ?? { category: "professional", verified: true };
 
           return (
             <div

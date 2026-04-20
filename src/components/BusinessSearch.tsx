@@ -1,6 +1,8 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import type { FormEvent } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { getCategories } from "../lib/categories";
+import type { Category } from "../lib/types";
 
 const BrowseMapView = lazy(() => import("./BrowseMapView"));
 
@@ -30,15 +32,7 @@ type Business = {
   longitude?: number | null;
 };
 
-const categories = [
-  { value: "", label: "All categories" },
-  { value: "food", label: "Food & Dining" },
-  { value: "retail", label: "Retail" },
-  { value: "services", label: "Services" },
-  { value: "health", label: "Health & Wellness" },
-  { value: "nonprofit", label: "Nonprofit & Community" },
-  { value: "other", label: "Other" },
-];
+const PAGE_SIZE = 12;
 
 /** Returns the display location string based on privacy rules. */
 function getLocationLabel(b: Business): string | null {
@@ -90,27 +84,33 @@ export default function BusinessSearch() {
   const [directory, setDirectory] = useState<Business[]>([]);
   const [loadingDirectory, setLoadingDirectory] = useState(true);
 
+  const [categories, setCategories] = useState<Category[]>([]);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [currentPage, setCurrentPage] = useState(0);
 
   useEffect(() => {
     const loadAll = async () => {
       try {
         setLoadingDirectory(true);
-        const { data, error } = await supabase
-          .from("businesses")
-          .select("*")
-          .not("is_archived", "is", true)
-          .order("verified", { ascending: false })
-          .order("name", { ascending: true });
+        const [{ data, error: dbError }, cats] = await Promise.all([
+          supabase
+            .from("businesses")
+            .select("*")
+            .not("is_archived", "is", true)
+            .order("verified", { ascending: false })
+            .order("name", { ascending: true }),
+          getCategories(),
+        ]);
 
-        if (error) {
-          console.error(error);
+        if (dbError) {
+          console.error(dbError);
           return;
         }
 
         const all = (data || []) as Business[];
         setDirectory(all);
         setFeatured(all.filter((b) => b.featured));
+        setCategories(cats);
       } catch (err) {
         console.error(err);
       } finally {
@@ -185,6 +185,7 @@ export default function BusinessSearch() {
     setLoading(true);
     setError(null);
     setHasSearched(true);
+    setCurrentPage(0);
 
     try {
       const data = await fetchBusinesses({
@@ -209,6 +210,7 @@ export default function BusinessSearch() {
     setResults([]);
     setHasSearched(false);
     setError(null);
+    setCurrentPage(0);
   };
 
   const renderBusinessCard = (b: Business) => {
@@ -263,7 +265,7 @@ export default function BusinessSearch() {
 
             {b.category && (
               <span className="mt-1.5 inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                {b.category}
+                {b.category === "nonprofit" ? "Community" : b.category}
               </span>
             )}
 
@@ -296,6 +298,25 @@ export default function BusinessSearch() {
   };
 
   const activeList = hasSearched ? results : directory;
+  const totalPages = Math.ceil(activeList.length / PAGE_SIZE);
+  const displayList = activeList.slice(
+    currentPage * PAGE_SIZE,
+    (currentPage + 1) * PAGE_SIZE
+  );
+
+  // Page numbers: show all if ≤7, otherwise show window around current page
+  const pageNumbers: (number | "…")[] = (() => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i);
+    const pages: (number | "…")[] = [];
+    pages.push(0);
+    if (currentPage > 2) pages.push("…");
+    for (let i = Math.max(1, currentPage - 1); i <= Math.min(totalPages - 2, currentPage + 1); i++) {
+      pages.push(i);
+    }
+    if (currentPage < totalPages - 3) pages.push("…");
+    pages.push(totalPages - 1);
+    return pages;
+  })();
 
   return (
     <div className="w-full flex flex-col items-center gap-8">
@@ -364,8 +385,9 @@ export default function BusinessSearch() {
               onChange={(e) => setCategory(e.target.value)}
               className="vj-select"
             >
+              <option value="">All categories</option>
               {categories.map((c) => (
-                <option key={c.value} value={c.value}>
+                <option key={c.slug} value={c.slug}>
                   {c.label}
                 </option>
               ))}
@@ -468,11 +490,11 @@ export default function BusinessSearch() {
               <span>
                 {loading || loadingDirectory
                   ? "Loading…"
-                  : hasSearched
-                  ? results.length === 0
-                    ? "No businesses found"
-                    : `Showing ${results.length} business${results.length === 1 ? "" : "es"}`
-                  : `Showing ${directory.length} business${directory.length === 1 ? "" : "es"}`}
+                  : activeList.length === 0
+                  ? hasSearched ? "No businesses found" : ""
+                  : totalPages > 1
+                  ? `Showing ${currentPage * PAGE_SIZE + 1}–${Math.min((currentPage + 1) * PAGE_SIZE, activeList.length)} of ${activeList.length}`
+                  : `${activeList.length} business${activeList.length === 1 ? "" : "es"}`}
               </span>
             </div>
 
@@ -489,7 +511,7 @@ export default function BusinessSearch() {
             </div>
           </div>
 
-          {/* Map view */}
+          {/* Map view — shows all results (no pagination on map) */}
           {viewMode === "map" && MAPBOX_TOKEN && (
             <Suspense
               fallback={
@@ -518,9 +540,51 @@ export default function BusinessSearch() {
           )}
 
           {/* List view */}
-          {viewMode === "list" && !loading && !loadingDirectory && activeList.length > 0 && (
+          {viewMode === "list" && !loading && !loadingDirectory && displayList.length > 0 && (
             <div className="grid gap-4 sm:grid-cols-2">
-              {activeList.map((b) => renderBusinessCard(b))}
+              {displayList.map((b) => renderBusinessCard(b))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {viewMode === "list" && !loading && !loadingDirectory && totalPages > 1 && (
+            <div className="flex items-center justify-center gap-1.5 pt-2">
+              <button
+                type="button"
+                onClick={() => { setCurrentPage(p => p - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                disabled={currentPage === 0}
+                className="px-3 py-1.5 text-[11px] font-semibold rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                ← Prev
+              </button>
+
+              {pageNumbers.map((p, idx) =>
+                p === "…" ? (
+                  <span key={`ellipsis-${idx}`} className="w-7 text-center text-[11px] text-slate-400">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => { setCurrentPage(p as number); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    className={`w-7 h-7 text-[11px] font-semibold rounded-full transition ${
+                      p === currentPage
+                        ? "bg-purple-600 text-white"
+                        : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    {(p as number) + 1}
+                  </button>
+                )
+              )}
+
+              <button
+                type="button"
+                onClick={() => { setCurrentPage(p => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                disabled={currentPage === totalPages - 1}
+                className="px-3 py-1.5 text-[11px] font-semibold rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                Next →
+              </button>
             </div>
           )}
 

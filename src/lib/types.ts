@@ -27,9 +27,16 @@ export type ClaimStatus = 'pending' | 'approved' | 'rejected';
 
 export type CategorySlug =
   | 'food'
-  | 'retail'
-  | 'services'
+  | 'beauty'
   | 'health'
+  | 'retail'
+  | 'professional'
+  | 'creative'
+  | 'home'
+  | 'education'
+  | 'events'
+  | 'finance'
+  | 'technology'
   | 'nonprofit'
   | 'other';
 
