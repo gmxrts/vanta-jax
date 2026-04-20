@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { createClient } from "@supabase/supabase-js";
-import { sendVerificationOutreach } from "../../../lib/email";
+import { sendVerificationOutreach, sendOwnerOutreach } from "../../../lib/email";
 
 export const prerender = false;
 
@@ -16,7 +16,9 @@ export const POST: APIRoute = async ({ request }) => {
     to?: string;
     firstName?: string;
     businessName?: string;
+    template?: "verification" | "owner";
     customNote?: string;
+    howFound?: string;
   };
   try {
     body = await request.json();
@@ -24,12 +26,15 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: "Invalid request." }), { status: 400 });
   }
 
-  const { businessId, to, firstName, businessName, customNote } = body;
+  const { businessId, to, firstName, businessName, template = "verification", customNote, howFound } = body;
   if (!businessId || !to || !firstName || !businessName) {
     return new Response(JSON.stringify({ error: "businessId, to, firstName, and businessName are required." }), { status: 400 });
   }
 
-  const emailResult = await sendVerificationOutreach({ to, firstName, businessName, businessId, customNote });
+  const emailResult = template === "owner"
+    ? await sendOwnerOutreach({ to, firstName, businessName, businessId, howFound })
+    : await sendVerificationOutreach({ to, firstName, businessName, businessId, customNote });
+
   if (emailResult.error) {
     return new Response(JSON.stringify({ error: emailResult.error.message }), { status: 500 });
   }
