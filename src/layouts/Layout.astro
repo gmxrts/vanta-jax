@@ -6,6 +6,7 @@ const {
   description = "",
   fullWidth = false,
   isAdmin = false,
+  mapLayout = false,
 } = Astro.props;
 
 const year = new Date().getFullYear();
@@ -33,7 +34,7 @@ const year = new Date().getFullYear();
     <slot name="head" />
   </head>
 
-  <body class="min-h-screen antialiased">
+  <body class={`min-h-screen antialiased${mapLayout ? ' vj-map-body' : ''}`}>
     <!-- Global header / nav -->
     <header class="border-b border-slate-200">
       <div
@@ -131,7 +132,9 @@ const year = new Date().getFullYear();
     <!-- Page content -->
     <main
       class={
-        fullWidth
+        mapLayout
+          ? "vj-map-main"
+          : fullWidth
           ? "w-full min-h-[calc(100vh-4rem-3rem)] px-4 py-8"
           : "mx-auto min-h-[calc(100vh-4rem-3rem)] max-w-[1100px] px-4 py-8"
       }
