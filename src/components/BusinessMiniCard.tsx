@@ -2,6 +2,12 @@ import BusinessAvatar from "./BusinessAvatar";
 import { getOpenStatus } from "../lib/hours";
 import type { Business } from "../lib/types";
 
+function formatCategory(slug: string | null | undefined): string {
+  if (!slug) return "";
+  if (slug === "nonprofit") return "Community";
+  return slug.charAt(0).toUpperCase() + slug.slice(1);
+}
+
 type Props = {
   business: Business;
   distanceMeters?: number | null;
@@ -108,7 +114,7 @@ export default function BusinessMiniCard({
           </div>
           {b.category && (
             <div style={{ fontSize: 11, fontWeight: 600, color: "var(--purple)", textTransform: "capitalize", marginTop: 2 }}>
-              {b.category === "nonprofit" ? "Community" : b.category}
+              {formatCategory(b.category)}
             </div>
           )}
 

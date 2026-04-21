@@ -55,6 +55,12 @@ function passesFilter(b: Business, activeCategory: string, searchQuery: string):
   return true;
 }
 
+function formatCategory(slug: string | null | undefined): string {
+  if (!slug) return "";
+  if (slug === "nonprofit") return "Community";
+  return slug.charAt(0).toUpperCase() + slug.slice(1);
+}
+
 function logoSrc(b: Business): string | null {
   if (b.logo_path) return `${SUPABASE_URL}/storage/v1/object/public/business-logos/${b.logo_path}`;
   return b.logo_url ?? null;
@@ -74,7 +80,9 @@ export default function BusinessMapDiscovery() {
   const [activeCategory, setActiveCategory] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
   const [mapStyle, setMapStyle] = useState<MapStyleKey>(() => readSavedStyle());
   const [syncKey, setSyncKey] = useState(0);
 
@@ -92,6 +100,11 @@ export default function BusinessMapDiscovery() {
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
+
+  // ── Resize map when layout switches between mobile/desktop ────────────────
+  useEffect(() => {
+    if (mapRef.current) mapRef.current.resize();
+  }, [isMobile]);
 
   // ── Load businesses + categories ──────────────────────────────────────────
   useEffect(() => {
@@ -570,15 +583,18 @@ export default function BusinessMapDiscovery() {
               overflow: "hidden",
               transition: isDragging.current ? "none" : "height 0.3s cubic-bezier(0.4,0,0.2,1)",
             }}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
           >
-            {/* Drag handle */}
-            <div style={{
-              flexShrink: 0, display: "flex", flexDirection: "column",
-              alignItems: "center", padding: "10px 0 6px", cursor: "grab",
-            }}>
+            {/* Drag handle — touch handlers here only so list scrolling works freely */}
+            <div
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+              style={{
+                flexShrink: 0, display: "flex", flexDirection: "column",
+                alignItems: "center", padding: "10px 0 6px", cursor: "grab",
+                touchAction: "none",
+              }}
+            >
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border-mid)" }} />
               {sheetHeight > SNAP_HANDLE + 20 && (
                 <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 6, fontWeight: 500 }}>
@@ -861,7 +877,7 @@ function BusinessListRow({
         </div>
         <div style={{ display: "flex", gap: 5, marginTop: 3, alignItems: "center", flexWrap: "wrap" }}>
           <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-            {b.category === "nonprofit" ? "Community" : b.category}
+            {formatCategory(b.category)}
           </span>
           {isService && (
             <span style={{ fontSize: 10, color: "var(--text-muted)", background: "var(--border)", borderRadius: 4, padding: "1px 4px", fontWeight: 600 }}>
@@ -945,7 +961,7 @@ function OnlineShelf({
               </div>
               <div style={{ display: "flex", gap: 5, marginTop: 3, alignItems: "center" }}>
                 <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                  {b.category === "nonprofit" ? "Community" : b.category}
+                  {formatCategory(b.category)}
                 </span>
                 <span style={{ fontSize: 11, color: "var(--text-muted)" }}>· 🌐 Online</span>
                 {openStatus && (
