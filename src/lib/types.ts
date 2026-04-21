@@ -20,6 +20,9 @@ export interface Business {
   latitude: number | null;
   longitude: number | null;
   is_archived: boolean | null;
+  hours: Record<string, { open: string; close: string } | null> | null;
+  logo_path: string | null;
+  dist_meters?: number | null;
 }
 
 export type SuggestionStatus = 'pending' | 'approved' | 'rejected';
