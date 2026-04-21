@@ -83,12 +83,19 @@ body {
 /* Map-first layout — full-viewport, no scroll */
 .vj-map-body {
   overflow: hidden;
-  height: 100dvh;
+  height: 100vh;    /* fallback for older mobile Safari */
+  height: 100svh;   /* accounts for browser chrome on mobile */
+  display: flex;
+  flex-direction: column;
+}
+.vj-map-body footer {
+  display: none;    /* footer not relevant in map mode */
 }
 .vj-map-main {
+  flex: 1;
+  min-height: 0;    /* allow flex child to shrink below content size */
   position: relative;
   width: 100%;
-  height: calc(100dvh - 57px); /* below nav */
   overflow: hidden;
   padding: 0;
 }
