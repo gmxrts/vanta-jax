@@ -23,11 +23,24 @@ function formatDistance(meters: number): string {
   return miles < 0.1 ? "Nearby" : `${miles.toFixed(1)} mi`;
 }
 
-function getGoogleMapsUrl(b: Business): string {
-  if (b.latitude && b.longitude) {
-    return `https://www.google.com/maps/dir/?api=1&destination=${b.latitude},${b.longitude}`;
+function getDirectionsUrl(b: Business): string {
+  const lat = b.latitude;
+  const lng = b.longitude;
+  const query = encodeURIComponent(
+    [b.name, b.address, b.city, b.state].filter(Boolean).join(" ")
+  );
+
+  // Detect iOS/iPadOS — prefer Apple Maps on Apple devices
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+  const isIOS = /iPhone|iPad|iPod/.test(ua);
+
+  if (lat && lng) {
+    if (isIOS) return `maps://maps.apple.com/?daddr=${lat},${lng}`;
+    return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
   }
-  const query = encodeURIComponent(`${b.name} ${b.address ?? ""} ${b.city ?? ""} ${b.state ?? ""}`);
+
+  // Fallback: text search
+  if (isIOS) return `maps://maps.apple.com/?q=${query}`;
   return `https://www.google.com/maps/search/?api=1&query=${query}`;
 }
 
@@ -173,7 +186,7 @@ export default function BusinessMiniCard({
         {/* Primary geo/web action */}
         {isOnline
           ? b.website && <ActionBtn href={b.website} label="Website" icon={<GlobeIcon />} />
-          : !isServiceBased && <ActionBtn href={getGoogleMapsUrl(b)} label="Directions" icon={<DirectionsIcon />} />
+          : !isServiceBased && <ActionBtn href={getDirectionsUrl(b)} label="Directions" icon={<DirectionsIcon />} />
         }
 
         {b.phone && (
