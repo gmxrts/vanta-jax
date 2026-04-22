@@ -85,9 +85,6 @@ export default function BusinessMapDiscovery() {
   );
   const [mapStyle, setMapStyle] = useState<MapStyleKey>(() => readSavedStyle());
   const [syncKey, setSyncKey] = useState(0);
-  const [mapContainerHeight, setMapContainerHeight] = useState(() =>
-    typeof window !== "undefined" ? window.innerHeight : 600
-  );
   const [collapsedSections, setCollapsedSections] = useState({ location: false, service: false, online: false });
 
   const toggleSection = useCallback((key: "location" | "service" | "online") => {
@@ -101,12 +98,9 @@ export default function BusinessMapDiscovery() {
   const dragStartTime = useRef(0);
   const isDragging = useRef(false);
 
-  // ── Mobile detection + map container height ───────────────────────────────
+  // ── Mobile detection ──────────────────────────────────────────────────────
   useEffect(() => {
-    const check = () => {
-      setIsMobile(window.innerWidth < 768);
-      setMapContainerHeight(window.innerHeight);
-    };
+    const check = () => setIsMobile(window.innerWidth < 768);
     check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
@@ -116,6 +110,13 @@ export default function BusinessMapDiscovery() {
   useEffect(() => {
     if (mapRef.current) mapRef.current.resize();
   }, [isMobile]);
+
+  // ── Scroll selected card into view when selectedBusiness changes ──────────
+  useEffect(() => {
+    if (!selectedBusiness) return;
+    const el = document.querySelector<HTMLElement>(`[data-business-id="${selectedBusiness.id}"]`);
+    el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [selectedBusiness?.id]);
 
   // ── Load businesses + categories ──────────────────────────────────────────
   useEffect(() => {
@@ -506,8 +507,8 @@ export default function BusinessMapDiscovery() {
           overflow: "hidden",
         }}>
           <>
-            <div style={{ padding: "12px 12px 0" }}>
-              <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500, marginBottom: 8 }}>
+            <div style={{ padding: "16px 12px 0" }}>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500, marginBottom: 10 }}>
                 {isLoading ? "Loading…" : sheetHeaderText}
               </div>
                 <SearchBar value={searchQuery} onChange={setSearchQuery} />
@@ -603,7 +604,7 @@ export default function BusinessMapDiscovery() {
 
       {/* ── Map area ── */}
       <div style={{ flex: 1, position: "relative" }}>
-        <div ref={mapContainerRef} style={{ width: "100%", height: isMobile ? mapContainerHeight : "100%" }} />
+        <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
         {/* Mobile: floating search + pills */}
         {isMobile && (
@@ -1033,11 +1034,13 @@ function BusinessListRow({
     <button
       type="button"
       onClick={() => onSelect(b)}
+      data-business-id={b.id}
       style={{
         display: "flex", alignItems: "center", gap: 10,
         width: "100%", padding: "10px 8px",
         borderRadius: 12, border: "none",
         background: isSelected ? "var(--accent-pale)" : "transparent",
+        borderLeft: isSelected ? "2.5px solid var(--accent, #C9A84C)" : "none",
         cursor: "pointer", textAlign: "left",
         borderBottom: "1px solid var(--border)",
       }}
@@ -1079,15 +1082,21 @@ function BusinessListRow({
             <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{miles}</span>
           )}
           {openStatus && (
-            <span style={{
-              fontSize: 10, fontWeight: 600,
-              color: openStatus.isOpen ? "#16a34a" : "#dc2626",
-              background: openStatus.isOpen ? "rgba(22,163,74,0.08)" : "rgba(220,38,38,0.08)",
-              borderRadius: 4,
-              padding: "1px 5px",
-            }}>
-              {openStatus.isOpen ? "Open" : "Closed"}
-            </span>
+            openStatus.isOpen ? (
+              <span style={{
+                fontSize: 11, fontWeight: 600,
+                background: "var(--color-success-bg, #D1FAE5)",
+                color: "var(--color-success-text, #047857)",
+                borderRadius: 10,
+                padding: "2px 8px",
+              }}>
+                Open
+              </span>
+            ) : (
+              <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                Closed
+              </span>
+            )
           )}
         </div>
       </div>
