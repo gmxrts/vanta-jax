@@ -85,6 +85,14 @@ export default function BusinessMapDiscovery() {
   );
   const [mapStyle, setMapStyle] = useState<MapStyleKey>(() => readSavedStyle());
   const [syncKey, setSyncKey] = useState(0);
+  const [mapContainerHeight, setMapContainerHeight] = useState(() =>
+    typeof window !== "undefined" ? window.innerHeight : 600
+  );
+  const [collapsedSections, setCollapsedSections] = useState({ location: false, service: false, online: false });
+
+  const toggleSection = useCallback((key: "location" | "service" | "online") => {
+    setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
 
   const [sheetHeight, setSheetHeight] = useState(SNAP_PEEK);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -93,9 +101,12 @@ export default function BusinessMapDiscovery() {
   const dragStartTime = useRef(0);
   const isDragging = useRef(false);
 
-  // ── Mobile detection ──────────────────────────────────────────────────────
+  // ── Mobile detection + map container height ───────────────────────────────
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
+    const check = () => {
+      setIsMobile(window.innerWidth < 768);
+      setMapContainerHeight(window.innerHeight);
+    };
     check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
@@ -197,6 +208,7 @@ export default function BusinessMapDiscovery() {
   // ── Init Mapbox ────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!mapContainerRef.current || !MAPBOX_TOKEN) return;
+    let resizeObserver: ResizeObserver | null = null;
 
     function initMap() {
       const mapboxgl = (window as any).mapboxgl;
@@ -209,10 +221,18 @@ export default function BusinessMapDiscovery() {
         center: JAX_CENTER,
         zoom: 11,
         attributionControl: false,
+        fadeDuration: 0,
       });
 
       map.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-right");
       mapRef.current = map;
+
+      requestAnimationFrame(() => { map.resize(); });
+
+      if (typeof ResizeObserver !== "undefined" && mapContainerRef.current) {
+        resizeObserver = new ResizeObserver(() => { map.resize(); });
+        resizeObserver.observe(mapContainerRef.current);
+      }
 
       map.on("load", () => {
         setupMapLayers(map);
@@ -253,6 +273,7 @@ export default function BusinessMapDiscovery() {
     }
 
     return () => {
+      resizeObserver?.disconnect();
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -261,16 +282,20 @@ export default function BusinessMapDiscovery() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Computed lists ─────────────────────────────────────────────────────────
-  const mappedBusinesses = useMemo(
+
+  // Businesses that appear in the sidebar/sheet list (all non-online-only)
+  const listBusinesses = useMemo(
     () =>
       businesses.filter(
-        (b) =>
-          b.business_type !== "online_only" &&
-          b.latitude != null &&
-          b.longitude != null &&
-          passesFilter(b, activeCategory, searchQuery)
+        (b) => b.business_type !== "online_only" && passesFilter(b, activeCategory, searchQuery)
       ),
     [businesses, activeCategory, searchQuery]
+  );
+
+  // Subset of listBusinesses that have coordinates → get map pins
+  const pinnableBusinesses = useMemo(
+    () => listBusinesses.filter((b) => b.latitude != null && b.longitude != null),
+    [listBusinesses]
   );
 
   const onlineBusinesses = useMemo(
@@ -283,12 +308,12 @@ export default function BusinessMapDiscovery() {
 
   // Keep features ref current for use in setupMapLayers after style switch
   useEffect(() => {
-    businessFeaturesRef.current = mappedBusinesses.map((b) => ({
+    businessFeaturesRef.current = pinnableBusinesses.map((b) => ({
       type: "Feature" as const,
       geometry: { type: "Point" as const, coordinates: [b.longitude!, b.latitude!] },
       properties: { id: b.id, business_type: b.business_type ?? "brick_and_mortar" },
     }));
-  }, [mappedBusinesses]);
+  }, [pinnableBusinesses]);
 
   // ── Sync pins to map ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -314,8 +339,8 @@ export default function BusinessMapDiscovery() {
         src.setData({ type: "FeatureCollection", features: businessFeaturesRef.current });
       }
 
-      // Add HTML markers per business
-      mappedBusinesses.forEach((b) => {
+      // Add HTML markers per business (only pinnable ones have coordinates)
+      pinnableBusinesses.forEach((b) => {
         const isSelected = selectedBusiness?.id === b.id;
         const isService = b.business_type === "service_based";
         const size = isSelected ? 22 : 16;
@@ -360,7 +385,7 @@ export default function BusinessMapDiscovery() {
     };
 
     trySync();
-  }, [mappedBusinesses, selectedBusiness?.id, syncKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pinnableBusinesses, selectedBusiness?.id, syncKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Style switcher ─────────────────────────────────────────────────────────
   const handleStyleChange = useCallback(
@@ -439,19 +464,29 @@ export default function BusinessMapDiscovery() {
   // ── Sorted display list ────────────────────────────────────────────────────
   const displayList = useMemo(
     () =>
-      [...mappedBusinesses].sort((a, b) => {
+      [...listBusinesses].sort((a, b) => {
         if (userCoords) {
           return ((a as any).dist_meters ?? Infinity) - ((b as any).dist_meters ?? Infinity);
         }
         return a.name.localeCompare(b.name);
       }),
-    [mappedBusinesses, userCoords]
+    [listBusinesses, userCoords]
+  );
+
+  const locationList = useMemo(
+    () => displayList.filter((b) => b.business_type !== "service_based"),
+    [displayList]
+  );
+
+  const serviceList = useMemo(
+    () => displayList.filter((b) => b.business_type === "service_based"),
+    [displayList]
   );
 
   const sheetHeaderText = (() => {
     const main = userCoords
-      ? `${mappedBusinesses.length} places nearby · sorted by distance`
-      : `${mappedBusinesses.length} businesses`;
+      ? `${listBusinesses.length} places nearby · sorted by distance`
+      : `${listBusinesses.length} businesses`;
     return onlineBusinesses.length > 0 ? `${main} · ${onlineBusinesses.length} online` : main;
   })();
 
@@ -470,48 +505,105 @@ export default function BusinessMapDiscovery() {
           background: "var(--bg-secondary)",
           overflow: "hidden",
         }}>
-          <div style={{ padding: "12px 12px 8px" }}>
-            <SearchBar value={searchQuery} onChange={setSearchQuery} />
-            <CategoryPills categories={categories} active={activeCategory} onSelect={setActiveCategory} />
-          </div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)", padding: "0 14px 8px", fontWeight: 500 }}>
-            {isLoading ? "Loading…" : sheetHeaderText}
-          </div>
-          <div style={{ flex: 1, overflowY: "auto", padding: "0 8px 8px" }}>
-            {displayList.map((b) => (
-              <BusinessListRow
-                key={b.id}
-                business={b}
-                isSelected={selectedBusiness?.id === b.id}
-                hasLocation={!!userCoords}
-                onSelect={(biz) => {
-                  setSelectedBusiness(biz);
-                  if (mapRef.current && biz.latitude && biz.longitude) {
-                    mapRef.current.easeTo({ center: [biz.longitude, biz.latitude], zoom: 15 });
-                  }
-                }}
-              />
-            ))}
-            {!isLoading && displayList.length === 0 && onlineBusinesses.length === 0 && (
-              <p style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", marginTop: 24 }}>
-                No businesses found.{" "}
-                <a href="/suggest-business" style={{ color: "var(--accent)" }}>Suggest one</a>
-              </p>
-            )}
-            {onlineBusinesses.length > 0 && (
-              <OnlineShelf
-                businesses={onlineBusinesses}
-                selectedId={selectedBusiness?.id}
-                onSelect={(biz) => setSelectedBusiness(biz)}
-              />
-            )}
-          </div>
+          <>
+            <div style={{ padding: "12px 12px 0" }}>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500, marginBottom: 8 }}>
+                {isLoading ? "Loading…" : sheetHeaderText}
+              </div>
+                <SearchBar value={searchQuery} onChange={setSearchQuery} />
+                <CategoryPills categories={categories} active={activeCategory} onSelect={setActiveCategory} />
+              </div>
+              <div style={{ flex: 1, overflowY: "auto", paddingBottom: 8, marginTop: 8 }}>
+                {locationList.length > 0 && (
+                  <>
+                    <SectionHeader
+                      title="In Jacksonville"
+                      count={locationList.length}
+                      collapsed={collapsedSections.location}
+                      onToggle={() => toggleSection("location")}
+                    />
+                    {!collapsedSections.location && (
+                      <div style={{ padding: "0 8px" }}>
+                        {locationList.map((b) => (
+                          <BusinessListRow
+                            key={b.id} business={b}
+                            isSelected={selectedBusiness?.id === b.id}
+                            hasLocation={!!userCoords}
+                            onSelect={(biz) => {
+                              setSelectedBusiness(biz);
+                              if (mapRef.current && biz.latitude && biz.longitude) {
+                                mapRef.current.easeTo({ center: [biz.longitude, biz.latitude], zoom: 15 });
+                              }
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+                {serviceList.length > 0 && (
+                  <>
+                    <SectionHeader
+                      title="Mobile & Service"
+                      count={serviceList.length}
+                      collapsed={collapsedSections.service}
+                      onToggle={() => toggleSection("service")}
+                    />
+                    {!collapsedSections.service && (
+                      <div style={{ padding: "0 8px" }}>
+                        {serviceList.map((b) => (
+                          <BusinessListRow
+                            key={b.id} business={b}
+                            isSelected={selectedBusiness?.id === b.id}
+                            hasLocation={!!userCoords}
+                            onSelect={(biz) => {
+                              setSelectedBusiness(biz);
+                              if (mapRef.current && biz.latitude && biz.longitude) {
+                                mapRef.current.easeTo({ center: [biz.longitude, biz.latitude], zoom: 15 });
+                              }
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+                {onlineBusinesses.length > 0 && (
+                  <>
+                    <SectionHeader
+                      title="Online Only"
+                      count={onlineBusinesses.length}
+                      collapsed={collapsedSections.online}
+                      onToggle={() => toggleSection("online")}
+                    />
+                    {!collapsedSections.online && (
+                      <div style={{ padding: "0 8px" }}>
+                        {onlineBusinesses.map((b) => (
+                          <BusinessListRow
+                            key={b.id} business={b}
+                            isSelected={selectedBusiness?.id === b.id}
+                            hasLocation={false}
+                            onSelect={(biz) => setSelectedBusiness(biz)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+                {!isLoading && locationList.length === 0 && serviceList.length === 0 && onlineBusinesses.length === 0 && (
+                  <p style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", marginTop: 24 }}>
+                    No businesses found.{" "}
+                    <a href="/suggest-business" style={{ color: "var(--accent)" }}>Suggest one</a>
+                  </p>
+                )}
+              </div>
+          </>
         </aside>
       )}
 
       {/* ── Map area ── */}
       <div style={{ flex: 1, position: "relative" }}>
-        <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
+        <div ref={mapContainerRef} style={{ width: "100%", height: isMobile ? mapContainerHeight : "100%" }} />
 
         {/* Mobile: floating search + pills */}
         {isMobile && (
@@ -604,37 +696,93 @@ export default function BusinessMapDiscovery() {
             </div>
 
             {sheetHeight > SNAP_HANDLE + 20 && (
-              <div style={{ flex: 1, overflowY: "auto", padding: "0 8px 12px" }}>
-                {displayList.map((b) => (
-                  <BusinessListRow
-                    key={b.id}
-                    business={b}
-                    isSelected={selectedBusiness?.id === b.id}
-                    hasLocation={!!userCoords}
-                    onSelect={(biz) => {
-                      setSelectedBusiness(biz);
-                      setSheetHeight(SNAP_PEEK);
-                      if (mapRef.current && biz.latitude && biz.longitude) {
-                        mapRef.current.easeTo({ center: [biz.longitude, biz.latitude], zoom: 15 });
-                      }
-                    }}
-                  />
-                ))}
-                {!isLoading && displayList.length === 0 && onlineBusinesses.length === 0 && (
+              <div style={{ flex: 1, overflowY: "auto", paddingBottom: 12 }}>
+                {locationList.length > 0 && (
+                  <>
+                    <SectionHeader
+                      title="In Jacksonville"
+                      count={locationList.length}
+                      collapsed={collapsedSections.location}
+                      onToggle={() => toggleSection("location")}
+                    />
+                    {!collapsedSections.location && (
+                      <div style={{ padding: "0 8px" }}>
+                        {locationList.map((b) => (
+                          <BusinessListRow
+                            key={b.id} business={b}
+                            isSelected={selectedBusiness?.id === b.id}
+                            hasLocation={!!userCoords}
+                            onSelect={(biz) => {
+                              setSelectedBusiness(biz);
+                              setSheetHeight(SNAP_PEEK);
+                              if (mapRef.current && biz.latitude && biz.longitude) {
+                                mapRef.current.easeTo({ center: [biz.longitude, biz.latitude], zoom: 15 });
+                              }
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+                {serviceList.length > 0 && (
+                  <>
+                    <SectionHeader
+                      title="Mobile & Service"
+                      count={serviceList.length}
+                      collapsed={collapsedSections.service}
+                      onToggle={() => toggleSection("service")}
+                    />
+                    {!collapsedSections.service && (
+                      <div style={{ padding: "0 8px" }}>
+                        {serviceList.map((b) => (
+                          <BusinessListRow
+                            key={b.id} business={b}
+                            isSelected={selectedBusiness?.id === b.id}
+                            hasLocation={!!userCoords}
+                            onSelect={(biz) => {
+                              setSelectedBusiness(biz);
+                              setSheetHeight(SNAP_PEEK);
+                              if (mapRef.current && biz.latitude && biz.longitude) {
+                                mapRef.current.easeTo({ center: [biz.longitude, biz.latitude], zoom: 15 });
+                              }
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+                {onlineBusinesses.length > 0 && (
+                  <>
+                    <SectionHeader
+                      title="Online Only"
+                      count={onlineBusinesses.length}
+                      collapsed={collapsedSections.online}
+                      onToggle={() => toggleSection("online")}
+                    />
+                    {!collapsedSections.online && (
+                      <div style={{ padding: "0 8px" }}>
+                        {onlineBusinesses.map((b) => (
+                          <BusinessListRow
+                            key={b.id} business={b}
+                            isSelected={selectedBusiness?.id === b.id}
+                            hasLocation={false}
+                            onSelect={(biz) => {
+                              setSelectedBusiness(biz);
+                              setSheetHeight(SNAP_PEEK);
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+                {!isLoading && locationList.length === 0 && serviceList.length === 0 && onlineBusinesses.length === 0 && (
                   <p style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", marginTop: 16 }}>
                     No businesses found.{" "}
                     <a href="/suggest-business" style={{ color: "var(--accent)" }}>Suggest one</a>
                   </p>
-                )}
-                {onlineBusinesses.length > 0 && (
-                  <OnlineShelf
-                    businesses={onlineBusinesses}
-                    selectedId={selectedBusiness?.id}
-                    onSelect={(biz) => {
-                      setSelectedBusiness(biz);
-                      setSheetHeight(SNAP_PEEK);
-                    }}
-                  />
                 )}
               </div>
             )}
@@ -826,6 +974,44 @@ function CategoryPills({
   );
 }
 
+// ─── SectionHeader ────────────────────────────────────────────────────────────
+function SectionHeader({
+  title, count, collapsed, onToggle,
+}: {
+  title: string; count: number; collapsed: boolean; onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      style={{
+        display: "flex", alignItems: "center", width: "100%",
+        padding: "8px 14px 6px", background: "none", border: "none",
+        borderBottom: "1px solid var(--border-mid)", cursor: "pointer", gap: 6,
+        marginTop: 4,
+      }}
+    >
+      <span style={{
+        flex: 1, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em",
+        textTransform: "uppercase", color: "var(--text-muted)", textAlign: "left",
+      }}>
+        {title}
+        <span style={{ fontWeight: 500, marginLeft: 5, opacity: 0.7 }}>({count})</span>
+      </span>
+      <svg
+        width="12" height="12" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+        style={{
+          color: "var(--text-muted)", flexShrink: 0, transition: "transform 0.2s",
+          transform: collapsed ? "rotate(-90deg)" : "rotate(0deg)",
+        }}
+      >
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
+    </button>
+  );
+}
+
 // ─── BusinessListRow ──────────────────────────────────────────────────────────
 function BusinessListRow({
   business: b,
@@ -884,16 +1070,21 @@ function BusinessListRow({
               Mobile
             </span>
           )}
+          {b.business_type === "online_only" && (
+            <span style={{ fontSize: 10, color: "var(--text-muted)", background: "var(--border)", borderRadius: 4, padding: "1px 4px", fontWeight: 600 }}>
+              Online
+            </span>
+          )}
           {miles && (
             <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{miles}</span>
           )}
           {openStatus && (
             <span style={{
               fontSize: 10, fontWeight: 600,
-              color: openStatus.isOpen ? "#047857" : "var(--text-muted)",
-              background: openStatus.isOpen ? "rgba(4,120,87,0.08)" : "transparent",
+              color: openStatus.isOpen ? "#16a34a" : "#dc2626",
+              background: openStatus.isOpen ? "rgba(22,163,74,0.08)" : "rgba(220,38,38,0.08)",
               borderRadius: 4,
-              padding: openStatus.isOpen ? "1px 5px" : "0",
+              padding: "1px 5px",
             }}>
               {openStatus.isOpen ? "Open" : "Closed"}
             </span>
@@ -908,78 +1099,3 @@ function BusinessListRow({
   );
 }
 
-// ─── OnlineShelf ──────────────────────────────────────────────────────────────
-function OnlineShelf({
-  businesses,
-  selectedId,
-  onSelect,
-}: {
-  businesses: Business[];
-  selectedId?: string;
-  onSelect: (b: Business) => void;
-}) {
-  return (
-    <div style={{ marginTop: 12 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 8px", marginBottom: 8 }}>
-        <div style={{ flex: 1, height: 1, background: "var(--border-mid)" }} />
-        <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text-muted)", letterSpacing: "0.08em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
-          Also on VantaJax · Online only
-        </span>
-        <div style={{ flex: 1, height: 1, background: "var(--border-mid)" }} />
-      </div>
-      {businesses.map((b) => {
-        const openStatus = b.hours ? getOpenStatus(b.hours) : null;
-        return (
-          <button
-            key={b.id}
-            type="button"
-            onClick={() => onSelect(b)}
-            style={{
-              display: "flex", alignItems: "center", gap: 10,
-              width: "100%", padding: "10px 8px",
-              borderRadius: 12, border: "none",
-              background: selectedId === b.id ? "var(--accent-pale)" : "transparent",
-              cursor: "pointer", textAlign: "left",
-              borderBottom: "1px solid var(--border)",
-            }}
-          >
-            <div style={{
-              width: 40, height: 40, borderRadius: 10, background: "var(--border)",
-              overflow: "hidden", flexShrink: 0,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 13, fontWeight: 700, color: "var(--text-secondary)",
-            }}>
-              {logoSrc(b) ? (
-                <img src={logoSrc(b)!} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 4 }} />
-              ) : (
-                b.name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase()).join("")
-              )}
-            </div>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {b.name}
-              </div>
-              <div style={{ display: "flex", gap: 5, marginTop: 3, alignItems: "center" }}>
-                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                  {formatCategory(b.category)}
-                </span>
-                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>· 🌐 Online</span>
-                {openStatus && (
-                  <span style={{
-                    fontSize: 10, fontWeight: 600,
-                    color: openStatus.isOpen ? "#047857" : "var(--text-muted)",
-                  }}>
-                    {openStatus.isOpen ? "Open" : "Closed"}
-                  </span>
-                )}
-              </div>
-            </div>
-            {selectedId === b.id && (
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", flexShrink: 0 }} />
-            )}
-          </button>
-        );
-      })}
-    </div>
-  );
-}

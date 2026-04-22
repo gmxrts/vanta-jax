@@ -66,26 +66,8 @@ const year = new Date().getFullYear();
         </a>
 
         <!-- Primary navigation -->
-        <nav class="flex items-center gap-3 text-xs sm:text-sm">
-          <a
-            href="/about"
-            class="rounded-lg px-2.5 py-1.5 text-slate-700 transition hover:bg-[#FDF6E3] hover:text-[#8B6914]"
-          >
-            About
-          </a>
-          <a
-            href="/businesses"
-            class="rounded-lg px-2.5 py-1.5 text-slate-700 transition hover:bg-[#FDF6E3] hover:text-[#8B6914]"
-          >
-            Browse
-          </a>
-          <a
-            href="/suggest-business"
-            class="rounded-lg px-2.5 py-1.5 text-slate-700 transition hover:bg-[#FDF6E3] hover:text-[#8B6914]"
-          >
-            Suggest
-          </a>
-          <!-- Auth nav item: shown/hidden by client script -->
+        <nav class="flex items-center gap-2">
+          <!-- Auth buttons — always visible -->
           <a
             id="nav-auth-link"
             href="/login"
@@ -101,6 +83,8 @@ const year = new Date().getFullYear();
           >
             Owner login
           </a>
+
+          <!-- Theme toggle — always visible -->
           {!isAdmin && (
             <button
               id="theme-toggle"
@@ -125,6 +109,31 @@ const year = new Date().getFullYear();
               </svg>
             </button>
           )}
+
+          <!-- Hamburger — nav links inside -->
+          <div id="nav-menu-wrap" style="position:relative;">
+            <button
+              id="nav-hamburger"
+              aria-label="Open menu"
+              aria-expanded="false"
+              style="background:none;border:1px solid var(--border-mid);border-radius:100px;width:34px;height:34px;cursor:pointer;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0;transition:background 150ms ease,border-color 150ms ease;"
+              onmouseover="this.style.background='var(--accent-pale)';this.style.borderColor='var(--accent-border)'"
+              onmouseout="if(this.getAttribute('aria-expanded')==='false'){this.style.background='none';this.style.borderColor='var(--border-mid)'}"
+            >
+              <span style="display:block;width:14px;height:2px;border-radius:1px;background:currentColor;transition:transform 150ms ease,opacity 150ms ease;" class="ham-bar"></span>
+              <span style="display:block;width:14px;height:2px;border-radius:1px;background:currentColor;transition:transform 150ms ease,opacity 150ms ease;" class="ham-bar"></span>
+              <span style="display:block;width:14px;height:2px;border-radius:1px;background:currentColor;transition:transform 150ms ease,opacity 150ms ease;" class="ham-bar"></span>
+            </button>
+
+            <div
+              id="nav-dropdown"
+              style="display:none;position:absolute;right:0;top:calc(100% + 8px);background:var(--bg-secondary);border:1px solid var(--border-mid);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);padding:6px;min-width:160px;z-index:100;"
+            >
+              <a href="/about"         class="nav-drop-item">About</a>
+              <a href="/businesses"    class="nav-drop-item">Browse</a>
+              <a href="/suggest-business" class="nav-drop-item">Suggest a business</a>
+            </div>
+          </div>
         </nav>
       </div>
     </header>
@@ -212,7 +221,6 @@ const year = new Date().getFullYear();
         btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
       }
 
-      // Set initial aria-label to match current theme
       updateLabel(document.documentElement.getAttribute('data-theme') || 'light');
 
       btn.addEventListener('click', function () {
@@ -221,6 +229,40 @@ const year = new Date().getFullYear();
         document.documentElement.setAttribute('data-theme', next);
         localStorage.setItem('vanta-theme', next);
         updateLabel(next);
+      });
+    })();
+
+    // Hamburger menu
+    (function () {
+      var wrap = document.getElementById('nav-menu-wrap');
+      var btn  = document.getElementById('nav-hamburger');
+      var drop = document.getElementById('nav-dropdown');
+      if (!btn || !drop) return;
+
+      function open() {
+        drop.style.display = 'block';
+        btn.setAttribute('aria-expanded', 'true');
+        btn.style.background = 'var(--accent-pale)';
+        btn.style.borderColor = 'var(--accent-border)';
+      }
+      function close() {
+        drop.style.display = 'none';
+        btn.setAttribute('aria-expanded', 'false');
+        btn.style.background = 'none';
+        btn.style.borderColor = 'var(--border-mid)';
+      }
+
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        drop.style.display === 'none' ? open() : close();
+      });
+
+      document.addEventListener('click', function (e) {
+        if (wrap && !wrap.contains(e.target)) close();
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') close();
       });
     })();
   </script>
