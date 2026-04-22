@@ -1260,3 +1260,193 @@ These require no migrations — do them right now:
 - [ ] **Add `/business/[id]` redirect** to `astro.config.mjs`
 - [ ] **Add `PUBLIC_MAPBOX_TOKEN` check** in `mapbox.ts` so misconfiguration fails loudly
 - [ ] **Run `007_indexes.sql`** in Supabase SQL editor — zero risk, immediate benefit
+
+I'm working on the VantaJax Astro project. I want to migrate the visual design 
+to match a new design system we've established. Work through this in phases, 
+stopping after each one to confirm before proceeding. Do not make changes beyond 
+the current phase without my approval.
+
+Before starting any phase, read the files you'll be modifying so you understand 
+the current state. Never guess at file contents.
+
+---
+
+DESIGN SYSTEM REFERENCE
+========================
+The new design uses two paired color modes:
+
+Light mode — "Obsidian & Ivory":
+  --bg-primary:     #FAFAF7   (warm ivory page background)
+  --bg-secondary:   #FFFFFF   (card surfaces)
+  --text-primary:   #0E0C0A   (deep obsidian)
+  --text-secondary: #6B6355   (warm muted)
+  --text-muted:     #9A9080
+  --accent:         #C9A84C   (warrior gold — primary CTAs, links, highlights)
+  --accent-hover:   #8B6914   (gold hover)
+  --accent-pale:    #FDF6E3   (gold tint backgrounds)
+  --accent-border:  rgba(201,168,76,0.28)
+  --purple:         #7C3CA1   (secondary accent — badges, tags, subtle signals only)
+  --purple-pale:    #F3EBF9
+  --purple-light:   #C4A0E8
+  --border:         rgba(14,12,10,0.09)
+  --border-mid:     rgba(14,12,10,0.15)
+
+Dark mode — "Midnight Reign":
+  --bg-primary:     #0C0B13   (near-black)
+  --bg-secondary:   #1A0F2E   (deep purple-dark surface)
+  --text-primary:   #FAF8F5
+  --text-secondary: rgba(250,248,245,0.55)
+  --text-muted:     rgba(250,248,245,0.32)
+  --accent:         #C9A84C   (gold is consistent across both modes)
+  --accent-hover:   #EAD88A
+  --accent-pale:    rgba(201,168,76,0.1)
+  --accent-border:  rgba(201,168,76,0.3)
+  --purple:         #C4A0E8   (purple lightens in dark mode)
+  --purple-pale:    rgba(196,160,232,0.1)
+  --border:         rgba(255,255,255,0.08)
+  --border-mid:     rgba(255,255,255,0.14)
+
+Typography:
+  Display/headlines: 'Playfair Display' (serif, weights 700 + 900 + italic)
+  Body/UI:           'DM Sans' (weights 300, 400, 500, 600)
+  Google Fonts URL:
+  https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap
+
+Key design rules:
+  - Gold (#C9A84C) is the PRIMARY action color: buttons, CTAs, links, focus rings, 
+    verified badges
+  - Purple is SECONDARY only: category tags, community badges, subtle accents
+  - Dark sections (#0C0B13 bg) are used for "How it works", platform callouts, 
+    and the footer — they provide dramatic contrast against the light page bg
+  - Verified badges: gold background + gold text in dark mode, 
+    green (#D1FAE5 bg / #047857 text) in light mode — keep existing green in light
+  - Card hover: translateY(-3px) + gold border color + subtle box-shadow
+  - All primary buttons: gold bg + dark text, 100px border-radius pill shape
+  - Focus rings: rgba(201,168,76,0.15) gold glow, not purple
+
+---
+
+PHASE 1 — Global CSS Token Swap
+=================================
+Read src/styles/global.css and src/styles/vj-surfaces.css first.
+
+Then update both files to replace the existing color tokens with the new 
+design system values above. Map existing token names to new values — do not 
+rename tokens as other files reference them by name. Where a token doesn't 
+have a direct equivalent, use your judgment based on the design system rules.
+
+Specifically:
+- --bg-primary:    #F0EEFF  →  #FAFAF7 (light) / #0C0B13 (dark)
+- --bg-secondary:  #FFFFFF  →  #FFFFFF (light) / #1A0F2E (dark)
+- --accent:        #A78BFA  →  #C9A84C (both modes)
+- --accent-light:  #C4B0FF  →  #EAD88A (light) / rgba(201,168,76,0.55) (dark)
+- All purple button/CTA colors → gold equivalents
+- Keep purple as a secondary variable (rename existing purple values to 
+  --color-secondary or --purple)
+- Update focus ring colors from purple to gold
+
+Also add the Google Fonts import link to src/layouts/Layout.astro (or wherever 
+the base <head> lives). Do not add it if it's already there.
+
+After completing Phase 1, summarize every file changed and show a before/after 
+for the key token values. Then stop and wait for my approval before Phase 2. Update ARCHITECTURE.md once finished
+
+---
+
+PHASE 2 — Typography
+=====================
+Read src/layouts/Layout.astro and any other base layout files first.
+
+Apply Playfair Display to all display-level headings across the platform:
+- The hero headline on src/pages/index.astro
+- All h1 elements in page hero/header sections
+- The large section titles on src/pages/about.astro
+- Business name on src/pages/business/[id].astro
+
+Apply DM Sans as the base body font (replace whatever is currently set in 
+global.css — likely Inter or system-ui).
+
+Add font-weight 900 + font-style italic to .hero-headline em or equivalent 
+italic accent elements.
+
+Do not change font sizes — only font-family and font-weight where appropriate.
+
+After completing Phase 2, list every selector modified. Then stop and wait 
+for my approval before Phase 3.
+
+---
+
+PHASE 3 — Component Updates (do one component at a time, confirm between each)
+================================================================================
+Work through these components in order. Read each file fully before editing it.
+After each component, show what changed and wait for my go-ahead.
+
+3a. Navigation (src/layouts/Layout.astro or nav component)
+  - Logo: "VANTA" in --text-primary, "JAX" in --accent (gold)
+  - Nav links: hover state uses gold background tint + gold text
+  - "Owner login" button: gold background, dark text, pill shape
+  - Dark mode toggle: border uses --border-mid, hover uses gold pale bg
+
+3b. Homepage hero (src/pages/index.astro)
+  - Background: replace flat lavender bg with a full-bleed image approach
+    (use position:relative on hero, add an ::after overlay gradient that goes 
+    from transparent at top to rgba(14,12,10,0.88) at bottom)
+  - Headline: apply Playfair Display, weight 900
+  - "Browse directory" button: gold background (#C9A84C), dark text (#0E0C0A), 
+    pill shape, hover lifts with gold box-shadow
+  - Eyebrow text ("VANTAJAX • JACKSONVILLE, FL"): use gold color
+  - The three feature pills (LOCAL-FIRST, COMMUNITY-SOURCED, QUICK DISCOVERY): 
+    white card bg with gold left-border accent on hover
+
+3c. Business cards (src/components/BusinessSearch.tsx or wherever cards render)
+  - Card hover: translateY(-3px) + left border gold flash (box-shadow: -3px 0 0 gold)
+  - Verified badge: keep existing green in light mode, use gold tint in dark mode
+  - Featured badge: gold background + dark text (replace purple)
+  - Category pill: purple bg (--purple-pale) + purple text — this is correct, 
+    purple stays for category tags
+  - "View details →" link: gold color on hover
+
+3d. About page (src/pages/about.astro)
+  - Main headline: Playfair Display
+  - Section dividers/rules: use gold color (rgba(201,168,76,0.55))
+  - The three value cards (TRUST, ACCESS, LOCAL): gold tag text, card hover 
+    uses gold border
+
+3e. Business detail page (src/pages/business/[id].astro)
+  - Business name: Playfair Display
+  - "Directions" / "Website" action buttons: primary = gold, secondary = outline
+  - Verified/Featured/Woman-owned badges: gold verified in dark, keep existing 
+    colors in light
+
+3f. Footer
+  - Background: #0C0B13 (always dark regardless of mode)
+  - Logo wordmark: "VANTA" white, "JAX" gold
+  - Link hover: white
+  - Copyright + badge pills: rgba(250,248,245,0.3) muted text
+
+---
+
+PHASE 4 — Dark Mode Audit
+===========================
+Read through all component files and identify any hardcoded color values 
+(hex codes or rgb()) that are not using CSS custom properties. List them all 
+first without changing anything.
+
+Then, for each hardcoded color:
+- If it should respond to dark mode: replace with the appropriate CSS variable
+- If it's intentionally fixed (e.g. the always-dark footer): leave it and 
+  add a comment noting it's intentional
+
+Show the full list before making any changes. Wait for approval.
+
+---
+
+IMPORTANT RULES FOR ALL PHASES:
+- Read files before editing them
+- Never change functionality — only visual styles
+- Never rename existing CSS custom properties, only change their values
+- If a file uses Tailwind classes instead of CSS variables, note it but do 
+  not convert — just update the Tailwind config color values instead
+- If you're unsure whether a change will break something, flag it and ask
+- Commit message format: "style(phase-N): description"
+- After every phase, run `pnpm build` to check for errors before stopping
