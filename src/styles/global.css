@@ -6,6 +6,10 @@
    Theme CSS Variables
    ================================ */
 
+:root {
+  --nav-h: 58px; /* height of the fixed nav bar — used by all layouts for offset */
+}
+
 :root,
 [data-theme="light"] {
   --bg-primary:     #FAFAF7;
@@ -83,19 +87,18 @@ body {
 /* Map-first layout — full-viewport, no scroll */
 .vj-map-body {
   overflow: hidden;
-  height: 100vh;    /* fallback for older mobile Safari */
-  height: 100svh;   /* accounts for browser chrome on mobile */
-  display: flex;
-  flex-direction: column;
+  height: 100svh;
 }
 .vj-map-body footer {
   display: none;    /* footer not relevant in map mode */
 }
+/* vj-map-main is fixed so it always fills the space between nav and bottom of screen */
 .vj-map-main {
-  flex: 1;
-  min-height: 0;    /* allow flex child to shrink below content size */
-  position: relative;
-  width: 100%;
+  position: fixed;
+  top: var(--nav-h);
+  left: 0;
+  right: 0;
+  bottom: 0;
   overflow: hidden;
   padding: 0;
 }
@@ -106,6 +109,22 @@ body {
   width: 100%;
   height: 100%;
   min-height: 0;
+}
+
+/* Nav inline link (desktop) */
+.vj-nav-link {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  transition: background 150ms ease, color 150ms ease;
+  white-space: nowrap;
+}
+.vj-nav-link:hover {
+  background: var(--accent-pale);
+  color: var(--accent-hover);
 }
 
 /* Nav hamburger dropdown items */

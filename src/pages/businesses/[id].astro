@@ -66,7 +66,10 @@ const displayLocation = (() => {
   return null; // fullAddress handles this case
 })();
 
-const mapsUrl = fullAddress
+// Default to coordinate-based URL when available; client-side handler overrides for iOS/Android
+const mapsUrl = lat && lng
+  ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
+  : fullAddress
   ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`
   : "";
 
@@ -484,6 +487,8 @@ const seoMeta = business && !isArchived
                         id="open-in-maps"
                         href={mapsUrl}
                         data-address={fullAddress}
+                        data-lat={lat ?? undefined}
+                        data-lng={lng ?? undefined}
                         target="_blank"
                         rel="noreferrer"
                         class="inline-flex items-center justify-center rounded-2xl bg-[#C9A84C] px-4 py-3 text-[13px] font-semibold text-[#0E0C0A] shadow-[0_16px_34px_-22px_rgba(201,168,76,0.35)] transition hover:-translate-y-0.5 hover:bg-[#8B6914] hover:text-[#FAF8F5]"
@@ -640,19 +645,24 @@ const seoMeta = business && !isArchived
 
               link.addEventListener('click', function (event) {
                 const address = link.getAttribute('data-address') || '';
-                if (!navigator || !navigator.userAgent) return;
-
-                const ua = navigator.userAgent.toLowerCase();
-                const isIOS = /iphone|ipad|ipod/.test(ua) && !window.MSStream;
-                const isAndroid = /android/.test(ua);
+                const lat = link.getAttribute('data-lat');
+                const lng = link.getAttribute('data-lng');
+                const ua = navigator.userAgent;
+                const isIOS = /iPhone|iPad|iPod/.test(ua);
+                const isAndroid = /Android/.test(ua);
 
                 if (isIOS) {
                   event.preventDefault();
-                  window.location.href = 'maps://?q=' + encodeURIComponent(address);
+                  window.location.href = lat && lng
+                    ? 'maps://maps.apple.com/?daddr=' + lat + ',' + lng
+                    : 'maps://maps.apple.com/?q=' + encodeURIComponent(address);
                 } else if (isAndroid) {
                   event.preventDefault();
-                  window.location.href = 'geo:0,0?q=' + encodeURIComponent(address);
+                  window.location.href = lat && lng
+                    ? 'geo:' + lat + ',' + lng + '?q=' + lat + ',' + lng
+                    : 'geo:0,0?q=' + encodeURIComponent(address);
                 }
+                // Desktop: let the default href (Google Maps) handle it
               });
             }
 

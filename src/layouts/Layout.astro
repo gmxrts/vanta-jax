@@ -35,44 +35,42 @@ const year = new Date().getFullYear();
   </head>
 
   <body class={`min-h-screen antialiased${mapLayout ? ' vj-map-body' : ''}`}>
-    <!-- Global header / nav -->
-    <header class="border-b border-slate-200">
-      <div
-        class="mx-auto flex max-w-[1100px] items-center justify-between gap-4 px-4 py-3"
-      >
-        <!-- Wordmark, always links home -->
-        <a href="/" class="flex flex-col items-start gap-0.5" style="align-self:center;">
-          <!-- VANTA wordmark — inherits text color for theme, JAX in brand purple -->
+    <!-- Global header / nav — fixed, matches homepage style -->
+    <header style="position:fixed;top:0;left:0;right:0;z-index:100;background:color-mix(in srgb,var(--bg-secondary) 90%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);transition:background 0.4s ease,border-color 0.4s ease;">
+      <div style="max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0.9rem 2rem;">
+
+        <!-- Wordmark -->
+        <a href="/" style="align-self:center;display:flex;flex-direction:column;gap:1px;text-decoration:none;">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            height="28"
-            viewBox="0 0 160 28"
+            height="24"
+            viewBox="0 0 160 24"
             role="img"
             aria-label="VantaJax"
           >
             <text
               x="0"
-              y="22"
+              y="19"
               font-family="system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif"
               font-weight="800"
-              font-size="22"
+              font-size="19"
               letter-spacing="2"
               fill="currentColor"
             >VANTA<tspan fill="#C9A84C">JAX</tspan></text>
           </svg>
-          <span class="text-[11px] text-slate-500 leading-none hidden md:block">
+          <span class="hidden md:block" style="font-size:10px;color:var(--text-muted);line-height:1;letter-spacing:0.04em;">
             Black-owned · Jacksonville
           </span>
         </a>
 
-        <!-- Primary navigation -->
-        <nav class="flex items-center gap-2">
-          <!-- Auth buttons — always visible -->
+        <!-- Right side: auth + theme toggle + hamburger -->
+        <div style="display:flex;align-items:center;gap:0.15rem;">
+          <!-- Auth — always visible -->
           <a
             id="nav-auth-link"
-            href="/login"
+            href="/dashboard"
             class="rounded-full border border-[#C9A84C] bg-[#C9A84C] px-3 py-1.5 text-[11px] font-semibold text-[#0E0C0A] shadow-sm transition hover:bg-[#8B6914] hover:border-[#8B6914] hover:text-[#FAF8F5]"
-            style="display:none"
+            style="display:none;margin-left:6px;"
           >
             Dashboard
           </a>
@@ -80,23 +78,24 @@ const year = new Date().getFullYear();
             id="nav-login-link"
             href="/login"
             class="rounded-full border border-[#C9A84C] bg-[#C9A84C] px-3 py-1.5 text-[11px] font-semibold text-[#0E0C0A] shadow-sm transition hover:bg-[#8B6914] hover:border-[#8B6914] hover:text-[#FAF8F5]"
+            style="margin-left:6px;"
           >
             Owner login
           </a>
 
-          <!-- Theme toggle — always visible -->
+          <!-- Theme toggle -->
           {!isAdmin && (
             <button
               id="theme-toggle"
               aria-label="Switch to dark mode"
-              style="background:none;border:1px solid var(--border-mid);border-radius:100px;width:34px;height:34px;cursor:pointer;padding:6px;display:inline-flex;align-items:center;justify-content:center;color:inherit;transition:background 150ms ease,border-color 150ms ease;"
+              style="background:none;border:1px solid var(--border-mid);border-radius:100px;width:34px;height:34px;cursor:pointer;padding:6px;display:inline-flex;align-items:center;justify-content:center;color:inherit;transition:background 150ms ease,border-color 150ms ease;margin-left:2px;"
               onmouseover="this.style.background='var(--accent-pale)';this.style.borderColor='var(--accent-border)'"
               onmouseout="this.style.background='none';this.style.borderColor='var(--border-mid)'"
             >
-              <svg class="theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg class="theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
               </svg>
-              <svg class="theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg class="theme-icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="5"/>
                 <line x1="12" y1="1" x2="12" y2="3"/>
                 <line x1="12" y1="21" x2="12" y2="23"/>
@@ -110,8 +109,8 @@ const year = new Date().getFullYear();
             </button>
           )}
 
-          <!-- Hamburger — nav links inside -->
-          <div id="nav-menu-wrap" style="position:relative;display:inline-flex;align-items:center;">
+          <!-- Hamburger — mobile only, contains same links as desktop inline list -->
+          <div id="nav-menu-wrap" class="md:hidden" style="position:relative;display:inline-flex;align-items:center;margin-left:2px;">
             <button
               id="nav-hamburger"
               aria-label="Open menu"
@@ -120,33 +119,34 @@ const year = new Date().getFullYear();
               onmouseover="this.style.background='var(--accent-pale)';this.style.borderColor='var(--accent-border)'"
               onmouseout="if(this.getAttribute('aria-expanded')==='false'){this.style.background='none';this.style.borderColor='var(--border-mid)'}"
             >
-              <span style="display:block;width:14px;height:2px;border-radius:1px;background:currentColor;transition:transform 150ms ease,opacity 150ms ease;" class="ham-bar"></span>
-              <span style="display:block;width:14px;height:2px;border-radius:1px;background:currentColor;transition:transform 150ms ease,opacity 150ms ease;" class="ham-bar"></span>
-              <span style="display:block;width:14px;height:2px;border-radius:1px;background:currentColor;transition:transform 150ms ease,opacity 150ms ease;" class="ham-bar"></span>
+              <span style="display:block;width:14px;height:2px;border-radius:1px;background:currentColor;" class="ham-bar"></span>
+              <span style="display:block;width:14px;height:2px;border-radius:1px;background:currentColor;" class="ham-bar"></span>
+              <span style="display:block;width:14px;height:2px;border-radius:1px;background:currentColor;" class="ham-bar"></span>
             </button>
 
             <div
               id="nav-dropdown"
-              style="display:none;position:absolute;right:0;top:calc(100% + 8px);background:var(--bg-secondary);border:1px solid var(--border-mid);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);padding:6px;min-width:160px;z-index:100;"
+              style="display:none;position:absolute;right:0;top:calc(100% + 8px);background:var(--bg-secondary);border:1px solid var(--border-mid);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);padding:6px;min-width:160px;z-index:200;"
             >
-              <a href="/about"         class="nav-drop-item">About</a>
-              <a href="/businesses"    class="nav-drop-item">Browse</a>
+              <a href="/about"            class="nav-drop-item">About</a>
+              <a href="/businesses"       class="nav-drop-item">Browse</a>
               <a href="/suggest-business" class="nav-drop-item">Suggest a business</a>
             </div>
           </div>
-        </nav>
+        </div>
       </div>
     </header>
 
-    <!-- Page content -->
+    <!-- Page content — non-map pages get top padding to clear the fixed header -->
     <main
       class={
         mapLayout
           ? "vj-map-main"
           : fullWidth
-          ? "w-full min-h-[calc(100vh-4rem-3rem)] px-4 py-8"
-          : "mx-auto min-h-[calc(100vh-4rem-3rem)] max-w-[1100px] px-4 py-8"
+          ? "w-full min-h-[calc(100vh-4rem-3rem)] px-4 pb-8"
+          : "mx-auto min-h-[calc(100vh-4rem-3rem)] max-w-[1100px] px-4 pb-8"
       }
+      style={!mapLayout ? "padding-top:calc(var(--nav-h) + 2rem)" : ""}
     >
       <slot />
     </main>
