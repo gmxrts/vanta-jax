@@ -4,6 +4,7 @@ import { getCategories } from "../lib/categories";
 import { requestUserLocation, getBusinessesNearby } from "../lib/geo";
 import { getOpenStatus } from "../lib/hours";
 import BusinessMiniCard from "./BusinessMiniCard";
+import BusinessListRowLink from "./BusinessListRow";
 import type { Business } from "../lib/types";
 import type { Category } from "../lib/types";
 
@@ -42,8 +43,16 @@ function nearestSnap(h: number): number {
   );
 }
 
-function passesFilter(b: Business, activeCategory: string, searchQuery: string): boolean {
+function passesFilter(
+  b: Business,
+  activeCategory: string,
+  searchQuery: string,
+  verifiedOnly: boolean,
+  womanOwned: boolean,
+): boolean {
   if (activeCategory && b.category !== activeCategory) return false;
+  if (verifiedOnly && !b.verified) return false;
+  if (womanOwned && !b.woman_owned) return false;
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
     return (
@@ -90,6 +99,14 @@ export default function BusinessMapDiscovery() {
   const toggleSection = useCallback((key: "location" | "service" | "online") => {
     setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
   }, []);
+
+  const [viewMode, setViewMode] = useState<"map" | "list">("map");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [womanOwned, setWomanOwned] = useState(false);
+
+  const activeFilterCount =
+    (activeCategory ? 1 : 0) + (verifiedOnly ? 1 : 0) + (womanOwned ? 1 : 0);
 
   const [sheetHeight, setSheetHeight] = useState(SNAP_PEEK);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -288,9 +305,9 @@ export default function BusinessMapDiscovery() {
   const listBusinesses = useMemo(
     () =>
       businesses.filter(
-        (b) => b.business_type !== "online_only" && passesFilter(b, activeCategory, searchQuery)
+        (b) => b.business_type !== "online_only" && passesFilter(b, activeCategory, searchQuery, verifiedOnly, womanOwned)
       ),
-    [businesses, activeCategory, searchQuery]
+    [businesses, activeCategory, searchQuery, verifiedOnly, womanOwned]
   );
 
   // Subset of listBusinesses that have coordinates → get map pins
@@ -302,9 +319,9 @@ export default function BusinessMapDiscovery() {
   const onlineBusinesses = useMemo(
     () =>
       businesses.filter(
-        (b) => b.business_type === "online_only" && passesFilter(b, activeCategory, searchQuery)
+        (b) => b.business_type === "online_only" && passesFilter(b, activeCategory, searchQuery, verifiedOnly, womanOwned)
       ),
-    [businesses, activeCategory, searchQuery]
+    [businesses, activeCategory, searchQuery, verifiedOnly, womanOwned]
   );
 
   // Keep features ref current for use in setupMapLayers after style switch
@@ -484,6 +501,31 @@ export default function BusinessMapDiscovery() {
     [displayList]
   );
 
+  // All businesses matching current filters (used in list view)
+  const allFilteredBusinesses = useMemo(
+    () => businesses.filter((b) => passesFilter(b, activeCategory, searchQuery, verifiedOnly, womanOwned)),
+    [businesses, activeCategory, searchQuery, verifiedOnly, womanOwned]
+  );
+
+  // Resize map when returning to map mode (was hidden)
+  useEffect(() => {
+    if (viewMode === "map" && mapRef.current) {
+      requestAnimationFrame(() => { mapRef.current?.resize(); });
+    }
+  }, [viewMode]);
+
+  // Close filter dropdown on outside click
+  useEffect(() => {
+    if (!filterOpen) return;
+    const handleMouseDown = (e: MouseEvent) => {
+      if (!(e.target as Element).closest(".vj-filter-ui")) {
+        setFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [filterOpen]);
+
   const sheetHeaderText = (() => {
     const main = userCoords
       ? `${listBusinesses.length} places nearby · sorted by distance`
@@ -495,24 +537,119 @@ export default function BusinessMapDiscovery() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
+    <>
+      <style>{`
+        .vj-view-toggle-label { display: inline; }
+        @media (max-width: 639px) { .vj-view-toggle-label { display: none; } }
+        @keyframes vj-dropdown-in {
+          from { opacity: 0; transform: translateY(-8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .vj-filter-dropdown { animation: vj-dropdown-in 150ms ease-out forwards; }
+      `}</style>
     <div className="vj-map-layout" style={{ position: "relative" }}>
 
-      {/* ── Desktop sidebar ── */}
-      {!isMobile && (
+      {/* ── List mode: full-width panel (no map) ── */}
+      {viewMode === "list" && (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+          {/* Header: search + toggle + filters */}
+          <div style={{
+            flexShrink: 0, padding: "16px 16px 8px",
+            background: "var(--bg-secondary)",
+            borderBottom: "1px solid var(--border-mid)",
+            position: "relative",
+          }}>
+            {/* Row 1: full-width search */}
+            <div style={{ marginBottom: 8 }}>
+              <SearchBar value={searchQuery} onChange={setSearchQuery} />
+            </div>
+            {/* Row 2: filters + toggle + count */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: 8 }} className="vj-filter-ui">
+              <FiltersButton
+                count={activeFilterCount}
+                open={filterOpen}
+                onToggle={() => setFilterOpen((v) => !v)}
+              />
+              <ViewToggleButton mode={viewMode} onToggle={setViewMode} />
+              <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500, marginLeft: "auto" }}>
+                {isLoading ? "Loading…" : `${allFilteredBusinesses.length} business${allFilteredBusinesses.length === 1 ? "" : "es"}`}
+              </span>
+            </div>
+            {/* Dropdown — positioned relative to header container */}
+            {filterOpen && (
+              <FilterDropdown
+                categories={categories}
+                activeCategory={activeCategory}
+                setActiveCategory={setActiveCategory}
+                verifiedOnly={verifiedOnly}
+                setVerifiedOnly={setVerifiedOnly}
+                womanOwned={womanOwned}
+                setWomanOwned={setWomanOwned}
+                onClose={() => setFilterOpen(false)}
+                onClear={() => { setActiveCategory(""); setVerifiedOnly(false); setWomanOwned(false); }}
+              />
+            )}
+          </div>
+          {/* Scrollable list */}
+          <div style={{ flex: 1, overflowY: "auto" }}>
+            {allFilteredBusinesses.map((b, i) => (
+              <BusinessListRowLink
+                key={b.id}
+                business={b}
+                distanceMeters={(b as any).dist_meters ?? null}
+                isLast={i === allFilteredBusinesses.length - 1}
+              />
+            ))}
+            {!isLoading && allFilteredBusinesses.length === 0 && (
+              <p style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", marginTop: 24, padding: "0 16px" }}>
+                No businesses found.{" "}
+                <a href="/suggest-business" style={{ color: "var(--accent)" }}>Suggest one</a>
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Desktop sidebar (map mode only) ── */}
+      {!isMobile && viewMode === "map" && (
         <aside style={{
           width: 320, flexShrink: 0,
           display: "flex", flexDirection: "column",
           borderRight: "1px solid var(--border-mid)",
           background: "var(--bg-secondary)",
-          overflow: "hidden",
         }}>
           <>
-            <div style={{ padding: "16px 12px 0" }}>
+            <div style={{ padding: "16px 12px 8px", position: "relative" }}>
               <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500, marginBottom: 10 }}>
                 {isLoading ? "Loading…" : sheetHeaderText}
               </div>
+              {/* Row 1: full-width search */}
+              <div style={{ marginBottom: 8 }}>
                 <SearchBar value={searchQuery} onChange={setSearchQuery} />
-                <CategoryPills categories={categories} active={activeCategory} onSelect={setActiveCategory} />
+              </div>
+              {/* Row 2: filters + toggle */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }} className="vj-filter-ui">
+                <FiltersButton
+                  count={activeFilterCount}
+                  open={filterOpen}
+                  onToggle={() => setFilterOpen((v) => !v)}
+                />
+                <ViewToggleButton mode={viewMode} onToggle={setViewMode} />
+              </div>
+              {/* Dropdown — positioned relative to the padding container */}
+              {filterOpen && (
+                <FilterDropdown
+                  categories={categories}
+                  activeCategory={activeCategory}
+                  setActiveCategory={setActiveCategory}
+                  verifiedOnly={verifiedOnly}
+                  setVerifiedOnly={setVerifiedOnly}
+                  womanOwned={womanOwned}
+                  setWomanOwned={setWomanOwned}
+                  onClose={() => setFilterOpen(false)}
+                  onClear={() => { setActiveCategory(""); setVerifiedOnly(false); setWomanOwned(false); }}
+                />
+              )}
               </div>
               <div style={{ flex: 1, overflowY: "auto", paddingBottom: 8, marginTop: 8 }}>
                 {locationList.length > 0 && (
@@ -602,18 +739,42 @@ export default function BusinessMapDiscovery() {
         </aside>
       )}
 
-      {/* ── Map area ── */}
-      <div style={{ flex: 1, position: "relative" }}>
+      {/* ── Map area — always in DOM so Mapbox stays initialized; hidden in list mode ── */}
+      <div style={{ flex: 1, position: "relative", display: viewMode === "list" ? "none" : undefined }}>
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-        {/* Mobile: floating search + pills */}
+        {/* Mobile: floating search + filters + toggle */}
         {isMobile && (
           <div style={{
             position: "absolute", top: 12, left: 12, right: 12, zIndex: 20,
             display: "flex", flexDirection: "column", gap: 8,
           }}>
+            {/* Row 1: full-width search */}
             <SearchBar value={searchQuery} onChange={setSearchQuery} />
-            <CategoryPills categories={categories} active={activeCategory} onSelect={setActiveCategory} />
+            {/* Row 2: filters + toggle */}
+            <div style={{ position: "relative" }} className="vj-filter-ui">
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <FiltersButton
+                  count={activeFilterCount}
+                  open={filterOpen}
+                  onToggle={() => setFilterOpen((v) => !v)}
+                />
+                <ViewToggleButton mode={viewMode} onToggle={setViewMode} />
+              </div>
+              {filterOpen && (
+                <FilterDropdown
+                  categories={categories}
+                  activeCategory={activeCategory}
+                  setActiveCategory={setActiveCategory}
+                  verifiedOnly={verifiedOnly}
+                  setVerifiedOnly={setVerifiedOnly}
+                  womanOwned={womanOwned}
+                  setWomanOwned={setWomanOwned}
+                  onClose={() => setFilterOpen(false)}
+                  onClear={() => { setActiveCategory(""); setVerifiedOnly(false); setWomanOwned(false); }}
+                />
+              )}
+            </div>
           </div>
         )}
 
@@ -791,6 +952,7 @@ export default function BusinessMapDiscovery() {
         )}
       </div>
     </div>
+    </>
   );
 }
 
@@ -1105,6 +1267,289 @@ function BusinessListRow({
         <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", flexShrink: 0 }} />
       )}
     </button>
+  );
+}
+
+// ─── FiltersButton ────────────────────────────────────────────────────────────
+function FiltersButton({
+  count,
+  open,
+  onToggle,
+}: {
+  count: number;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const hasFilters = count > 0;
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="vj-filter-ui"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        padding: "7px 14px",
+        borderRadius: 100,
+        border: `1px solid ${hasFilters ? "var(--accent-border)" : "var(--border-mid)"}`,
+        background: hasFilters ? "var(--accent-pale)" : "var(--bg-secondary)",
+        color: hasFilters ? "var(--accent)" : "var(--text-secondary)",
+        fontSize: 12,
+        fontWeight: 600,
+        cursor: "pointer",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+        transition: "border-color 0.15s, background 0.15s, color 0.15s",
+      }}
+    >
+      {/* SlidersHorizontal icon */}
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/>
+        <line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/>
+        <line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/>
+        <line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>
+      </svg>
+      {hasFilters ? `Filters · ${count}` : "Filters"}
+    </button>
+  );
+}
+
+// ─── FilterDropdown ───────────────────────────────────────────────────────────
+function FilterDropdown({
+  categories,
+  activeCategory,
+  setActiveCategory,
+  verifiedOnly,
+  setVerifiedOnly,
+  womanOwned,
+  setWomanOwned,
+  onClose,
+  onClear,
+}: {
+  categories: Category[];
+  activeCategory: string;
+  setActiveCategory: (v: string) => void;
+  verifiedOnly: boolean;
+  setVerifiedOnly: (v: boolean) => void;
+  womanOwned: boolean;
+  setWomanOwned: (v: boolean) => void;
+  onClose: () => void;
+  onClear: () => void;
+}) {
+  return (
+    <div
+      className="vj-filter-dropdown vj-filter-ui"
+      style={{
+        position: "absolute",
+        top: "calc(100% + 8px)",
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        background: "var(--bg-secondary)",
+        border: "1px solid var(--border-mid)",
+        borderRadius: 16,
+        boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+        padding: "16px",
+        minWidth: 260,
+      }}
+    >
+      {/* Category */}
+      <div style={{ marginBottom: 14 }}>
+        <div style={{
+          fontSize: 10, fontWeight: 700, letterSpacing: "0.08em",
+          textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 8,
+        }}>
+          Category
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {[{ slug: "", label: "All" }, ...categories].map((c) => {
+            const isActive = activeCategory === c.slug;
+            return (
+              <button
+                key={c.slug}
+                type="button"
+                onClick={() => setActiveCategory(isActive && c.slug !== "" ? "" : c.slug)}
+                style={{
+                  padding: "5px 12px",
+                  borderRadius: 100,
+                  border: isActive ? "1px solid var(--accent)" : "1px solid var(--border-mid)",
+                  background: isActive ? "var(--accent)" : "var(--bg-primary)",
+                  color: isActive ? "#0E0C0A" : "var(--text-secondary)",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "background 0.15s, color 0.15s, border-color 0.15s",
+                }}
+              >
+                {c.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Verified + Woman-owned toggles */}
+      <ToggleRow
+        label="Verified businesses only"
+        active={verifiedOnly}
+        onToggle={() => setVerifiedOnly(!verifiedOnly)}
+      />
+      <ToggleRow
+        label="Woman-owned"
+        active={womanOwned}
+        onToggle={() => setWomanOwned(!womanOwned)}
+        last
+      />
+
+      {/* Footer */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            flex: 1,
+            padding: "10px",
+            borderRadius: 100,
+            background: "var(--accent)",
+            color: "#0E0C0A",
+            fontWeight: 700,
+            fontSize: 14,
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          Show results
+        </button>
+        <button
+          type="button"
+          onClick={onClear}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "var(--text-muted)",
+            fontSize: 12,
+            fontWeight: 500,
+            whiteSpace: "nowrap",
+            padding: "0 4px",
+          }}
+        >
+          Clear all
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── ToggleRow ────────────────────────────────────────────────────────────────
+function ToggleRow({
+  label,
+  active,
+  onToggle,
+  last = false,
+}: {
+  label: string;
+  active: boolean;
+  onToggle: () => void;
+  last?: boolean;
+}) {
+  return (
+    <div style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "10px 0",
+      borderBottom: last ? "none" : "1px solid var(--border)",
+    }}>
+      <span style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>
+        {label}
+      </span>
+      <button
+        type="button"
+        onClick={onToggle}
+        style={{
+          padding: "4px 14px",
+          borderRadius: 100,
+          border: active ? "1px solid var(--accent)" : "1px solid var(--border-mid)",
+          background: active ? "var(--accent)" : "transparent",
+          color: active ? "#0E0C0A" : "var(--text-secondary)",
+          fontSize: 11,
+          fontWeight: 600,
+          cursor: "pointer",
+          transition: "background 0.15s, color 0.15s, border-color 0.15s",
+          flexShrink: 0,
+        }}
+      >
+        {active ? "On" : "Off"}
+      </button>
+    </div>
+  );
+}
+
+// ─── ViewToggleButton ─────────────────────────────────────────────────────────
+function ViewToggleButton({
+  mode,
+  onToggle,
+}: {
+  mode: "map" | "list";
+  onToggle: (m: "map" | "list") => void;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        borderRadius: 100,
+        border: "1px solid var(--border-mid)",
+        background: "var(--bg-secondary)",
+        padding: "3px",
+        gap: 2,
+        flexShrink: 0,
+        boxShadow: "0 2px 8px rgba(0,0,0,0.10)",
+      }}
+    >
+      {(["map", "list"] as const).map((m) => (
+        <button
+          key={m}
+          type="button"
+          onClick={() => onToggle(m)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 5,
+            borderRadius: 100,
+            padding: "7px 13px",
+            fontSize: 12,
+            fontWeight: 600,
+            background: mode === m ? "var(--accent)" : "transparent",
+            color: mode === m ? "#0E0C0A" : "var(--text-secondary)",
+            border: "none",
+            cursor: "pointer",
+            transition: "background 0.15s ease, color 0.15s ease",
+          }}
+        >
+          {m === "map" ? (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
+              <line x1="9" y1="3" x2="9" y2="18"/>
+              <line x1="15" y1="6" x2="15" y2="21"/>
+            </svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="8" y1="6" x2="21" y2="6"/>
+              <line x1="8" y1="12" x2="21" y2="12"/>
+              <line x1="8" y1="18" x2="21" y2="18"/>
+              <line x1="3" y1="6" x2="3.01" y2="6"/>
+              <line x1="3" y1="12" x2="3.01" y2="12"/>
+              <line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+          )}
+          <span className="vj-view-toggle-label">
+            {m === "map" ? "Map" : "List"}
+          </span>
+        </button>
+      ))}
+    </div>
   );
 }
 
