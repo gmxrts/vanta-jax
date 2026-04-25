@@ -4,6 +4,8 @@ import { supabase } from "../lib/supabaseClient";
 import { getCategories } from "../lib/categories";
 import type { Category } from "../lib/types";
 
+import BusinessListRow from "./BusinessListRow";
+
 const BrowseMapView = lazy(() => import("./BrowseMapView"));
 
 type Business = {
@@ -30,6 +32,10 @@ type Business = {
   // Coordinates
   latitude?: number | null;
   longitude?: number | null;
+  // Additional fields from DB
+  logo_path?: string | null;
+  hours?: Record<string, { open: string; close: string } | null> | null;
+  dist_meters?: number | null;
 };
 
 const PAGE_SIZE = 12;
@@ -85,7 +91,7 @@ export default function BusinessSearch() {
   const [loadingDirectory, setLoadingDirectory] = useState(true);
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [viewMode, setViewMode] = useState<"list" | "map">("map");
   const [currentPage, setCurrentPage] = useState(0);
 
   useEffect(() => {
@@ -322,6 +328,11 @@ export default function BusinessSearch() {
   })();
 
   return (
+    <>
+      <style>{`
+        .vj-view-toggle-label { display: inline; }
+        @media (max-width: 639px) { .vj-view-toggle-label { display: none; } }
+      `}</style>
     <div className="w-full flex flex-col items-center gap-8">
       {/* PRIMARY SEARCH AREA */}
       <form
@@ -329,41 +340,121 @@ export default function BusinessSearch() {
         className="w-full max-w-2xl flex flex-col items-center gap-4"
       >
         <div className="w-full">
-          <div className="relative">
-            <div className="vj-searchbar-sheen" />
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Search businesses, services, or categories…"
-              className="vj-searchbar vj-rounded-full"
-            />
-            <button
-              type="submit"
-              className="vj-searchbar-icon-btn"
-              aria-label={loading ? "Searching…" : "Search"}
-              disabled={loading}
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                aria-hidden="true"
+          {/* Stat line */}
+          <p style={{ color: "var(--text-muted)", fontSize: 13, fontFamily: "'DM Sans', sans-serif", marginBottom: 8, lineHeight: 1.4 }}>
+            {activeList.length} business{activeList.length === 1 ? "" : "es"} · Jacksonville, FL
+          </p>
+          <div style={{ width: "100%", height: 1, background: "rgba(201,168,76,0.3)", marginBottom: 12 }} />
+          {/* Search input row — toggle lives here, right-aligned */}
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <div className="vj-searchbar-sheen" />
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Search businesses, services, or categories…"
+                className="vj-searchbar vj-rounded-full"
+              />
+              <button
+                type="submit"
+                className="vj-searchbar-icon-btn"
+                aria-label={loading ? "Searching…" : "Search"}
+                disabled={loading}
               >
-                <path
-                  d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-                <path
-                  d="M16.5 16.5 21 21"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M16.5 16.5 21 21"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* View mode toggle — inline with search bar */}
+            {MAPBOX_TOKEN && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  borderRadius: 100,
+                  border: "1px solid var(--border-mid)",
+                  background: "var(--bg-secondary)",
+                  padding: "3px",
+                  gap: 2,
+                  flexShrink: 0,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setViewMode("map")}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    borderRadius: 100,
+                    padding: "7px 13px",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    background: viewMode === "map" ? "var(--accent)" : "transparent",
+                    color: viewMode === "map" ? "#0E0C0A" : "var(--text-secondary)",
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "background 0.15s ease, color 0.15s ease",
+                  }}
+                >
+                  {/* Lucide Map icon */}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
+                    <line x1="9" y1="3" x2="9" y2="18"/>
+                    <line x1="15" y1="6" x2="15" y2="21"/>
+                  </svg>
+                  <span className="vj-view-toggle-label">Map</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    borderRadius: 100,
+                    padding: "7px 13px",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    background: viewMode === "list" ? "var(--accent)" : "transparent",
+                    color: viewMode === "list" ? "#0E0C0A" : "var(--text-secondary)",
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "background 0.15s ease, color 0.15s ease",
+                  }}
+                >
+                  {/* Lucide List icon */}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <line x1="8" y1="6" x2="21" y2="6"/>
+                    <line x1="8" y1="12" x2="21" y2="12"/>
+                    <line x1="8" y1="18" x2="21" y2="18"/>
+                    <line x1="3" y1="6" x2="3.01" y2="6"/>
+                    <line x1="3" y1="12" x2="3.01" y2="12"/>
+                    <line x1="3" y1="18" x2="3.01" y2="18"/>
+                  </svg>
+                  <span className="vj-view-toggle-label">List</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {(location || category || verifiedOnly || womanOwned || hasSearched) && (
@@ -420,33 +511,6 @@ export default function BusinessSearch() {
             Woman-owned
           </button>
 
-          {MAPBOX_TOKEN && (
-            <div className="flex items-center rounded-full border border-slate-200 bg-white/80 p-0.5 shadow-sm">
-              <button
-                type="button"
-                onClick={() => setViewMode("list")}
-                className={`rounded-full px-3 py-1 text-[11px] font-semibold transition ${
-                  viewMode === "list"
-                    ? "bg-slate-900 text-white"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                List
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("map")}
-                className={`rounded-full px-3 py-1 text-[11px] font-semibold transition ${
-                  viewMode === "map"
-                    ? "bg-slate-900 text-white"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                Map
-              </button>
-            </div>
-          )}
-
           <span className="text-[11px] text-slate-500">
             Searches are focused on Jacksonville, FL.
           </span>
@@ -495,8 +559,6 @@ export default function BusinessSearch() {
                   ? "Loading…"
                   : activeList.length === 0
                   ? hasSearched ? "No businesses found" : ""
-                  : totalPages > 1
-                  ? `Showing ${currentPage * PAGE_SIZE + 1}–${Math.min((currentPage + 1) * PAGE_SIZE, activeList.length)} of ${activeList.length}`
                   : `${activeList.length} business${activeList.length === 1 ? "" : "es"}`}
               </span>
             </div>
@@ -542,68 +604,41 @@ export default function BusinessSearch() {
             </Suspense>
           )}
 
-          {/* List view */}
-          {viewMode === "list" && !loading && !loadingDirectory && displayList.length > 0 && (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {displayList.map((b) => renderBusinessCard(b))}
-            </div>
-          )}
-
-          {/* Pagination */}
-          {viewMode === "list" && !loading && !loadingDirectory && totalPages > 1 && (
-            <div className="flex items-center justify-center gap-1.5 pt-2">
-              <button
-                type="button"
-                onClick={() => { setCurrentPage(p => p - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                disabled={currentPage === 0}
-                className="px-3 py-1.5 text-[11px] font-semibold rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+          {/* List view — compact scrollable rows */}
+          {viewMode === "list" && !loading && !loadingDirectory && (
+            activeList.length === 0 ? (
+              <p className="text-[11px] text-slate-500">
+                {hasSearched
+                  ? "Can't find what you're looking for? "
+                  : "No businesses in the directory yet. "}
+                <a
+                  href="/suggest-business"
+                  className="text-[#C9A84C] underline underline-offset-2 hover:text-[#8B6914]"
+                >
+                  Suggest a business.
+                </a>
+              </p>
+            ) : (
+              <div
+                style={{
+                  overflowY: "auto",
+                  maxHeight: "calc(100vh - 320px)",
+                  minHeight: 300,
+                  borderRadius: 16,
+                  border: "1px solid var(--border)",
+                  background: "var(--bg-secondary)",
+                }}
               >
-                ← Prev
-              </button>
-
-              {pageNumbers.map((p, idx) =>
-                p === "…" ? (
-                  <span key={`ellipsis-${idx}`} className="w-7 text-center text-[11px] text-slate-400">…</span>
-                ) : (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => { setCurrentPage(p as number); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                    className={`w-7 h-7 text-[11px] font-semibold rounded-full transition ${
-                      p === currentPage
-                        ? "bg-[#C9A84C] text-[#0E0C0A]"
-                        : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                    }`}
-                  >
-                    {(p as number) + 1}
-                  </button>
-                )
-              )}
-
-              <button
-                type="button"
-                onClick={() => { setCurrentPage(p => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                disabled={currentPage === totalPages - 1}
-                className="px-3 py-1.5 text-[11px] font-semibold rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
-              >
-                Next →
-              </button>
-            </div>
-          )}
-
-          {/* Empty state */}
-          {viewMode === "list" && !loading && !loadingDirectory && activeList.length === 0 && (
-            <p className="text-[11px] text-slate-500">
-              {hasSearched
-                ? "Can't find what you're looking for? "
-                : "No businesses in the directory yet. "}
-              <a
-                href="/suggest-business"
-                className="text-[#C9A84C] underline underline-offset-2 hover:text-[#8B6914]"
-              >
-                Suggest a business.
-              </a>
-            </p>
+                {activeList.map((b, i) => (
+                  <BusinessListRow
+                    key={b.id}
+                    business={b as Parameters<typeof BusinessListRow>[0]["business"]}
+                    distanceMeters={b.dist_meters}
+                    isLast={i === activeList.length - 1}
+                  />
+                ))}
+              </div>
+            )
           )}
         </section>
       )}
@@ -620,5 +655,6 @@ export default function BusinessSearch() {
           </p>
         )}
     </div>
+    </>
   );
 }
