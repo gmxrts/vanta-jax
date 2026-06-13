@@ -1,5 +1,4 @@
 import BusinessAvatar from "./BusinessAvatar";
-import { getOpenStatus } from "../lib/hours";
 import type { Business } from "../lib/types";
 
 function formatCategory(slug: string | null | undefined): string {
@@ -63,8 +62,7 @@ export default function BusinessMiniCard({
   isDesktop = false,
   onClose,
 }: Props) {
-  const openStatus = getOpenStatus(b.hours);
-  const logoUrl = b.logo_path
+const logoUrl = b.logo_path
     ? `${SUPABASE_URL}/storage/v1/object/public/business-logos/${b.logo_path}`
     : b.logo_url ?? null;
 
@@ -163,11 +161,6 @@ export default function BusinessMiniCard({
             {distanceMeters != null && (
               <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
                 {formatDistance(distanceMeters)}
-              </span>
-            )}
-            {b.hours && (
-              <span style={{ fontSize: 11, fontWeight: 600, color: openStatus.isOpen ? "#047857" : "var(--text-muted)" }}>
-                {openStatus.label}
               </span>
             )}
           </div>

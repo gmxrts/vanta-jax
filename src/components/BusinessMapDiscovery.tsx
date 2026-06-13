@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { getCategories } from "../lib/categories";
 import { requestUserLocation, getBusinessesNearby } from "../lib/geo";
-import { getOpenStatus } from "../lib/hours";
 import BusinessMiniCard from "./BusinessMiniCard";
 import BusinessListRowLink from "./BusinessListRow";
 import type { Business } from "../lib/types";
@@ -169,7 +168,20 @@ export default function BusinessMapDiscovery() {
 
         try {
           const nearby = await getBusinessesNearby(loc.lat, loc.lng, "Jacksonville");
-          if (nearby.length > 0) setBusinesses(nearby);
+          if (nearby.length > 0) {
+            // Attach dist_meters from the nearby results without dropping businesses outside the radius
+            const distMap = new Map(nearby.map((b) => [b.id, (b as any).dist_meters as number]));
+            setBusinesses((prev) => {
+              const enriched = prev.map((b) =>
+                distMap.has(b.id) ? { ...b, dist_meters: distMap.get(b.id) } : b
+              );
+              return enriched.sort((a, b) => {
+                const da = (a as any).dist_meters ?? Infinity;
+                const db = (b as any).dist_meters ?? Infinity;
+                return da - db;
+              });
+            });
+          }
         } catch {}
 
         const map = mapRef.current;
@@ -1189,8 +1201,7 @@ function BusinessListRow({
 }) {
   const dist = (b as any).dist_meters;
   const miles = dist != null && hasLocation ? `${(dist / 1609.34).toFixed(1)} mi` : null;
-  const openStatus = b.hours ? getOpenStatus(b.hours) : null;
-  const isService = b.business_type === "service_based";
+const isService = b.business_type === "service_based";
 
   return (
     <button
@@ -1242,23 +1253,6 @@ function BusinessListRow({
           )}
           {miles && (
             <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{miles}</span>
-          )}
-          {openStatus && (
-            openStatus.isOpen ? (
-              <span style={{
-                fontSize: 11, fontWeight: 600,
-                background: "var(--color-success-bg, #D1FAE5)",
-                color: "var(--color-success-text, #047857)",
-                borderRadius: 10,
-                padding: "2px 8px",
-              }}>
-                Open
-              </span>
-            ) : (
-              <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                Closed
-              </span>
-            )
           )}
         </div>
       </div>

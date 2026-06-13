@@ -1,5 +1,4 @@
 import { businessLogoUrl } from "../lib/storage";
-import { getOpenStatus } from "../lib/hours";
 import type { Business } from "../lib/types";
 
 const WARM_COLORS = ['#F4E4C1', '#D4E8D4', '#E4D4E8', '#D4E4F4', '#F4D4D4', '#D4F4E8', '#F4F0D4', '#E8D4D4'];
@@ -34,8 +33,7 @@ function formatCategory(slug: string | null | undefined): string {
 }
 
 export default function BusinessListRow({ business: b, distanceMeters, isLast = false }: Props) {
-  const openStatus = b.hours ? getOpenStatus(b.hours) : null;
-  const logoUrl = businessLogoUrl(b.logo_path, { width: 80, quality: 85 }) ?? b.logo_url ?? null;
+const logoUrl = businessLogoUrl(b.logo_path, { width: 80, quality: 85 }) ?? b.logo_url ?? null;
   const dist = distanceMeters ?? b.dist_meters ?? null;
 
   const initials =
@@ -206,17 +204,6 @@ export default function BusinessListRow({ business: b, distanceMeters, isLast = 
         {dist != null && (
           <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>
             {formatDistance(dist)}
-          </span>
-        )}
-        {openStatus?.isOpen && (
-          <span
-            style={{
-              fontSize: 10,
-              fontWeight: 600,
-              color: "#047857",
-            }}
-          >
-            Open now
           </span>
         )}
         <svg
