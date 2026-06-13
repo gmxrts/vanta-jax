@@ -40,6 +40,8 @@ export const POST: APIRoute = async ({ request }) => {
     description,
     verified,
     woman_owned,
+    african_diaspora,
+    caribbean_diaspora,
     latitude,
     longitude,
     business_type,
@@ -72,6 +74,8 @@ export const POST: APIRoute = async ({ request }) => {
     website: website || null,
     verified: typeof verified === 'boolean' ? verified : true,
     woman_owned: typeof woman_owned === 'boolean' ? woman_owned : false,
+    african_diaspora: typeof african_diaspora === 'boolean' ? african_diaspora : false,
+    caribbean_diaspora: typeof caribbean_diaspora === 'boolean' ? caribbean_diaspora : false,
   };
 
   // Phase 3 fields

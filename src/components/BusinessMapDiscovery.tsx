@@ -604,8 +604,12 @@ export default function BusinessMapDiscovery() {
                 setVerifiedOnly={setVerifiedOnly}
                 womanOwned={womanOwned}
                 setWomanOwned={setWomanOwned}
+                africanDiaspora={africanDiaspora}
+                setAfricanDiaspora={setAfricanDiaspora}
+                caribbeanDiaspora={caribbeanDiaspora}
+                setCaribbeanDiaspora={setCaribbeanDiaspora}
                 onClose={() => setFilterOpen(false)}
-                onClear={() => { setActiveCategory(""); setVerifiedOnly(false); setWomanOwned(false); }}
+                onClear={() => { setActiveCategory(""); setVerifiedOnly(false); setWomanOwned(false); setAfricanDiaspora(false); setCaribbeanDiaspora(false); }}
               />
             )}
           </div>
