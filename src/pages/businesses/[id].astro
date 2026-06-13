@@ -184,14 +184,18 @@ const seoMeta = business && !isArchived
 
             <div class="flex flex-wrap items-center gap-2">
               {business.verified && (
-                <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-700 shadow-sm">
-                  Verified
-                </span>
+                <span class="vj-badge-verified shadow-sm">Verified</span>
               )}
               {business.featured && (
                 <span class="inline-flex items-center rounded-full border border-[rgba(201,168,76,0.35)] bg-[#FDF6E3] px-3 py-1 text-[11px] font-semibold text-[#8B6914] shadow-sm">
                   Featured
                 </span>
+              )}
+              {business.african_diaspora && (
+                <span class="vj-badge-african-diaspora shadow-sm">African Diaspora</span>
+              )}
+              {business.caribbean_diaspora && (
+                <span class="vj-badge-caribbean-diaspora shadow-sm">Caribbean Diaspora</span>
               )}
               {business.woman_owned && (
                 <span class="vj-badge-woman-owned shadow-sm">

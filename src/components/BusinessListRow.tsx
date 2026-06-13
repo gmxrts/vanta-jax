@@ -131,26 +131,13 @@ const logoUrl = businessLogoUrl(b.logo_path, { width: 80, quality: 85 }) ?? b.lo
             {b.name}
           </span>
           {b.verified && (
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 2,
-                fontSize: 9,
-                fontWeight: 700,
-                background: "#D1FAE5",
-                color: "#047857",
-                border: "1px solid #6EE7B7",
-                borderRadius: 100,
-                padding: "1px 5px",
-                flexShrink: 0,
-              }}
-            >
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              Verified
-            </span>
+            <span className="vj-badge-verified" style={{ flexShrink: 0 }}>Verified</span>
+          )}
+          {b.african_diaspora && (
+            <span className="vj-badge-african-diaspora" style={{ flexShrink: 0 }}>African Diaspora</span>
+          )}
+          {b.caribbean_diaspora && (
+            <span className="vj-badge-caribbean-diaspora" style={{ flexShrink: 0 }}>Caribbean Diaspora</span>
           )}
           {b.woman_owned && (
             <span

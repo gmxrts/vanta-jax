@@ -52,6 +52,8 @@ type LiveBusiness = {
   featured: boolean | null;
   woman_owned: boolean | null;
   woman_owned_requested: boolean | null;
+  african_diaspora: boolean | null;
+  caribbean_diaspora: boolean | null;
   business_type: string | null;
   is_address_public: boolean | null;
   public_location_label: string | null;
@@ -849,6 +851,8 @@ function EditForm({
         (fd.get("public_location_label") as string)?.trim() || null,
       verified: fd.get("verified") === "on",
       woman_owned: fd.get("woman_owned") === "on",
+      african_diaspora: fd.get("african_diaspora") === "on",
+      caribbean_diaspora: fd.get("caribbean_diaspora") === "on",
       instagram_url: instagramUrl.trim() || null,
       facebook_url: facebookUrl.trim() || null,
       tiktok_url: tiktokUrl.trim() || null,
@@ -1184,6 +1188,22 @@ function EditForm({
             />
             <span className="text-[12px] text-slate-700">Woman-Owned</span>
           </label>
+          <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
+            <input
+              type="checkbox"
+              name="african_diaspora"
+              className="h-4 w-4 accent-green-700"
+            />
+            <span className="text-[12px] text-slate-700">African Diaspora</span>
+          </label>
+          <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
+            <input
+              type="checkbox"
+              name="caribbean_diaspora"
+              className="h-4 w-4 accent-blue-700"
+            />
+            <span className="text-[12px] text-slate-700">Caribbean Diaspora</span>
+          </label>
         </div>
 
         <button
@@ -1290,6 +1310,8 @@ function EditListingForm({
       verified: fd.get("verified") === "on",
       featured: fd.get("featured") === "on",
       woman_owned: fd.get("woman_owned") === "on",
+      african_diaspora: fd.get("african_diaspora") === "on",
+      caribbean_diaspora: fd.get("caribbean_diaspora") === "on",
       instagram_url: instagramUrl.trim() || null,
       facebook_url: facebookUrl.trim() || null,
       tiktok_url: tiktokUrl.trim() || null,
@@ -1498,6 +1520,14 @@ function EditListingForm({
           <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
             <input type="checkbox" name="woman_owned" defaultChecked={business.woman_owned ?? false} className="h-4 w-4 accent-pink-500" />
             <span className="text-[12px] text-slate-700">Woman-Owned{business.woman_owned_requested && !business.woman_owned ? " ★ requested" : ""}</span>
+          </label>
+          <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
+            <input type="checkbox" name="african_diaspora" defaultChecked={business.african_diaspora ?? false} className="h-4 w-4 accent-green-700" />
+            <span className="text-[12px] text-slate-700">African Diaspora</span>
+          </label>
+          <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
+            <input type="checkbox" name="caribbean_diaspora" defaultChecked={business.caribbean_diaspora ?? false} className="h-4 w-4 accent-blue-700" />
+            <span className="text-[12px] text-slate-700">Caribbean Diaspora</span>
           </label>
         </div>
         <div className="flex items-center gap-2">
@@ -1793,8 +1823,10 @@ function LiveListings({
                         <span className="rounded-full border border-slate-200 bg-white/60 px-3 py-1 shadow-sm capitalize">{b.category}</span>
                       )}
                       <span className="rounded-full border border-slate-200 bg-white/60 px-3 py-1 shadow-sm">{compactLocation(b.city, b.state)}</span>
-                      {b.verified && <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700 shadow-sm">Verified</span>}
+                      {b.verified && <span className="vj-badge-verified shadow-sm">Verified</span>}
                       {b.featured && <span className="rounded-full border border-[rgba(201,168,76,0.35)] bg-[#FDF6E3] px-3 py-1 text-[#8B6914] shadow-sm">Featured</span>}
+                      {b.african_diaspora && <span className="vj-badge-african-diaspora shadow-sm">African Diaspora</span>}
+                      {b.caribbean_diaspora && <span className="vj-badge-caribbean-diaspora shadow-sm">Caribbean Diaspora</span>}
                       {b.woman_owned && <span className="vj-badge-woman-owned shadow-sm">Woman-Owned</span>}
                       {b.woman_owned_requested && !b.woman_owned && <span className="rounded-full border border-pink-200 bg-pink-50 px-3 py-1 text-pink-600 shadow-sm">WO Requested</span>}
                       {isArchived && <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-700 shadow-sm">Archived</span>}
