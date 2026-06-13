@@ -12,6 +12,8 @@ export interface Business {
   verified: boolean;
   featured: boolean | null;
   woman_owned: boolean | null;
+  african_diaspora: boolean | null;
+  caribbean_diaspora: boolean | null;
   logo_url: string | null;
   business_type: string | null;
   is_address_public: boolean | null;

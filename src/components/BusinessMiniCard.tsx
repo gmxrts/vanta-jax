@@ -129,18 +129,17 @@ const logoUrl = b.logo_path
             </div>
           )}
 
-          {/* Verified + Woman-Owned badges */}
-          {(b.verified || b.woman_owned) && (
+          {/* Badges */}
+          {(b.verified || b.woman_owned || b.african_diaspora || b.caribbean_diaspora) && (
             <div style={{ display: "flex", gap: 4, marginTop: 5, flexWrap: "wrap" }}>
               {b.verified && (
-                <span style={{
-                  fontSize: 10, fontWeight: 700,
-                  background: "#D1FAE5", color: "#047857",
-                  border: "1px solid #6EE7B7",
-                  borderRadius: 100, padding: "1px 6px",
-                }}>
-                  Verified
-                </span>
+                <span className="vj-badge-verified">Verified</span>
+              )}
+              {b.african_diaspora && (
+                <span className="vj-badge-african-diaspora">African Diaspora</span>
+              )}
+              {b.caribbean_diaspora && (
+                <span className="vj-badge-caribbean-diaspora">Caribbean Diaspora</span>
               )}
               {b.woman_owned && (
                 <span style={{

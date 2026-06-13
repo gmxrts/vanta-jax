@@ -233,8 +233,24 @@ body {
   }
 
   .vj-badge-verified {
-    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap
-      border-emerald-300 bg-emerald-100 text-emerald-700;
+    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap;
+    border-color: #9B1C1C;
+    background-color: #450A0A;
+    color: #FDE68A;
+  }
+
+  .vj-badge-african-diaspora {
+    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap;
+    border-color: #3F6212;
+    background-color: #ECFDF5;
+    color: #14532D;
+  }
+
+  .vj-badge-caribbean-diaspora {
+    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap;
+    border-color: #1D4ED8;
+    background-color: #EFF6FF;
+    color: #1E3A8A;
   }
 
   .vj-badge-featured {
@@ -498,11 +514,23 @@ body {
   box-shadow: 0 14px 30px -22px rgba(201,168,76,0.15), -3px 0 0 rgba(201,168,76,0.6);
 }
 
-/* Verified badge: gold tint in dark mode */
+/* Verified badge: keep dark red/gold in dark mode */
 [data-theme="dark"]:not([data-vj-admin]) .vj-badge-verified {
-  border-color: rgba(201,168,76,0.3);
-  background-color: rgba(201,168,76,0.12);
-  color: #C9A84C;
+  border-color: #7F1D1D;
+  background-color: #3D0000;
+  color: #FDE68A;
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-badge-african-diaspora {
+  border-color: #166534;
+  background-color: #052E16;
+  color: #86EFAC;
+}
+
+[data-theme="dark"]:not([data-vj-admin]) .vj-badge-caribbean-diaspora {
+  border-color: #1E40AF;
+  background-color: #1E3A8A;
+  color: #BFDBFE;
 }
 
 /* Featured badge: keep gold in dark mode */

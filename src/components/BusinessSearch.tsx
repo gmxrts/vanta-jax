@@ -81,6 +81,8 @@ export default function BusinessSearch() {
   const [category, setCategory] = useState("");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [womanOwned, setWomanOwned] = useState(false);
+  const [africanDiaspora, setAfricanDiaspora] = useState(false);
+  const [caribbeanDiaspora, setCaribbeanDiaspora] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<Business[]>([]);
@@ -133,11 +135,15 @@ export default function BusinessSearch() {
     category?: string;
     verifiedOnly?: boolean;
     womanOwned?: boolean;
+    africanDiaspora?: boolean;
+    caribbeanDiaspora?: boolean;
   }) => {
     const loc = (opts?.location || "").trim();
     const cat = opts?.category || "";
     const verified = opts?.verifiedOnly || false;
     const wo = opts?.womanOwned || false;
+    const african = opts?.africanDiaspora || false;
+    const caribbean = opts?.caribbeanDiaspora || false;
 
     let query = supabase.from("businesses").select("*").not("is_archived", "is", true);
 
@@ -158,6 +164,14 @@ export default function BusinessSearch() {
 
     if (wo) {
       query = query.eq("woman_owned", true);
+    }
+
+    if (african) {
+      query = query.eq("african_diaspora", true);
+    }
+
+    if (caribbean) {
+      query = query.eq("caribbean_diaspora", true);
     }
 
     const { data, error } = await query
@@ -200,6 +214,8 @@ export default function BusinessSearch() {
         category,
         verifiedOnly,
         womanOwned,
+        africanDiaspora,
+        caribbeanDiaspora,
       });
       setResults(data);
     } catch {
@@ -214,6 +230,8 @@ export default function BusinessSearch() {
     setCategory("");
     setVerifiedOnly(false);
     setWomanOwned(false);
+    setAfricanDiaspora(false);
+    setCaribbeanDiaspora(false);
     setResults([]);
     setHasSearched(false);
     setError(null);
@@ -266,6 +284,8 @@ export default function BusinessSearch() {
               <div className="flex flex-wrap gap-1">
                 {b.verified && <span className="vj-badge-verified">Verified</span>}
                 {b.featured && <span className="vj-badge-featured">Featured</span>}
+                {b.african_diaspora && <span className="vj-badge-african-diaspora">African Diaspora</span>}
+                {b.caribbean_diaspora && <span className="vj-badge-caribbean-diaspora">Caribbean Diaspora</span>}
                 {b.woman_owned && <span className="vj-badge-woman-owned">Woman-Owned</span>}
               </div>
             </div>
@@ -481,7 +501,7 @@ export default function BusinessSearch() {
             )}
           </div>
 
-          {(location || category || verifiedOnly || womanOwned || hasSearched) && (
+          {(location || category || verifiedOnly || womanOwned || africanDiaspora || caribbeanDiaspora || hasSearched) && (
             <div className="mt-3 flex justify-center">
               <button
                 type="button"
@@ -519,7 +539,7 @@ export default function BusinessSearch() {
               onChange={(e) => setVerifiedOnly(e.target.checked)}
               className="vj-checkbox"
             />
-            <span>Verified only</span>
+            <span>Verified Black American Owned</span>
           </label>
 
           <button
@@ -533,6 +553,30 @@ export default function BusinessSearch() {
             style={womanOwned ? { backgroundColor: "var(--color-woman-owned-bg)" } : {}}
           >
             Woman-owned
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAfricanDiaspora(!africanDiaspora)}
+            className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium transition ${
+              africanDiaspora
+                ? "border-[#3F6212] bg-[#ECFDF5] text-[#14532D]"
+                : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+            }`}
+          >
+            African Diaspora
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCaribbeanDiaspora(!caribbeanDiaspora)}
+            className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium transition ${
+              caribbeanDiaspora
+                ? "border-[#1D4ED8] bg-[#EFF6FF] text-[#1E3A8A]"
+                : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+            }`}
+          >
+            Caribbean Diaspora
           </button>
 
           <span className="text-[11px] text-slate-500">

@@ -96,10 +96,13 @@ export default function BusinessCard({ business: b }: Props) {
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
             {b.verified && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 9, fontWeight: 700, background: "#D1FAE5", color: "#047857", border: "1px solid #6EE7B7", borderRadius: 100, padding: "1px 5px" }}>
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
-                Verified
-              </span>
+              <span className="vj-badge-verified">Verified</span>
+            )}
+            {b.african_diaspora && (
+              <span className="vj-badge-african-diaspora">African Diaspora</span>
+            )}
+            {b.caribbean_diaspora && (
+              <span className="vj-badge-caribbean-diaspora">Caribbean Diaspora</span>
             )}
             {b.woman_owned && (
               <span style={{ fontSize: 9, fontWeight: 700, background: "var(--color-woman-owned-bg)", color: "var(--color-woman-owned-text)", border: "1px solid #F9A8D4", borderRadius: 100, padding: "1px 5px" }}>

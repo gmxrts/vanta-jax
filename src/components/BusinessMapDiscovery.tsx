@@ -48,10 +48,14 @@ function passesFilter(
   searchQuery: string,
   verifiedOnly: boolean,
   womanOwned: boolean,
+  africanDiaspora: boolean,
+  caribbeanDiaspora: boolean,
 ): boolean {
   if (activeCategory && b.category !== activeCategory) return false;
   if (verifiedOnly && !b.verified) return false;
   if (womanOwned && !b.woman_owned) return false;
+  if (africanDiaspora && !b.african_diaspora) return false;
+  if (caribbeanDiaspora && !b.caribbean_diaspora) return false;
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
     return (
@@ -103,9 +107,12 @@ export default function BusinessMapDiscovery() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [womanOwned, setWomanOwned] = useState(false);
+  const [africanDiaspora, setAfricanDiaspora] = useState(false);
+  const [caribbeanDiaspora, setCaribbeanDiaspora] = useState(false);
 
   const activeFilterCount =
-    (activeCategory ? 1 : 0) + (verifiedOnly ? 1 : 0) + (womanOwned ? 1 : 0);
+    (activeCategory ? 1 : 0) + (verifiedOnly ? 1 : 0) + (womanOwned ? 1 : 0) +
+    (africanDiaspora ? 1 : 0) + (caribbeanDiaspora ? 1 : 0);
 
   const [sheetHeight, setSheetHeight] = useState(SNAP_PEEK);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -317,7 +324,7 @@ export default function BusinessMapDiscovery() {
   const listBusinesses = useMemo(
     () =>
       businesses.filter(
-        (b) => b.business_type !== "online_only" && passesFilter(b, activeCategory, searchQuery, verifiedOnly, womanOwned)
+        (b) => b.business_type !== "online_only" && passesFilter(b, activeCategory, searchQuery, verifiedOnly, womanOwned, africanDiaspora, caribbeanDiaspora)
       ),
     [businesses, activeCategory, searchQuery, verifiedOnly, womanOwned]
   );
@@ -331,7 +338,7 @@ export default function BusinessMapDiscovery() {
   const onlineBusinesses = useMemo(
     () =>
       businesses.filter(
-        (b) => b.business_type === "online_only" && passesFilter(b, activeCategory, searchQuery, verifiedOnly, womanOwned)
+        (b) => b.business_type === "online_only" && passesFilter(b, activeCategory, searchQuery, verifiedOnly, womanOwned, africanDiaspora, caribbeanDiaspora)
       ),
     [businesses, activeCategory, searchQuery, verifiedOnly, womanOwned]
   );
@@ -515,7 +522,7 @@ export default function BusinessMapDiscovery() {
 
   // All businesses matching current filters (used in list view)
   const allFilteredBusinesses = useMemo(
-    () => businesses.filter((b) => passesFilter(b, activeCategory, searchQuery, verifiedOnly, womanOwned)),
+    () => businesses.filter((b) => passesFilter(b, activeCategory, searchQuery, verifiedOnly, womanOwned, africanDiaspora, caribbeanDiaspora)),
     [businesses, activeCategory, searchQuery, verifiedOnly, womanOwned]
   );
 
@@ -658,8 +665,12 @@ export default function BusinessMapDiscovery() {
                   setVerifiedOnly={setVerifiedOnly}
                   womanOwned={womanOwned}
                   setWomanOwned={setWomanOwned}
+                  africanDiaspora={africanDiaspora}
+                  setAfricanDiaspora={setAfricanDiaspora}
+                  caribbeanDiaspora={caribbeanDiaspora}
+                  setCaribbeanDiaspora={setCaribbeanDiaspora}
                   onClose={() => setFilterOpen(false)}
-                  onClear={() => { setActiveCategory(""); setVerifiedOnly(false); setWomanOwned(false); }}
+                  onClear={() => { setActiveCategory(""); setVerifiedOnly(false); setWomanOwned(false); setAfricanDiaspora(false); setCaribbeanDiaspora(false); }}
                 />
               )}
               </div>
@@ -782,8 +793,12 @@ export default function BusinessMapDiscovery() {
                   setVerifiedOnly={setVerifiedOnly}
                   womanOwned={womanOwned}
                   setWomanOwned={setWomanOwned}
+                  africanDiaspora={africanDiaspora}
+                  setAfricanDiaspora={setAfricanDiaspora}
+                  caribbeanDiaspora={caribbeanDiaspora}
+                  setCaribbeanDiaspora={setCaribbeanDiaspora}
                   onClose={() => setFilterOpen(false)}
-                  onClear={() => { setActiveCategory(""); setVerifiedOnly(false); setWomanOwned(false); }}
+                  onClear={() => { setActiveCategory(""); setVerifiedOnly(false); setWomanOwned(false); setAfricanDiaspora(false); setCaribbeanDiaspora(false); }}
                 />
               )}
             </div>
@@ -1317,6 +1332,10 @@ function FilterDropdown({
   setVerifiedOnly,
   womanOwned,
   setWomanOwned,
+  africanDiaspora,
+  setAfricanDiaspora,
+  caribbeanDiaspora,
+  setCaribbeanDiaspora,
   onClose,
   onClear,
 }: {
@@ -1327,6 +1346,10 @@ function FilterDropdown({
   setVerifiedOnly: (v: boolean) => void;
   womanOwned: boolean;
   setWomanOwned: (v: boolean) => void;
+  africanDiaspora: boolean;
+  setAfricanDiaspora: (v: boolean) => void;
+  caribbeanDiaspora: boolean;
+  setCaribbeanDiaspora: (v: boolean) => void;
   onClose: () => void;
   onClear: () => void;
 }) {
@@ -1382,9 +1405,9 @@ function FilterDropdown({
         </div>
       </div>
 
-      {/* Verified + Woman-owned toggles */}
+      {/* Toggles */}
       <ToggleRow
-        label="Verified businesses only"
+        label="Verified Black American Owned"
         active={verifiedOnly}
         onToggle={() => setVerifiedOnly(!verifiedOnly)}
       />
@@ -1392,6 +1415,16 @@ function FilterDropdown({
         label="Woman-owned"
         active={womanOwned}
         onToggle={() => setWomanOwned(!womanOwned)}
+      />
+      <ToggleRow
+        label="African Diaspora"
+        active={africanDiaspora}
+        onToggle={() => setAfricanDiaspora(!africanDiaspora)}
+      />
+      <ToggleRow
+        label="Caribbean Diaspora"
+        active={caribbeanDiaspora}
+        onToggle={() => setCaribbeanDiaspora(!caribbeanDiaspora)}
         last
       />
 
