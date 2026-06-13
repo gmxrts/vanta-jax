@@ -4,7 +4,8 @@ import { supabase } from "../lib/supabaseClient";
 import { getCategories } from "../lib/categories";
 import type { Category } from "../lib/types";
 
-import BusinessListRow from "./BusinessListRow";
+// BusinessListRow available for future mobile-specific use
+import BusinessCard from "./BusinessCard";
 
 const BrowseMapView = lazy(() => import("./BrowseMapView"));
 
@@ -307,6 +308,26 @@ export default function BusinessSearch() {
   };
 
   const activeList = hasSearched ? results : directory;
+
+  const GridEmptyState = ({ onClear }: { onClear: () => void }) => (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 24px", gap: 12, textAlign: "center" }}>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-muted)" }} aria-hidden="true">
+        <circle cx="10" cy="10" r="7"/>
+        <path d="m21 21-6-6"/>
+        <path d="m13 7-6 6"/>
+        <path d="m7 7 6 6"/>
+      </svg>
+      <p style={{ fontSize: 18, fontWeight: 600, color: "var(--text-primary)", margin: 0 }}>No businesses found</p>
+      <p style={{ fontSize: 14, color: "var(--text-muted)", margin: 0 }}>Try adjusting your filters or search term</p>
+      <button
+        type="button"
+        onClick={onClear}
+        style={{ marginTop: 8, padding: "10px 24px", borderRadius: 100, background: "var(--accent)", color: "#0E0C0A", fontWeight: 600, fontSize: 13, border: "none", cursor: "pointer" }}
+      >
+        Clear filters
+      </button>
+    </div>
+  );
   const totalPages = Math.ceil(activeList.length / PAGE_SIZE);
   const displayList = activeList.slice(
     currentPage * PAGE_SIZE,
@@ -332,6 +353,9 @@ export default function BusinessSearch() {
       <style>{`
         .vj-view-toggle-label { display: inline; }
         @media (max-width: 639px) { .vj-view-toggle-label { display: none; } }
+        .vj-business-grid { display: grid; grid-template-columns: 1fr; gap: 16px; padding: 16px 0; }
+        @media (min-width: 640px) { .vj-business-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; } }
+        @media (min-width: 1024px) { .vj-business-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
       `}</style>
     <div className="w-full flex flex-col items-center gap-8">
       {/* PRIMARY SEARCH AREA */}
@@ -578,65 +602,51 @@ export default function BusinessSearch() {
 
           {/* Map view — shows all results (no pagination on map) */}
           {viewMode === "map" && MAPBOX_TOKEN && (
-            <Suspense
-              fallback={
-                <div
-                  style={{
-                    height: "520px",
-                    borderRadius: "20px",
-                    background: "#f8fafc",
-                    border: "1px solid rgba(226,232,240,0.7)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <span className="text-[12px] text-slate-400">
-                    Loading map…
-                  </span>
-                </div>
-              }
-            >
-              <BrowseMapView
-                businesses={activeList}
-                token={MAPBOX_TOKEN}
-              />
-            </Suspense>
+            <>
+              <Suspense
+                fallback={
+                  <div
+                    style={{
+                      height: "520px",
+                      borderRadius: "20px",
+                      background: "#f8fafc",
+                      border: "1px solid rgba(226,232,240,0.7)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span className="text-[12px] text-slate-400">
+                      Loading map…
+                    </span>
+                  </div>
+                }
+              >
+                <BrowseMapView
+                  businesses={activeList}
+                  token={MAPBOX_TOKEN}
+                />
+              </Suspense>
+              {!loading && !loadingDirectory && activeList.length === 0 && (
+                <GridEmptyState onClear={handleClearSearch} />
+              )}
+            </>
           )}
 
-          {/* List view — compact scrollable rows */}
+          {/* List view — responsive card grid */}
           {viewMode === "list" && !loading && !loadingDirectory && (
             activeList.length === 0 ? (
-              <p className="text-[11px] text-slate-500">
-                {hasSearched
-                  ? "Can't find what you're looking for? "
-                  : "No businesses in the directory yet. "}
-                <a
-                  href="/suggest-business"
-                  className="text-[#C9A84C] underline underline-offset-2 hover:text-[#8B6914]"
-                >
-                  Suggest a business.
-                </a>
-              </p>
+              <GridEmptyState onClear={handleClearSearch} />
             ) : (
-              <div
-                style={{
-                  overflowY: "auto",
-                  maxHeight: "calc(100vh - 320px)",
-                  minHeight: 300,
-                  borderRadius: 16,
-                  border: "1px solid var(--border)",
-                  background: "var(--bg-secondary)",
-                }}
-              >
-                {activeList.map((b, i) => (
-                  <BusinessListRow
-                    key={b.id}
-                    business={b as Parameters<typeof BusinessListRow>[0]["business"]}
-                    distanceMeters={b.dist_meters}
-                    isLast={i === activeList.length - 1}
-                  />
-                ))}
+              <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 320px)", minHeight: 300 }}>
+                <div className="vj-business-grid">
+                  {activeList.map((b) => (
+                    <BusinessCard
+                      key={b.id}
+                      business={b as Parameters<typeof BusinessCard>[0]["business"]}
+                    />
+                  ))}
+                </div>
               </div>
             )
           )}
