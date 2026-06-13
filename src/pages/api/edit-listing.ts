@@ -34,7 +34,7 @@ export const POST: APIRoute = async ({ request }) => {
     'name', 'category', 'description', 'address', 'city', 'state', 'zip',
     'phone', 'website', 'logo_url', 'business_type', 'is_address_public',
     'public_location_label', 'service_area', 'latitude', 'longitude',
-    'verified', 'featured', 'woman_owned',
+    'verified', 'featured', 'woman_owned', 'african_diaspora', 'caribbean_diaspora',
     // Phase 6
     'hours', 'instagram_url', 'facebook_url', 'tiktok_url',
   ];
